@@ -69,20 +69,35 @@ def generate_genomes_ancestors(root_nodes, generator, recombinators):
         queue.extend(person.children)
         visited.add(person)
 
-def generate_genomes(population, generator, recombinators, keep_last = None):
+def generate_genomes(population, generator, recombinators, keep_last = None,
+                     true_genealogy = True):
     assert keep_last is None or keep_last > 0
     for generation_num, generation in enumerate(population.generations):
         for person in generation.members:
             if person.genome is not None:
                 continue
-            mother = person.mother
-            father = person.father
-            if mother is None:
+            if true_genealogy:
+                mother = person.mother
+                father = person.father
+            else:
+                mother = person.suspected_mother
+                father = person.suspected_father
+            
+            if mother is None and father is None:
                 person.genome = generator.generate()
                 continue
-            assert mother.genome is not None
-            assert father.genome is not None
-            person.genome = mate(mother.genome, father.genome,
+            if mother is None:
+                mother_genome = generator.generate()
+            else:
+                mother_genome = mother.genome
+            if father is None:
+                father_genome = generator.generate()
+            else:
+                father_genome = father.genome
+                
+            assert mother_genome is not None
+            assert father_genome is not None
+            person.genome = mate(mother_genome, father_genome,
                                  recombinators[Sex.Female],
                                  recombinators[Sex.Male])
         if keep_last is not None and keep_last <= generation_num:

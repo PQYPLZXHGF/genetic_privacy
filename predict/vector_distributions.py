@@ -48,7 +48,7 @@ def parse_genealogy_file(filename):
     for name, (father_name, mother_name) in parents.items():
         all_nodes[name] = node_generator.generate_node(all_nodes[father_name],
                                                        all_nodes[mother_name],
-                                                       genders[name])
+                                                       sex = genders[name])
     return (all_nodes, set(founders.values()))
 
 def simulate_sharing(founders, pair, genome_generator, recombinators,
@@ -85,10 +85,20 @@ pair_1 = [all_nodes_1[name] for name in args.pair_2]
 sharing_1 = simulate_sharing(founders_1, pair_1, genome_generator,
                              recombinators)
 
-pyplot.hist(sharing_0, bins = 30, alpha = 0.5, normed = False,
+weights_0 = np.ones_like(sharing_0)/float(len(sharing_0))
+weights_1 = np.ones_like(sharing_1)/float(len(sharing_1))
+# pyplot.hist(sharing_0, bins = 30, alpha = 0.5, normed = False,
+#             label = basename(args.relationship_file[0]))
+# pyplot.hist(sharing_1, bins = 30, alpha = 0.5, normed = False,
+#             label = basename(args.relationship_file[1]))
+pyplot.hist(sharing_0, bins = 30, normed = False,
+            weights = weights_0,
             label = basename(args.relationship_file[0]))
-pyplot.hist(sharing_1, bins = 30, alpha = 0.5, normed = False,
+pyplot.hist(sharing_1, bins = 30, normed = False,
+            weights = weights_1,
             label = basename(args.relationship_file[1]))
+pyplot.ylabel("Simliarity function probability", size = 20)
+pyplot.xlabel("Similarity function value", size = 20)
 pyplot.legend(loc='upper right')
 pyplot.show()
 print(abs(np.mean(sharing_0) - np.mean(sharing_1)))
