@@ -23,6 +23,9 @@ class RandomQueue:
             self.elements[location] = temp
         return self.elements.pop()
 
+    def __len__(self):
+        return len(self.elements)
+
     def __repr__(self):
         return "RandomQueue({})".format(repr(self.elements))
 
