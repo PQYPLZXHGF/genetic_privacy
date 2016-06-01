@@ -18,7 +18,7 @@ class NodeGenerator:
         
     def generate_node(self, father = None, mother = None,
                       suspected_father = None, suspected_mother = None,
-                      sex = None):
+                      sex = None, twin = None):
         node_id = self._id
         self._id += 1
         if father is not None:
@@ -66,9 +66,10 @@ class Node:
     """
     def __init__(self, node_generator, self_id, father_id = None,
                  mother_id = None, suspected_father_id = None,
-                 suspected_mother_id = None, sex = None):
+                 suspected_mother_id = None, sex = None, twin_id = None):
         self.genome = None
         self._node_generator = node_generator
+        self._twin_id = twin_id
         self._mother_id = mother_id
         if suspected_mother_id is None:
             self._suspected_mother_id = mother_id
@@ -98,7 +99,7 @@ class Node:
             self.father._children.append(self._id)
         if self.suspected_father is not None:
             assert self.suspected_father.sex == Sex.Male
-            self.father._suspected_children.append(self._id)
+            self.father._suspected_children.append(self._id)            
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -106,6 +107,7 @@ class Node:
         del state["father"]
         del state["suspected_mother"]
         del state["suspected_father"]
+        del state["twin"]
         return state
     
     def __setstate__(self, state):
@@ -120,6 +122,12 @@ class Node:
         object.
         """
         mapping = self._node_generator._mapping
+
+        if self._twin_id is not None:
+            self.twin = mapping[self._twin_id]
+        else:
+            self.twin = None
+
         if self._mother_id is not None:
             self.mother = mapping[self._mother_id]
         else:
@@ -137,6 +145,10 @@ class Node:
             self.suspected_mother = mapping[self._suspected_mother_id]
         else:
             self.suspected_mother = self.mother
+
+    def set_twin(self, twin):
+        self._twin_id = twin._id
+        self.twin = twin
             
     @property
     def mapping(self):

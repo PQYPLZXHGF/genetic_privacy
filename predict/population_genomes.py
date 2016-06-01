@@ -76,6 +76,8 @@ def generate_genomes(population, generator, recombinators, keep_last = None,
         for person in generation.members:
             if person.genome is not None:
                 continue
+            if person.twin is not None and person.twin.genome is not None:
+                person.genome = person.twin.genome
             if true_genealogy:
                 mother = person.mother
                 father = person.father
