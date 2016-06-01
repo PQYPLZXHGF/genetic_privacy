@@ -2,6 +2,9 @@ from random import shuffle, randrange
 from collections import Counter
 
 class RandomQueue:
+    """
+    Randomly returns an element that was previously enqueued.
+    """
     def __init__(self, initial = None):
         if initial is not None:
             self.elements = list(initial)
