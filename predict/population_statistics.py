@@ -34,7 +34,7 @@ def proportion_within_distance(population, distance, percent_labeled):
         to_search.extend(current_node.children)
     return len(descendant_set.intersection(members)) / len(members)
 
-def ancestors_of(node, distance):
+def ancestors_of(node, distance, suspected = True):
     assert distance > 0
     to_visit = [(node, 0)]
     ancestors = set()
@@ -44,8 +44,14 @@ def ancestors_of(node, distance):
         if current_distance == distance:
             ancestors.add(current_node)
             continue
-        to_visit.append((current_node.mother, current_distance + 1))
-        to_visit.append((current_node.father, current_distance + 1))
+        if suspected:
+            mother = current_node.suspected_mother
+            father = current_node.suspected_father
+        else:
+            mother = current_node.mother
+            father = current_node.father
+        to_visit.append((mother, current_distance + 1))
+        to_visit.append((father, current_distance + 1))
     return ancestors
     
 
