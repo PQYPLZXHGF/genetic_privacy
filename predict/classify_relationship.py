@@ -122,7 +122,8 @@ def shared_to_directory(population, labeled_nodes, genome_generator,
         print("Cleaning genomes.")
         population.clean_genomes()
         print("Generating genomes")
-        generate_genomes(population, genome_generator, recombinators, 3)
+        generate_genomes(population, genome_generator, recombinators, 3,
+                         true_genealogy = False)
         print("Calculating shared length")
         _calculate_shared_to_fds(pairs, fds, min_segment_length)
     for fd in fds.values():
