@@ -1,5 +1,5 @@
 from math import floor
-from random import shuffle, uniform, choice, random
+from random import shuffle, uniform, choice, random, sample
 from itertools import chain
 from types import GeneratorType
 from pickle import Unpickler
@@ -7,6 +7,7 @@ from collections import defaultdict
 
 from random_queue import RandomQueue
 from generation import Generation
+from sex import Sex
 
 class Population:
     def __init__(self, initial_generation = None):
@@ -146,9 +147,9 @@ class HierarchicalIslandPopulation(Population):
         return members
             
 
-    def new_generation(self, size = None, non_paternity = None,
-                       adoption = None, single_partner = None,
-                       multi_partner_probs = None):
+    def new_generation(self, size = None, non_paternity_rate = 0,
+                       adoption_rate = 0, unknown_mother_rate = 0,
+                       unknown_father_rate = 0, multi_partner_probs = None):
         """
         Generates a new generation of individuals from the previous
         generation. If size is not passed, the new generation will be
@@ -160,7 +161,7 @@ class HierarchicalIslandPopulation(Population):
         shuffle(previous_generation)
         boundary = len(previous_generation) // 2
         seekers = RandomQueue(previous_generation[:boundary])
-        mates = previous_generation[boundary:]
+        mates = set(previous_generation[boundary:])
         mate_set = defaultdict(set)
         mate_attempts = defaultdict(int)
         available_mates = self._island_members(mates)
@@ -200,20 +201,32 @@ class HierarchicalIslandPopulation(Population):
         node_generator = pairs[0][0].node_generator
         new_nodes = []
         for i, (seeker, mate) in enumerate(pairs):
+            if seeker.sex == Sex.Male:
+                man = seeker
+                woman = mate
+            else:
+                man = mate
+                woman = seeker
+
             if i < extra_child:
                 extra = 1
             else:
                 extra = 0
                 
-            # Child will be based at mother's island
-            island = self.island_tree.get_island(woman)
+            # Child will be based at mate's island
+            island = self.island_tree.get_island(mate)
             for i in range(min_children + extra):
                 child = node_generator.generate_node(man, woman)
                 new_nodes.append(child)
                 self.island_tree.add_individual(island, child)
 
+        apportioned = apportion(new_nodes, non_paternity_rate, adoption_rate,
+                                unknown_mother_rate, unknown_father_rate)
+        non_paternity, adopted, unknown_mother, unknown_father = apportioned
+
         new_nodes.extend(node_generator.twin_node(template_node)
                          for template_node in sample(new_nodes, num_twins))
+
 
                 
         SIZE_ERROR = "Generation generated is not correct size. Expected {}, got {}."
@@ -223,6 +236,25 @@ class HierarchicalIslandPopulation(Population):
     @property
     def island_tree(self):
         return self._island_tree
+
+def apportion(original, *rates):
+    remainder = list(original)
+    assigned = set()
+    length = len(original)
+    subsets = []
+    for rate in rates:
+        assert int(length * rate) < len(remainder)
+        if rate == 0:
+            current_group = []
+        else:
+            current_group = sample(remainder, int(length * rate))
+        assigned.update(current_group)
+        subsets.append(current_group)
+        if 0 < len(current_group):
+            remainder = [node for node in original if node not in assigned]
+        
+    return tuple(subsets)
+        
 
 class PopulationUnpickler(Unpickler):
     
