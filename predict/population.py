@@ -199,7 +199,7 @@ class HierarchicalIslandPopulation(Population):
         extra_child = non_twin_size - min_children * len(pairs)
         node_generator = pairs[0][0].node_generator
         new_nodes = []
-        for i, (man, woman) in enumerate(pairs):
+        for i, (seeker, mate) in enumerate(pairs):
             if i < extra_child:
                 extra = 1
             else:
