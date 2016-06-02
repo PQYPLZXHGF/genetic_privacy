@@ -23,9 +23,15 @@ class IslandNode():
     def _add_individual(self, individual):
         self._individuals.add(individual)
 
+    def _remove_individual(self, individual):
+        self._individuals.remove(individual)
+
     def _add_island(self, island):
         self._islands.add(island)
         island._parent = self
+
+    def __in__(self, individual):
+        return individual in self._individuals
 
     @property
     def is_leaf(self):
@@ -75,6 +81,17 @@ class IslandTree():
     def add_individual(self, island, individual):
         island._add_individual(individual)
         self._individual_island[individual] = island
+
+    def move_individual(self, individual, destination_island):
+        """
+        Remove an individual from their current island and move them
+        to destination_island.
+        """
+        source_island = self._individual_island[individual]
+        source_island._remove_individual(individual)
+        destination_island._add_individual(individual)
+        self._individual_island[individual] = destination_island
+        
                 
     @property
     def root(self):

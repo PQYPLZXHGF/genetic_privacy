@@ -43,9 +43,26 @@ class NodeGenerator:
         else:
             suspected_mother_id = None
 
+        if twin is not None:
+            twin_id = twin._id
+        else:
+            twin_id = None
+
         node = Node(self, node_id, father_id, mother_id, suspected_father_id,
-                    suspected_mother_id, sex = sex)
+                    suspected_mother_id, sex = sex, twin_id = twin_id)
         self._mapping[node_id] = node
+        return node
+
+    def twin_node(self, template):
+        mother = template.mother
+        father = template.father
+        suspected_father = template.suspsected_father
+        suspected_mother = template.suspected_mother
+        sex = template.sex
+        node = self.generate_node(father, mother, suspected_father,
+                                  suspected_mother, sex = sex,
+                                  twin = template)
+        template.set_twin(node)
         return node
     
     @property
@@ -58,7 +75,8 @@ class Node:
     The mother and father properties are the true biological mother and father
 
     The suspected_mother and suspected_father are the individuals the
-    'attacker' thinks are the mother and
+  
+  'attacker' thinks are the mother and
     father. suspected_mother/father may be the true biological mother
     and father, or they may be other nodes in the geneology. They can
     be different due to errors in the records the attacker has, which

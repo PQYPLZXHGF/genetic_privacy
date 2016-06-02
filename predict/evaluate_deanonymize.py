@@ -15,7 +15,7 @@ with open("population_10000.pickle", "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
 
 print("Loading classifier")
-with open("classifier.pickle", "rb") as pickle_file:
+with open("classifier_2000_gen6.pickle", "rb") as pickle_file:
     classifier = load(pickle_file)
 
 print("Fixing persistence")
@@ -30,7 +30,7 @@ last_generation = population.generations[-1].members
 bayes = BayesDeanonymize(population, classifier)
 
 unlabeled = sample(list(set(last_generation) - set(classifier._labeled_nodes)),
-                   10)
+                   200)
 # unlabeled = [choice(list(set(last_generation) - labeled_nodes))]
 correct = 0
 incorrect = 0
