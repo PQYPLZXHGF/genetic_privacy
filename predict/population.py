@@ -145,6 +145,14 @@ class HierarchicalIslandPopulation(Population):
             m = leaf.individuals.intersection(generation_members)
             members[leaf] = m
         return members
+
+    def migrate_generation(self, generation):
+        """
+        Cause all members of the population to migrate.
+        """
+        for member in generation.members:
+            island = self._pick_island(member)
+            self._island_tree.move_individual(member, island)
             
 
     def new_generation(self, size = None, non_paternity_rate = 0,
@@ -157,7 +165,8 @@ class HierarchicalIslandPopulation(Population):
         """
         if size is None:
             size = self._generations[-1].size
-        previous_generation = list(self._generations[-1])
+        self.migrate_generation(self._generations[-1])
+        previous_generation = list(self._generations[-1].members)
         shuffle(previous_generation)
         boundary = len(previous_generation) // 2
         seekers = RandomQueue(previous_generation[:boundary])
@@ -170,7 +179,7 @@ class HierarchicalIslandPopulation(Population):
             seeker = seekers.dequeue()
             if sum(len(members) for members in available_mates.values()) is 0:
                 break
-            island = self._pick_island(seeker)
+            island = self._island_tree.get_island(seeker)
             potential_mates = [mate for mate in available_mates[island]
                                if mate.sex != seeker.sex]
             shuffle(potential_mates)
@@ -185,7 +194,8 @@ class HierarchicalIslandPopulation(Population):
                     existing_mates = mate_set[seeker]
                     existing_mates.add(potential_mate)
                     num_mates = len(existing_mates)
-                    if multi_partner_probs[num_mates] < random():
+                    if (multi_partner_probs is not None and
+                        random() < multi_partner_probs[num_mates]):
                         seekers.enqueue(seeker)
                     else:
                         available_mates[island].remove(potential_mate)
@@ -214,7 +224,7 @@ class HierarchicalIslandPopulation(Population):
                 extra = 0
                 
             # Child will be based at mate's island
-            island = self.island_tree.get_island(mate)
+            island = self._island_tree.get_island(mate)
             for i in range(min_children + extra):
                 child = node_generator.generate_node(man, woman)
                 new_nodes.append(child)
@@ -223,9 +233,31 @@ class HierarchicalIslandPopulation(Population):
         apportioned = apportion(new_nodes, non_paternity_rate, adoption_rate,
                                 unknown_mother_rate, unknown_father_rate)
         non_paternity, adopted, unknown_mother, unknown_father = apportioned
+        for node in unknown_mother:
+            node.set_suspected_mother(None)
+        for node in unknown_father:
+            node.set_suspected_father(None)
 
-        new_nodes.extend(node_generator.twin_node(template_node)
-                         for template_node in sample(new_nodes, num_twins))
+        men_by_island = self._island_members(self._generations[-1].men)
+        for node in non_paternity:
+            child_island = self._island_tree.get_island(node)
+            suspected_father = choice(men_by_island[child_island])
+            node.set_suspected_father(suspected_father)
+
+        women_by_island = self._island_members(self._generations[-1].women)
+        for node in adopted:
+            child_island = self._island_tree.get_island(node)
+            suspected_father = choice(men_by_island[child_island])
+            node.set_suspected_father(suspected_father)
+            suspected_mother = choice(women_by_island[child_island])
+            node.set_suspected_mother(suspected_mother)
+
+        # Generate twins. Twins will essentially be copies of their sibling
+        for template_node in sample(new_nodes, num_twins):
+            twin = node_generator.twin_node(template_node)
+            island = self._island_tree.get_island(template_node)
+            self._island_tree.add_individual(island, twin)
+            new_nodes.append(twin)
 
 
                 

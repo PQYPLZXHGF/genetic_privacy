@@ -56,7 +56,7 @@ class NodeGenerator:
     def twin_node(self, template):
         mother = template.mother
         father = template.father
-        suspected_father = template.suspsected_father
+        suspected_father = template.suspected_father
         suspected_mother = template.suspected_mother
         sex = template.sex
         node = self.generate_node(father, mother, suspected_father,
@@ -158,15 +158,30 @@ class Node:
         if self._suspected_father_id is not None:
             self.suspected_father = mapping[self._suspected_father_id]
         else:
-            self.suspected_father = self.father
+            self.suspected_father = None
         if self._suspected_mother_id is not None:
             self.suspected_mother = mapping[self._suspected_mother_id]
         else:
-            self.suspected_mother = self.mother
+            self.suspected_mother = None
 
     def set_twin(self, twin):
         self._twin_id = twin._id
         self.twin = twin
+
+    # TODO: Turn suspected mother and father into @property methods
+    def set_suspected_mother(self, suspected_mother):
+        self.suspected_mother = suspected_mother
+        if suspected_mother is not None:
+            self._suspected_mother_id = suspected_mother._id
+        else:
+            self._suspected_mother_id = None
+
+    def set_suspected_father(self, suspected_father):
+        self.suspected_father = suspected_father
+        if suspected_father is not None:
+            self._suspected_father_id = suspected_father._id
+        else:
+            self._suspected_father_id = None
             
     @property
     def mapping(self):

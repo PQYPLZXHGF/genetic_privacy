@@ -88,6 +88,8 @@ class IslandTree():
         to destination_island.
         """
         source_island = self._individual_island[individual]
+        if source_island == destination_island:
+            return
         source_island._remove_individual(individual)
         destination_island._add_individual(individual)
         self._individual_island[individual] = destination_island
