@@ -11,6 +11,13 @@ from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
 from island_model import tree_from_file
 from sex import Sex
 
+def conditionalize_partner_probs(probabilities):
+    conditional_probs = dict()
+    for i, prob in enumerate(probabilities):
+        greater_prob = sum(probabilities[i:])
+        conditional_probs[i + 1] = probabilities[i] / greater_prob
+    return conditional_probs
+
 parser = ArgumentParser(description = "Generate a population and its associated genomes.")
 parser.add_argument("tree_file",
                     help = "Describes hierarchical island model.")
@@ -20,12 +27,29 @@ parser.add_argument("--generation_size", type = int, default = 10000)
 parser.add_argument("--num_generations", type = int, default = 10)
 parser.add_argument("--no_genomes", action="store_true", default = False,
                     help = "Don't generate genomes for the individuals in the population.")
+parser.add_argument("--non_paternity", "-p", type = float, default = 0,
+                    help = "Rate with which the suspected father is not the true father.")
+parser.add_argument("--adoption", "-a", type = float, default = 0,
+                    help = "Rate with which the suspected mother and father are not the true mother and father.")
+parser.add_argument("--multi_partner_prob", "-m", default = "1",
+                    help = "Break down on number of partners people will have on average. Comma separated list of numbers between 0 and 1. First number the number of people who have 1 partner, next is 2 partners, etc. Numbers should sum up to 1.")
 parser.add_argument("--output_file")
 
 args = parser.parse_args()
 if args.num_generations < 1:
     parser.error("num_generations must be >= 1")
 
+if not 0 <= args.non_paternity <= 1:
+    parser.error("Non-paternity rate must be in the range [0, 1]")
+    
+if not 0 <= args.adoption <= 1:
+    parser.error("adoption rate must be in the range [0, 1]")
+
+multi_partner_prob = [float(x) for x in args.multi_partner_prob.split(",")]
+if sum(multi_partner_prob) != 1.0:
+    parser.error("Multi partner probabilities must sum to 1. Summed to {}".format(sum(args.multi_partner_prob)))
+
+cond_probs = conditionalize_partner_probs(multi_partner_prob)
 
 node_generator = NodeGenerator()
 founders = [node_generator.generate_node() for _ in range(args.generation_size)]
@@ -37,7 +61,9 @@ for person in founders:
 population = HierarchicalIslandPopulation(tree)
 
 for _ in range(args.num_generations - 1):
-    population.new_generation()
+    population.new_generation(non_paternity_rate = args.non_paternity,
+                              adoption_rate = args.adoption,
+                              multi_partner_probs = cond_probs)
 
 if not args.no_genomes:
     # tr = tracker.SummaryTracker()

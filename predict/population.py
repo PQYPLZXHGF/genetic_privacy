@@ -195,7 +195,7 @@ class HierarchicalIslandPopulation(Population):
                     existing_mates.add(potential_mate)
                     num_mates = len(existing_mates)
                     if (multi_partner_probs is not None and
-                        random() < multi_partner_probs[num_mates]):
+                        multi_partner_probs[num_mates] < random()):
                         seekers.enqueue(seeker)
                     else:
                         available_mates[island].remove(potential_mate)
