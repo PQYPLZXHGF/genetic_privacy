@@ -239,12 +239,16 @@ class HierarchicalIslandPopulation(Population):
             node.set_suspected_father(None)
 
         men_by_island = self._island_members(self._generations[-1].men)
+        men_by_island = {island: list(men) for island, men
+                         in men_by_island.items()}
         for node in non_paternity:
             child_island = self._island_tree.get_island(node)
             suspected_father = choice(men_by_island[child_island])
             node.set_suspected_father(suspected_father)
 
         women_by_island = self._island_members(self._generations[-1].women)
+        women_by_island = {island: list(women) for island, women
+                           in women_by_island.items()}
         for node in adopted:
             child_island = self._island_tree.get_island(node)
             suspected_father = choice(men_by_island[child_island])
