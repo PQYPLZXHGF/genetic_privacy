@@ -67,9 +67,13 @@ for _ in range(args.num_generations - 1):
 
 if not args.no_genomes:
     # tr = tracker.SummaryTracker()
+    import time
+    
     print("Loading recombination rates")
+    start = time.perf_counter()
     recombinators = recombinators_from_directory(args.recombination_dir)
-    print("Recombination rates loaded.")
+    stop = time.perf_counter()
+    print("Recombination rates loaded. Took {} seconds".format(stop - start))
     chrom_sizes = recombinators[Sex.Male]._num_bases
     genome_generator = RecombGenomeGenerator(chrom_sizes)
     generate_genomes(population, genome_generator, recombinators, 3)
