@@ -7,7 +7,7 @@ from warnings import warn
 
 from scipy.stats import gamma
 import numpy as np
-import pyximport; pyximport.install()
+# import pyximport; pyximport.install()
 
 from common_segments import common_segment_lengths
 from population_genomes import generate_genomes

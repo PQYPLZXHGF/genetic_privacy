@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 
 import numpy as np
 
-import pyximport; pyximport.install()
+# import pyximport; pyximport.install()
 from common_segments import common_homolog_segments, _consolidate_sequence
 
 uint32 = np.uint32

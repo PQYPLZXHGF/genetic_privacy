@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import unittest
 
 import numpy as np
-import pyximport; pyximport.install()
+# import pyximport; pyximport.install()
 
 import recomb_genome
 from recomb_helper import new_sequence

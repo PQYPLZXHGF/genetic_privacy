@@ -2,7 +2,7 @@ from functools import reduce
 from operator import mul
 from math import isnan
 
-import pyximport; pyximport.install()
+# import pyximport; pyximport.install()
 import numpy as np
 
 from classify_relationship import (LengthClassifier,

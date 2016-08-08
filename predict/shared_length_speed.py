@@ -6,7 +6,7 @@ import threading
 import pdb
 
 import numpy as np
-import pyximport; pyximport.install()
+# import pyximport; pyximport.install()
 
 from population import PopulationUnpickler
 from classify_relationship import shared_segment_length_genomes

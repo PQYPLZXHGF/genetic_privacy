@@ -10,7 +10,7 @@ from collections import defaultdict, namedtuple
 from itertools import chain
 
 import numpy as np
-import pyximport; pyximport.install()
+# import pyximport; pyximport.install()
 
 from sex import Sex
 from diploid import Diploid
