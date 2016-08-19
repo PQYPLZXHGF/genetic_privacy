@@ -11,6 +11,9 @@ from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
 from island_model import tree_from_file
 from sex import Sex
 
+def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
+    return abs(a-b) <= max(rel_tol * max(abs(a), abs(b)), abs_tol)
+
 def conditionalize_partner_probs(probabilities):
     conditional_probs = dict()
     for i, prob in enumerate(probabilities):
@@ -46,7 +49,7 @@ if not 0 <= args.adoption <= 1:
     parser.error("adoption rate must be in the range [0, 1]")
 
 multi_partner_prob = [float(x) for x in args.multi_partner_prob.split(",")]
-if sum(multi_partner_prob) != 1.0:
+if not isclose(sum(multi_partner_prob), 1.0):
     parser.error("Multi partner probabilities must sum to 1. Summed to {}".format(sum(args.multi_partner_prob)))
 
 cond_probs = conditionalize_partner_probs(multi_partner_prob)
@@ -68,7 +71,6 @@ for _ in range(args.num_generations - 1):
 if not args.no_genomes:
     # tr = tracker.SummaryTracker()
     import time
-    
     print("Loading recombination rates")
     start = time.perf_counter()
     recombinators = recombinators_from_directory(args.recombination_dir)
