@@ -11,7 +11,10 @@ args = parser.parse_args()
 counter = Counter()
 with open(args.filename, "r") as output_file:
     for line in output_file:
-        node, length = line.split()
+        try:
+            node, length = line.split()
+        except ValueError:
+            continue
         counter[node] += 1
 common_node, common_count = list(counter.most_common(1))[0]
 print("Node {} seen {} times".format(common_node, common_count))
