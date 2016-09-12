@@ -88,10 +88,11 @@ def generate_classifier(population, labeled_nodes, genome_generator,
     elif clobber:
         rmtree(directory)
         makedirs(directory)
-    shared_to_directory(population, labeled_nodes, genome_generator,
-                        recombinators, directory, clobber = clobber,
-                        iterations = iterations,
-                        generations_back_shared = generations_back_shared)
+    if 0 < iterations:
+        shared_to_directory(population, labeled_nodes, genome_generator,
+                            recombinators, directory, clobber = clobber,
+                            iterations = iterations,
+                            generations_back_shared = generations_back_shared)
     return classifier_from_directory(directory, population.id_mapping)
 
 
