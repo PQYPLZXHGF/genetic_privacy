@@ -51,7 +51,7 @@ else:
                      for filename in listdir(args.work_dir)]
 print("Populating length classifier.")
 
-clobber = not (args.recover or num_iterations == 0)
+clobber = not (args.recover or args.num_iterations == 0)
 
 classifier = generate_classifier(population, labeled_nodes,
                                  genome_generator, recombinators,
@@ -59,6 +59,9 @@ classifier = generate_classifier(population, labeled_nodes,
                                  iterations = args.num_iterations,
                                  clobber = clobber,
                                  generations_back_shared = args.gen_back)
+
+import pdb
+pdb.set_trace()
 
 print("Pickling classifier")
 with open(args.output_pickle, "wb") as pickle_file:
