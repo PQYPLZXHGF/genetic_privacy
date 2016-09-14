@@ -77,6 +77,5 @@ class BayesDeanonymize:
 def get_sibling_group(node):
     """
     Returns the set containing node and all its full siblings
-    Will need to change when monogamy assumptions change.
     """
-    return node.mother.children
+    return set(node.mother.children).intersection(node.father.children)

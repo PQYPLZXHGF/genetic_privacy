@@ -2,20 +2,26 @@
 
 from random import sample
 from pickle import load
+from argparse import ArgumentParser
 
 import pdb
 
 from bayes_deanonymize import BayesDeanonymize
 from population import PopulationUnpickler
 
-NUM_LABELED = 400
+parser = ArgumentParser(description = "Evaluate performance of classification.")
+parser.add_argument("population")
+parser.add_argument("classifier")
+parser.add_argument("--num_node", "-n", type = int, default = 10)
+args = parser.parse_args()
+
 
 print("Loading population.")
-with open("population_10000.pickle", "rb") as pickle_file:
+with open(args.population, "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
 
 print("Loading classifier")
-with open("classifier_2000_gen6.pickle", "rb") as pickle_file:
+with open(args.classifier, "rb") as pickle_file:
     classifier = load(pickle_file)
 
 print("Fixing persistence")
@@ -30,7 +36,7 @@ last_generation = population.generations[-1].members
 bayes = BayesDeanonymize(population, classifier)
 
 unlabeled = sample(list(set(last_generation) - set(classifier._labeled_nodes)),
-                   200)
+                   args.num_node)
 # unlabeled = [choice(list(set(last_generation) - labeled_nodes))]
 correct = 0
 incorrect = 0
