@@ -6,3 +6,4 @@
 IBD error
 =========
 Figure 4 from [this paper](https://mbe.oxfordjournals.org/content/early/2014/05/23/molbev.msu151.full.pdf+html) provides a means of simulating IBD detection error.
+![Figure 4](images/ibd_detect_error.png)
