@@ -51,7 +51,7 @@ else:
                      for filename in listdir(args.work_dir)]
 print("Populating length classifier.")
 
-clobber = not args.recover && num_iterations != 0
+clobber = not args.recover and num_iterations != 0
 
 classifier = generate_classifier(population, labeled_nodes,
                                  genome_generator, recombinators,
