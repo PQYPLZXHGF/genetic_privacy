@@ -60,6 +60,11 @@ classifier = generate_classifier(population, labeled_nodes,
                                  clobber = clobber,
                                  generations_back_shared = args.gen_back)
 
+del recombinators
+del labeled_nodes
+del genome_generator
+del population
+
 print("Pickling classifier")
 with open(args.output_pickle, "wb") as pickle_file:
     dump(classifier, pickle_file)
