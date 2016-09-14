@@ -60,9 +60,6 @@ classifier = generate_classifier(population, labeled_nodes,
                                  clobber = clobber,
                                  generations_back_shared = args.gen_back)
 
-import pdb
-pdb.set_trace()
-
 print("Pickling classifier")
 with open(args.output_pickle, "wb") as pickle_file:
     dump(classifier, pickle_file)

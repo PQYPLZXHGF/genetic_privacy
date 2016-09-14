@@ -4,6 +4,7 @@ from os import popen, listdir, makedirs
 from os.path import join, exists
 from shutil import rmtree
 from warnings import warn
+from pickle import Unpickler
 
 from scipy.stats import gamma
 import numpy as np
@@ -42,21 +43,31 @@ class LengthClassifier:
         shape, scale =  self._distributions[query_node, labeled_node]
         return gamma.pdf(shared_length, a = shape, scale = scale)
 
-    def fix_persistence(self, population):
-        """
-        This is a hack, because pickling causes issues. Long term
-        should probably use something from
-        https://docs.python.org/3/library/pickle.html#pickle-persistent
-        """
-        id_map = population.id_mapping
-        self._distributions = {(id_map[nodes[0]._id],
-                                id_map[nodes[1]._id]): dist
-                               for nodes, dist
-                               in self._distributions.items()}
-        self._labeled_nodes = [id_map[node._id] for node in self._labeled_nodes]
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        state["_distributions"] = {(node_a._id, node_b._id): params
+                                   for (node_a, node_b), params
+                                   in self._distributions.items()}
+        
+        state["_labeled_nodes"] = [node._id for node in self._labeled_nodes]
+        return state
+    
+    def __setstate__(self, state):
+        self.__dict__.update(state)
 
     def __contains__(self, item):
         return item in self._distributions
+
+class ClassifierUnpickler(Unpickler):
+    def load(self, population):
+        result = super().load()
+        id_map = population.id_mapping
+        result._distributions = {(id_map[node_id_a], id_map[node_id_b]): dist
+                                 for (node_id_a, node_id_b), dist
+                                 in result._distributions.items()}
+        result._labeled_nodes = [id_map[node_id] for node_id
+                                 in result._labeled_nodes]
+        return result
 
 def related_pairs(unlabeled_nodes, labeled_nodes, population, generations):
     """

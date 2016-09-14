@@ -7,6 +7,7 @@ from argparse import ArgumentParser
 import pdb
 
 from bayes_deanonymize import BayesDeanonymize
+from classify_relationship import ClassifierUnpickler
 from population import PopulationUnpickler
 
 parser = ArgumentParser(description = "Evaluate performance of classification.")
@@ -22,10 +23,8 @@ with open(args.population, "rb") as pickle_file:
 
 print("Loading classifier")
 with open(args.classifier, "rb") as pickle_file:
-    classifier = load(pickle_file)
+    classifier = ClassifierUnpickler(pickle_file).load(population)
 
-print("Fixing persistence")
-classifier.fix_persistence(population)
 print("Checking labeled nodes")
 all_nodes = set(population.members)
 for node in classifier._labeled_nodes:
