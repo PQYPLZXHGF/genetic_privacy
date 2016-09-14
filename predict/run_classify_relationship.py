@@ -52,6 +52,8 @@ else:
 print("Populating length classifier.")
 
 clobber = not args.recover
+if num_iterations == 0:
+    clobber = False
 
 classifier = generate_classifier(population, labeled_nodes,
                                  genome_generator, recombinators,
@@ -59,6 +61,7 @@ classifier = generate_classifier(population, labeled_nodes,
                                  iterations = args.num_iterations,
                                  clobber = clobber,
                                  generations_back_shared = args.gen_back)
+
 print("Pickling classifier")
 with open(args.output_pickle, "wb") as pickle_file:
     dump(classifier, pickle_file)
