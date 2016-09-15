@@ -17,15 +17,6 @@ from gamma import fit_gamma
 
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
 
-DB_FILE = "/media/paul/Storage/scratch/lengths.db"
-
-cpu_info = dict([x.strip() for x in line.split(":")]
-                for line in popen('lscpu').readlines())
-try:
-    NUM_CPU = int(cpu_info["Socket(s)"]) * int(cpu_info["Core(s) per socket"])
-except KeyError:
-    NUM_CPU = 1
-
 class LengthClassifier:
     """
     Classifies based total length of shared segments
