@@ -52,7 +52,7 @@ class LengthClassifier:
     def __contains__(self, item):
         return item in self._distributions
 
-def unpickle_length_Classifier(filename):
+def unpickle_length_classifier(filename):
     with open(filename, "rb") as pickle_file:
         labeled_nodes = load(pickle_file)
         distributions = dict()
