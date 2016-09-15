@@ -47,9 +47,7 @@ if not args.recover:
     labeled_nodes = sample(potentially_labeled, num_labeled_nodes)
 else:
     print("Recovering run")
-    # labeled_nodes = [population.id_mapping[int(filename)]
-    #                  for filename in listdir(args.work_dir)]
-    labeled_nodes = [int(filename)
+    labeled_nodes = [population.id_mapping[int(filename)]
                      for filename in listdir(args.work_dir)]
 print("Populating length classifier.")
 

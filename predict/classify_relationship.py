@@ -46,7 +46,7 @@ class LengthClassifier:
     def pickle(self, filename):
         with open(filename, "wb") as pickle_file:
             dump([node for node in self._labeled_nodes], pickle_file)
-            for item in self._labeled_nodes.items():
+            for item in self._distributions.items():
                 dump(item, pickle_file)
 
     def __contains__(self, item):
