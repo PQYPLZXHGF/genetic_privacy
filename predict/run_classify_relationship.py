@@ -47,7 +47,9 @@ if not args.recover:
     labeled_nodes = sample(potentially_labeled, num_labeled_nodes)
 else:
     print("Recovering run")
-    labeled_nodes = [population.id_mapping[int(filename)]
+    # labeled_nodes = [population.id_mapping[int(filename)]
+    #                  for filename in listdir(args.work_dir)]
+    labeled_nodes = [int(filename)
                      for filename in listdir(args.work_dir)]
 print("Populating length classifier.")
 
@@ -65,7 +67,8 @@ del labeled_nodes
 del genome_generator
 del population
 
-# print("Pickling classifier")
+print("Pickling classifier")
+classifier.pickle(args.output_pickle)
 # with open(args.output_pickle, "wb") as pickle_file:
 #     dump(classifier, pickle_file)
 
