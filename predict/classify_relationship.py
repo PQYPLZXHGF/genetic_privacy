@@ -34,26 +34,8 @@ class LengthClassifier:
         shape, scale =  self._distributions[query_node, labeled_node]
         return gamma.pdf(shared_length, a = shape, scale = scale)
 
-    def pickle(self, filename):
-        with open(filename, "wb") as pickle_file:
-            dump([node for node in self._labeled_nodes], pickle_file)
-            for item in self._distributions.items():
-                dump(item, pickle_file)
-
     def __contains__(self, item):
         return item in self._distributions
-
-def unpickle_length_classifier(filename):
-    with open(filename, "rb") as pickle_file:
-        labeled_nodes = load(pickle_file)
-        distributions = dict()
-        while True:
-            try:
-                key, value = load(pickle_file)
-                distributions[key] = value
-            except EOFError:
-                break
-    return LengthClassifier(distributions, labeled_nodes)
 
 def related_pairs(unlabeled_nodes, labeled_nodes, population, generations):
     """

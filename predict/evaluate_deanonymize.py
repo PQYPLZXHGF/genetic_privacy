@@ -22,7 +22,8 @@ with open(args.population, "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
 
 print("Loading classifier")
-classifier = unpickle_length_classifier(args.classifier)
+with open(args.classifier, "rb") as pickle_file:
+    classifier = load(pickle_file)
 
 last_generation = population.generations[-1].members
 

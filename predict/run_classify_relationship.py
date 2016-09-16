@@ -66,9 +66,8 @@ del genome_generator
 del population
 
 print("Pickling classifier")
-classifier.pickle(args.output_pickle)
-# with open(args.output_pickle, "wb") as pickle_file:
-#     dump(classifier, pickle_file)
+with open(args.output_pickle, "wb") as pickle_file:
+    dump(classifier, pickle_file)
 
 print("Pickling complete")
 # import pdb
