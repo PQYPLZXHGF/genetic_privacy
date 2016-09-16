@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 import pdb
 
 from bayes_deanonymize import BayesDeanonymize
-from classify_relationship import ClassifierUnpickler
+from classify_relationship import unpickle_length_classifier
 from population import PopulationUnpickler
 
 parser = ArgumentParser(description = "Evaluate performance of classification.")
@@ -22,19 +22,17 @@ with open(args.population, "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
 
 print("Loading classifier")
-with open(args.classifier, "rb") as pickle_file:
-    classifier = ClassifierUnpickler(pickle_file).load(population)
-
-print("Checking labeled nodes")
-all_nodes = set(population.members)
-for node in classifier._labeled_nodes:
-    assert node in all_nodes
+classifier = unpickle_length_classifier(args.classifier)
 
 last_generation = population.generations[-1].members
 
 bayes = BayesDeanonymize(population, classifier)
 
-unlabeled = sample(list(set(last_generation) - set(classifier._labeled_nodes)),
+id_mapping = population.id_mapping
+labeled_nodes = set(id_mapping[node_id] for node_id
+                    in classifier._labeled_nodes)
+
+unlabeled = sample(list(set(last_generation) - labeled_nodes),
                    args.num_node)
 # unlabeled = [choice(list(set(last_generation) - labeled_nodes))]
 correct = 0

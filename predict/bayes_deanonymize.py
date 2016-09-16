@@ -1,5 +1,3 @@
-from functools import reduce
-from operator import mul
 from math import isnan
 
 # import pyximport; pyximport.install()
@@ -23,7 +21,9 @@ class BayesDeanonymize:
     def _compare_genome_node(self, node, genome, cache):
         probabilities = []
         length_classifier = self._length_classifier
-        for labeled_node in length_classifier._labeled_nodes:
+        id_map = self._population.id_mapping
+        for labeled_node_id in length_classifier._labeled_nodes:
+            labeled_node = id_map[labeled_node_id]
             if labeled_node in cache:
                 shared = cache[labeled_node]
             else:
@@ -37,8 +37,8 @@ class BayesDeanonymize:
                 else:
                     prob = ZERO_REPLACE
             else:
-                prob = length_classifier.get_probability(shared, node,
-                                                         labeled_node)
+                prob = length_classifier.get_probability(shared, node._id,
+                                                         labeled_node_id)
                 if prob > 1 or isnan(prob):
                     prob = INF_REPLACE
                 if prob == 0:

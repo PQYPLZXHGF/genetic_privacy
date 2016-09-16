@@ -70,5 +70,6 @@ classifier.pickle(args.output_pickle)
 # with open(args.output_pickle, "wb") as pickle_file:
 #     dump(classifier, pickle_file)
 
+print("Pickling complete")
 # import pdb
 # pdb.set_trace()
