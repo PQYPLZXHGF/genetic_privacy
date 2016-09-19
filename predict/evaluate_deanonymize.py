@@ -7,7 +7,6 @@ from argparse import ArgumentParser
 import pdb
 
 from bayes_deanonymize import BayesDeanonymize
-from classify_relationship import unpickle_length_classifier
 from population import PopulationUnpickler
 
 parser = ArgumentParser(description = "Evaluate performance of classification.")
