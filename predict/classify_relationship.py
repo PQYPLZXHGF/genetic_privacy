@@ -4,7 +4,7 @@ from os import popen, listdir, makedirs
 from os.path import join, exists
 from shutil import rmtree
 from warnings import warn
-from pickle import Unpickler
+from pickle import dump, load
 
 from scipy.stats import gamma
 import numpy as np
@@ -16,15 +16,6 @@ from population_statistics import ancestors_of
 from gamma import fit_gamma
 
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
-
-DB_FILE = "/media/paul/Storage/scratch/lengths.db"
-
-cpu_info = dict([x.strip() for x in line.split(":")]
-                for line in popen('lscpu').readlines())
-try:
-    NUM_CPU = int(cpu_info["Socket(s)"]) * int(cpu_info["Core(s) per socket"])
-except KeyError:
-    NUM_CPU = 1
 
 class LengthClassifier:
     """
@@ -43,31 +34,8 @@ class LengthClassifier:
         shape, scale =  self._distributions[query_node, labeled_node]
         return gamma.pdf(shared_length, a = shape, scale = scale)
 
-    def __getstate__(self):
-        state = self.__dict__.copy()
-        state["_distributions"] = {(node_a._id, node_b._id): params
-                                   for (node_a, node_b), params
-                                   in self._distributions.items()}
-        
-        state["_labeled_nodes"] = [node._id for node in self._labeled_nodes]
-        return state
-    
-    def __setstate__(self, state):
-        self.__dict__.update(state)
-
     def __contains__(self, item):
         return item in self._distributions
-
-class ClassifierUnpickler(Unpickler):
-    def load(self, population):
-        result = super().load()
-        id_map = population.id_mapping
-        result._distributions = {(id_map[node_id_a], id_map[node_id_b]): dist
-                                 for (node_id_a, node_id_b), dist
-                                 in result._distributions.items()}
-        result._labeled_nodes = [id_map[node_id] for node_id
-                                 in result._labeled_nodes]
-        return result
 
 def related_pairs(unlabeled_nodes, labeled_nodes, population, generations):
     """
@@ -162,8 +130,7 @@ def _calculate_shared_to_fds(pairs, fds, min_segment_length):
 
 def classifier_from_directory(directory, id_mapping):
     distributions = distributions_from_directory(directory, id_mapping)
-    labeled_nodes = set(id_mapping[int(filename)]
-                        for filename in listdir(directory))
+    labeled_nodes = set(int(filename) for filename in listdir(directory))
     return LengthClassifier(distributions, labeled_nodes)
 
 def distributions_from_directory(directory, id_mapping):
@@ -174,7 +141,7 @@ def distributions_from_directory(directory, id_mapping):
     distributions = dict()
     for labeled_filename in listdir(directory):
         lengths = defaultdict(list)
-        labeled = id_mapping[int(labeled_filename)]
+        labeled = int(labeled_filename)
         with open(join(directory, labeled_filename), "r") as labeled_file:
             for line in labeled_file:
                 # If the program crashed, the output can be left in an
@@ -184,13 +151,12 @@ def distributions_from_directory(directory, id_mapping):
                 except ValueError:
                     warn("Malformed line:\n{}".format(line), stacklevel = 0)
                     continue
-                try:
-                    unlabeled = id_mapping[int(unlabeled_id)]
-                except KeyError:
+                unlabeled = int(unlabeled_id)
+                if unlabeled not in id_mapping:
                     error_string = "No such unlabeled node with id {}."
                     warn(error_string.format(unlabeled_id), stacklevel = 0)
                     continue
-                lengths[unlabeled].append(int(shared_str))
+                lengths[unlabeled].append(float(shared_str))
         for unlabeled, lengths in lengths.items():
             shape, scale = fit_gamma(np.array(lengths, dtype = np.float64))
             params = GammaParams(shape, scale)
