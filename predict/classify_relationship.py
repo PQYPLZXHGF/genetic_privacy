@@ -156,7 +156,13 @@ def distributions_from_directory(directory, id_mapping):
                     error_string = "No such unlabeled node with id {}."
                     warn(error_string.format(unlabeled_id), stacklevel = 0)
                     continue
-                lengths[unlabeled].append(float(shared_str))
+                try:
+                    shared_float = float(shared_str)
+                except ValueError:
+                    error_string = "Error formatting value as float: {}."
+                    warn(error_string.format(shared_str), stacklevel = 0)
+                    continue
+                lengths[unlabeled].append(shared_float)
         for unlabeled, lengths in lengths.items():
             shape, scale = fit_gamma(np.array(lengths, dtype = np.float64))
             params = GammaParams(shape, scale)
