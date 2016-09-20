@@ -124,9 +124,7 @@ def _calculate_shared_to_fds(pairs, fds, min_segment_length):
                    for unlabeled, labeled in pairs)
     for unlabeled, labeled, shared in shared_iter:
         fd = fds[labeled]
-        fd.write(str(unlabeled._id))
-        fd.write("\t")
-        fd.write(str(shared) + "\n")
+        fd.write("{}\t{}\n".format(unlabeled._id, shared))
 
 def classifier_from_directory(directory, id_mapping):
     distributions = distributions_from_directory(directory, id_mapping)
