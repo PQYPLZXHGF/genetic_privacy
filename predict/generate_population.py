@@ -26,7 +26,8 @@ parser.add_argument("tree_file",
                     help = "Describes hierarchical island model.")
 parser.add_argument("recombination_dir",
                     help = "Directory containing Hapmap and decode data.")
-parser.add_argument("--generation_size", type = int, default = 10000)
+parser.add_argument("--generation_size", help = "Number of individuals in each generation.",
+                    type = int, default = 10000)
 parser.add_argument("--num_generations", type = int, default = 10)
 parser.add_argument("--no_genomes", action="store_true", default = False,
                     help = "Don't generate genomes for the individuals in the population.")
@@ -34,9 +35,10 @@ parser.add_argument("--non_paternity", "-p", type = float, default = 0,
                     help = "Rate with which the suspected father is not the true father.")
 parser.add_argument("--adoption", "-a", type = float, default = 0,
                     help = "Rate with which the suspected mother and father are not the true mother and father.")
-parser.add_argument("--multi_partner_prob", "-m", default = "1",
+parser.add_argument("--multi_partner_prob", "-m", default = "1.0",
                     help = "Break down on number of partners people will have on average. Comma separated list of numbers between 0 and 1. First number the number of people who have 1 partner, next is 2 partners, etc. Numbers should sum up to 1.")
-parser.add_argument("--output_file")
+parser.add_argument("--output_file", default = "population.pickle",
+                    help = "Outputs a pickle file containing a Population object to this file. This file will be clobbered if it exists.")
 
 args = parser.parse_args()
 if args.num_generations < 1:
