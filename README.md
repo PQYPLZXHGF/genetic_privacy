@@ -24,7 +24,9 @@ Running
 
 Notes:
 * For the most part, executables are in the `predict` directory.
-* Some of the naming of the scripts doesn't make sense, because the files were named at a time when many functions were group together, then split out into other files.
+* Some of the script names don't make sense, because the files were
+  named at a time when many functions were group together, then split
+  out into other files.
 
 Work flow
 ---------
@@ -51,21 +53,40 @@ pickle format.
 
 ### Gather samples
 
-To run experiments to collect data, run the command:
-`python3 run_classify_relationship.py population.pickle work_dir 100 --num_labeled_nodes 150 --output_pickle distributions.pickle`
+To run experiments to collect data, run the command: `python3
+run_classify_relationship.py population.pickle work_dir 100
+--num_labeled_nodes 150 --output_pickle distributions.pickle`
 
 
-This command will pick 150 nodes from the last generation and mark them as "labeled". All other nodes in the last 3 generations are considered "unlabeled". Then it will perform 100 experiments to sample from the simulated empirical distributions from the (labeled, unlabeled) pairs. After collecting 100 samples, it will fit a gamma distribution for each of these pairs to the empirical distribution.The total number of data points will be at most 100 samples multiplied by the number of (labeled, unlabeled) pairs.
+This command will pick 150 nodes from the last generation and mark
+them as "labeled". All other nodes in the last 3 generations are
+considered "unlabeled". Then it will perform 100 experiments to sample
+from the simulated empirical distributions from the (labeled,
+unlabeled) pairs. After collecting 100 samples, it will fit a gamma
+distribution for each of these pairs to the empirical distribution.The
+total number of data points will be at most 100 samples multiplied by
+the number of (labeled, unlabeled) pairs.
 
-Some pruning is done. Values are not sampled for pairs that are related more than `--gen_back` generations.
+Some pruning is done. Values are not sampled for pairs that are
+related more than `--gen_back` generations.
 
-This command will delete the `work_dir` directory if it already exists, and create it if it doesn't (Unless the `--recover` option is used).
+This command will delete the `work_dir` directory if it already
+exists, and create it if it doesn't (Unless the `--recover` option is
+used).
 
-This command tends to take a long time to run. If this process is interrupted it can be resumed using `--recover`. If you provide the recover option, the `--num_labeled_nodes` option will be ignored, as the labeled nodes will be determined by `work_dir`. Recovering will try to do `num_iteration` new iterations, on top of what may already be in the `work_dir`. If `num_iterations` is 0, no experiments will be run, but rather the distributions will be calculated immediately.
+This command tends to take a long time to run. If this process is
+interrupted it can be resumed using `--recover`. If you provide the
+recover option, the `--num_labeled_nodes` option will be ignored, as
+the labeled nodes will be determined by `work_dir`. Recovering will
+try to do `num_iteration` new iterations, on top of what may already
+be in the `work_dir`. If `num_iterations` is 0, no experiments will be
+run, but rather the distributions will be calculated immediately.
 
 
 ### Identify
 
 The final step is identifying unlabeled individuals.
 
-Running `python3 evaluate_deanonymize.py population.pickle distributions.pickle -n 10` will try to identify 10 random unlabeled individuals in the population.
+Running `python3 evaluate_deanonymize.py population.pickle
+distributions.pickle -n 10` will try to identify 10 random unlabeled
+individuals in the population.
