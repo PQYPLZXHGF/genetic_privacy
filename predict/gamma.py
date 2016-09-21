@@ -13,7 +13,7 @@ def fit_gamma(data):
     # data += 1e-8 # Add small number to avoid 0s in the data causing issues.
     # Add small amount of noise to avoid 0s in the data causing issues
     # or all values being identical causing issues.
-    data += np.random.uniform(1e-8, 100000, len(data))
+    data += np.random.uniform(1e-8, 10000, len(data))
     data_mean = np.mean(data)
     log_of_mean = log(data_mean)
     mean_of_logs = np.mean(np.log(data))
