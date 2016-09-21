@@ -32,7 +32,7 @@ The typical work flow is a three step process
 
 1. Generate population - `python3 generate_population.py --help`
 2. Gather samples - `python3 run_classify_relationship.py --help`
-3. Run identification - `python3 evaluate_deanonymize.py --help`
+3. Identify - `python3 evaluate_deanonymize.py --help`
 
 Commands
 --------
@@ -63,7 +63,7 @@ This command will delete the `work_dir` directory if it already exists, and crea
 This command tends to take a long time to run. If this process is interrupted it can be resumed using `--recover`. If you provide the recover option, the `--num_labeled_nodes` option will be ignored, as the labeled nodes will be determined by `work_dir`. Recovering will try to do `num_iteration` new iterations, on top of what may already be in the `work_dir`. If `num_iterations` is 0, no experiments will be run, but rather the distributions will be calculated immediately.
 
 
-### Identification
+### Identify
 
 The final step is identifying unlabeled individuals.
 
