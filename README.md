@@ -22,8 +22,9 @@ Setup
 Running
 =======
 
-Note: For the most part, executables are in the `predict` directory.
-Some of the naming of the scripts doesn't make sense, because the files were named at a time when many functions were group together, then split out into other files.
+Notes:
+* For the most part, executables are in the `predict` directory.
+* Some of the naming of the scripts doesn't make sense, because the files were named at a time when many functions were group together, then split out into other files.
 
 Work flow
 ---------
