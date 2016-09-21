@@ -23,15 +23,16 @@ Running
 =======
 
 Note: For the most part, executables are in the `predict` directory.
+Some of the naming of the scripts doesn't make sense, because the files were named at a time when many functions were group together, then split out into other files.
 
 Work flow
 ---------
 
 The typical work flow is a three step process
 
-1. Generate population
-2. Gather samples
-3. Run identification
+1. Generate population - `python3 generate_population.py --help`
+2. Gather samples - `python3 run_classify_relationship.py --help`
+3. Run identification - `python3 evaluate_deanonymize.py --help`
 
 Commands
 --------
@@ -66,4 +67,4 @@ This command tends to take a long time to run. If this process is interrupted it
 
 The final step is identifying unlabeled individuals.
 
-Running `python3 evaluate_deanonymize.py
+Running `python3 evaluate_deanonymize.py population.pickle distributions.pickle -n 10` will try to identify 10 random unlabeled individuals in the population.
