@@ -16,14 +16,16 @@ parser.add_argument("population_file", help = "Pickled file with population")
 parser.add_argument("work_dir",
                     help = "Directory to put shared length calculations in.")
 parser.add_argument("num_iterations", type = int, default = 1000,
-                    help = "Number of sample to collect from empirical distributions")
+                    help = "Number of samples to collect from empirical distributions")
 parser.add_argument("--recover", "-r", default = False,
                     action="store_true",
                     help = "work directory from interrupted run.")
 parser.add_argument("--gen_back", "-g", type = int, default = 7,
                     help = "Ignore common ancestry more than the given number of generations back.")
-parser.add_argument("--num_labeled_nodes", "-n", type = int, default = 0)
-parser.add_argument("--output_pickle", default = "classifier.pickle")
+parser.add_argument("--num_labeled_nodes", "-n", type = int, default = 0,
+                    help = "Number of nodes to include in the 'known' set. Nodes are picked randomly from the last generation. If no value is given, the number is the population size multiplied by 0.01. (Note that this is not the same as a random sample of 1%% of the entire population as only the last generation is used.)")
+parser.add_argument("--output_pickle", default = "distributions.pickle",
+                    help = "File to store distributions in. Pickle format will be used. Default is 'distributions.pickle'")
 
 args = parser.parse_args()
 
