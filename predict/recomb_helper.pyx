@@ -43,7 +43,7 @@ def new_sequence(diploid, locations):
             return_founder.append(founder[j - 1])
     return Diploid(return_starts, diploid.end, return_founder)
 
-def new_sequence_v2(diploid, locations):
+def new_sequence_v2(diploid, np.ndarray[np.uint32_t, ndim=1] locations):
     """
     Return a new sequence, broken up at the given start, stop locations.
     Eg the sequence starts: 0  10 20
@@ -54,33 +54,34 @@ def new_sequence_v2(diploid, locations):
     """
     cdef np.ndarray[np.uint32_t, ndim=1] starts = diploid.starts
     cdef np.ndarray[np.uint32_t, ndim=1] founder = diploid.founder
-    cdef unsigned long end = diploid.end
     cdef unsigned long break_index, break_location
     cdef list new_starts = []
     cdef list new_founder = []
-    cdef unsigned long starts_i, locations_i, total_len
+    cdef unsigned long starts_i, locations_i
+    cdef unsigned long total_len, locations_len, starts_len
     cdef unsigned long start_loci, break_loci
-    if len(locations) > 0 and locations[-1] == end:
+    if locations.shape[0] > 0 and locations[-1] == diploid.end:
         locations = locations[:-1]
     starts_i = 0
     locations_i = 0
     founder_i = 0
     total_i = 0
-    total_len = len(starts) + len(locations)
+    locations_len = locations.shape[0]
+    starts_len = starts.shape[0]
+    total_len = starts_len + locations_len
     while (starts_i + locations_i) < total_len:
-        # print("starts_i: {}\tlocations_i: {}".format(starts_i, locations_i))
-        if (len(locations) == locations_i or
-            (len(starts) != starts_i and
+        if (locations_len == locations_i or
+            (starts_len != starts_i and
              starts[starts_i] < locations[locations_i])):
             new_starts.append(starts[starts_i])
             new_founder.append(founder[starts_i])
             starts_i += 1
-        elif (len(starts) == starts_i or
+        elif (starts_len == starts_i or
               starts[starts_i] > locations[locations_i]):
             new_starts.append(locations[locations_i])
             new_founder.append(founder[starts_i - 1])
             locations_i += 1
-        else: # starts[starts_i] = locations[locations_i])
+        else: # starts[starts_i] == locations[locations_i])
             new_starts.append(starts[starts_i])
             new_founder.append(founder[starts_i])
             starts_i += 1
