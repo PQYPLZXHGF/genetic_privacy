@@ -60,14 +60,18 @@ def new_sequence_v2(diploid, locations):
     cdef list new_founder = []
     cdef unsigned long starts_i, locations_i, total_len
     cdef unsigned long start_loci, break_loci
+    if len(locations) > 0 and locations[-1] == end:
+        locations = locations[:-1]
     starts_i = 0
     locations_i = 0
     founder_i = 0
     total_i = 0
     total_len = len(starts) + len(locations)
     while (starts_i + locations_i) < total_len:
+        # print("starts_i: {}\tlocations_i: {}".format(starts_i, locations_i))
         if (len(locations) == locations_i or
-            starts[starts_i] < locations[locations_i]):
+            (len(starts) != starts_i and
+             starts[starts_i] < locations[locations_i])):
             new_starts.append(starts[starts_i])
             new_founder.append(founder[starts_i])
             starts_i += 1
@@ -77,7 +81,7 @@ def new_sequence_v2(diploid, locations):
             new_founder.append(founder[starts_i - 1])
             locations_i += 1
         else: # starts[starts_i] = locations[locations_i])
-            new_starts.append(start_loci)
+            new_starts.append(starts[starts_i])
             new_founder.append(founder[starts_i])
             starts_i += 1
             locations_i += 1
