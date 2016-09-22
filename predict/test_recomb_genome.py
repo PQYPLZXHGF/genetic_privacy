@@ -8,7 +8,7 @@ import numpy as np
 # import pyximport; pyximport.install()
 
 import recomb_genome
-from recomb_helper import new_sequence, new_sequence_v2
+from recomb_helper import new_sequence
 
 def ar(locs):
     return np.array(locs, dtype = np.uint32)
@@ -17,13 +17,14 @@ def break_sequence_wrapper(sequence, location):
     return recomb_genome._break_sequence(sequence, location,
                                          bisect_left(sequence, (location,)))
 
+
 class TestNewSequence(unittest.TestCase):
     def test_single_element_middle(self):
         diploid = MagicMock()
         diploid.starts = np.array([0], dtype = np.uint32)
         diploid.end = 10
         diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = new_sequence(diploid, [5])
+        ret_diploid = new_sequence(diploid, ar([5]))
         self.assertEqual(ret_diploid.starts, [0, 5])
         self.assertEqual(ret_diploid.founder, [1, 1])
 
@@ -33,7 +34,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0], dtype = np.uint32)
         diploid.end = 10
         diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = new_sequence(diploid, [0])
+        ret_diploid = new_sequence(diploid, ar([0]))
         self.assertEqual(ret_diploid.starts, [0])
         self.assertEqual(ret_diploid.founder, [1])
 
@@ -42,7 +43,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0], dtype = np.uint32)
         diploid.end = 10
         diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = new_sequence(diploid, [0, 4, 6, 8])
+        ret_diploid = new_sequence(diploid, ar([0, 4, 6, 8]))
         self.assertEqual(ret_diploid.starts, [0, 4, 6, 8])
         self.assertEqual(ret_diploid.founder, [1, 1, 1, 1])
 
@@ -51,7 +52,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0, 10], dtype = np.uint32)
         diploid.end = 20
         diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = new_sequence(diploid, [10])
+        ret_diploid = new_sequence(diploid, ar([10]))
         self.assertEqual(ret_diploid.starts, [0, 10])
         self.assertEqual(ret_diploid.founder, [1, 2])
 
@@ -60,7 +61,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0, 10], dtype = np.uint32)
         diploid.end = 20
         diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = new_sequence(diploid, [0])
+        ret_diploid = new_sequence(diploid, ar([0]))
         self.assertEqual(ret_diploid.starts, [0, 10])
         self.assertEqual(ret_diploid.founder, [1, 2])
 
@@ -69,7 +70,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0, 10], dtype = np.uint32)
         diploid.end = 20
         diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = new_sequence(diploid, [5])
+        ret_diploid = new_sequence(diploid, ar([5]))
         self.assertEqual(ret_diploid.starts, [0, 5, 10])
         self.assertEqual(ret_diploid.founder, [1, 1, 2])
 
@@ -78,7 +79,7 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0, 10], dtype = np.uint32)
         diploid.end = 20
         diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = new_sequence(diploid, [5, 15])
+        ret_diploid = new_sequence(diploid, ar([5, 15]))
         self.assertEqual(ret_diploid.starts, [0, 5, 10, 15])
         self.assertEqual(ret_diploid.founder, [1, 1, 2, 2])
 
@@ -87,82 +88,16 @@ class TestNewSequence(unittest.TestCase):
         diploid.starts = np.array([0], dtype = np.uint32)
         diploid.end = 10
         diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = new_sequence(diploid, [10])
+        ret_diploid = new_sequence(diploid, ar([10]))
         self.assertEqual(ret_diploid.starts, [0])
         self.assertEqual(ret_diploid.founder, [1])
 
-
-class TestNewSequenceV2(unittest.TestCase):
-    def test_single_element_middle(self):
+    def test_empty_locations(self):
         diploid = MagicMock()
         diploid.starts = np.array([0], dtype = np.uint32)
         diploid.end = 10
         diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = new_sequence_v2(diploid, ar([5]))
-        self.assertEqual(ret_diploid.starts, [0, 5])
-        self.assertEqual(ret_diploid.founder, [1, 1])
-
-
-    def test_single_element_start(self):
-        diploid = MagicMock()
-        diploid.starts = np.array([0], dtype = np.uint32)
-        diploid.end = 10
-        diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = new_sequence_v2(diploid, ar([0]))
-        self.assertEqual(ret_diploid.starts, [0])
-        self.assertEqual(ret_diploid.founder, [1])
-
-    def test_single_element_multiple(self):
-        diploid = MagicMock()
-        diploid.starts = np.array([0], dtype = np.uint32)
-        diploid.end = 10
-        diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = new_sequence_v2(diploid, ar([0, 4, 6, 8]))
-        self.assertEqual(ret_diploid.starts, [0, 4, 6, 8])
-        self.assertEqual(ret_diploid.founder, [1, 1, 1, 1])
-
-    def test_end_boundary_two_element(self):
-        diploid = MagicMock()
-        diploid.starts = np.array([0, 10], dtype = np.uint32)
-        diploid.end = 20
-        diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = new_sequence_v2(diploid, ar([10]))
-        self.assertEqual(ret_diploid.starts, [0, 10])
-        self.assertEqual(ret_diploid.founder, [1, 2])
-
-    def test_start_boundary_two_element(self):
-        diploid = MagicMock()
-        diploid.starts = np.array([0, 10], dtype = np.uint32)
-        diploid.end = 20
-        diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = new_sequence_v2(diploid, ar([0]))
-        self.assertEqual(ret_diploid.starts, [0, 10])
-        self.assertEqual(ret_diploid.founder, [1, 2])
-
-    def test_middle_boundary_two_element(self):
-        diploid = MagicMock()
-        diploid.starts = np.array([0, 10], dtype = np.uint32)
-        diploid.end = 20
-        diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = new_sequence_v2(diploid, ar([5]))
-        self.assertEqual(ret_diploid.starts, [0, 5, 10])
-        self.assertEqual(ret_diploid.founder, [1, 1, 2])
-
-    def test_middle_boundary_two_element_multiple_breaks(self):
-        diploid = MagicMock()
-        diploid.starts = np.array([0, 10], dtype = np.uint32)
-        diploid.end = 20
-        diploid.founder = np.array([1, 2], dtype = np.uint32)
-        ret_diploid = new_sequence_v2(diploid, ar([5, 15]))
-        self.assertEqual(ret_diploid.starts, [0, 5, 10, 15])
-        self.assertEqual(ret_diploid.founder, [1, 1, 2, 2])
-
-    def test_single_element_end(self):
-        diploid = MagicMock()
-        diploid.starts = np.array([0], dtype = np.uint32)
-        diploid.end = 10
-        diploid.founder = np.array([1], dtype = np.uint32)
-        ret_diploid = new_sequence_v2(diploid, ar([10]))
+        ret_diploid = new_sequence(diploid, ar([]))
         self.assertEqual(ret_diploid.starts, [0])
         self.assertEqual(ret_diploid.founder, [1])
 

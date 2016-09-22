@@ -21,9 +21,7 @@ DECODE_FILENAME = "decode_recombination_data.tab"
 CHROMOSOME_ORDER = list(range(1, 23))
 NUM_CHROMS = len(CHROMOSOME_ORDER)
 
-IndexMap = namedtuple("IndexMap", ["mother", "father"])
 RecombGenome = namedtuple("RecombGenome", ["mother", "father"])
-
 
 class RecombGenomeGenerator():
     def __init__(self, chromosome_lengths):
@@ -261,6 +259,8 @@ class Recombinator():
             offset = self._chrom_start_offset[chrom_name]
             global_locations.extend(location + offset
                                     for location in locations)
+        if len(global_locations) == 0:
+            return genome
             
         mother, father = _swap_at_locations(genome.mother,
                                             genome.father,
@@ -276,7 +276,9 @@ def _swap_at_locations(mother, father, locations):
     or list index.
     """
     locations = tuple(locations)
-    flat_locations = tuple(chain.from_iterable(locations))
+    flat_locations = np.fromiter(chain.from_iterable(locations),
+                                 count = len(locations) * 2,
+                                 dtype = np.uint32)
     new_mother = new_sequence(mother, flat_locations)
     new_father = new_sequence(father, flat_locations)
     for start, stop in locations:
