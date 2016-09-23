@@ -31,7 +31,8 @@ class BayesDeanonymize:
                                                        labeled_node.genome,
                                                        0)
                 cache[labeled_node] = shared
-            if (node, labeled_node) not in length_classifier:
+
+            if (node._id, labeled_node._id) not in length_classifier:
                 if shared == 0:
                     prob = INF_REPLACE
                 else:
