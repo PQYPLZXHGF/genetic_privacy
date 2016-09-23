@@ -45,12 +45,15 @@ class BayesDeanonymize:
                 batch_labeled_node_id.append(labeled_node_id)
                 batch_lengths.append(shared)
 
-        calc_prob = length_classifier.get_batch_probabilities(batch_lengths,
-                                                              batch_node_id,
-                                                              batch_labeled_node_id)
-        inf_or_nan = np.logical_or(np.isnan(calc_prob), np.isinf(calc_prob))
-        calc_prob[inf_or_nan] = INF_REPLACE
-        calc_prob[calc_prob == 0.0] = ZERO_REPLACE
+        if len(batch_lengths) > 0:
+            calc_prob = length_classifier.get_batch_probability(batch_lengths,
+                                                                batch_node_id,
+                                                                batch_labeled_node_id)
+            inf_or_nan = np.logical_or(np.isnan(calc_prob), np.isinf(calc_prob))
+            calc_prob[inf_or_nan] = INF_REPLACE
+            calc_prob[calc_prob == 0.0] = ZERO_REPLACE
+        else:
+            calc_prob = []
             
         return np.append(probabilities, calc_prob)
 

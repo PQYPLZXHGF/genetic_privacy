@@ -35,9 +35,10 @@ class LengthClassifier:
         return gamma.pdf(shared_length, a = shape, scale = scale)
 
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
-        shape_and_scale = zip(*(self._distributions[query_node, labeled_node]
-                                for query_node, labeled_node
-                                in zip(query_nodes, labeled_nodes)))
+        params = (self._distributions[query_node, labeled_node]
+                  for query_node, labeled_node
+                  in zip(query_nodes, labeled_nodes))
+        shape_and_scale = zip(*params)
         shapes, scales = list(shape_and_scale)
         return gamma.pdf(lengths, a = shapes, scale = scales)
 
