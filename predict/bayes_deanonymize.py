@@ -20,6 +20,9 @@ class BayesDeanonymize:
 
     def _compare_genome_node(self, node, genome, cache):
         probabilities = []
+        batch_node_id = []
+        batch_labeled_node_id = []
+        batch_lengths = []
         length_classifier = self._length_classifier
         id_map = self._population.id_mapping
         for labeled_node_id in length_classifier._labeled_nodes:
@@ -34,20 +37,22 @@ class BayesDeanonymize:
 
             if (node._id, labeled_node._id) not in length_classifier:
                 if shared == 0:
-                    prob = INF_REPLACE
+                    probabilities.append(INF_REPLACE)
                 else:
-                    prob = ZERO_REPLACE
+                    probabilities.append(ZERO_REPLACE)
             else:
-                prob = length_classifier.get_probability(shared, node._id,
-                                                         labeled_node_id)
-                if prob > 1 or isnan(prob):
-                    prob = INF_REPLACE
-                if prob == 0:
-                    prob = ZERO_REPLACE
-                
-            probabilities.append(prob)
+                batch_node_id.append(node._id)
+                batch_labeled_node_id.append(labeled_node_id)
+                batch_lengths.append(shared)
+
+        calc_prob = length_classifier.get_batch_probabilities(batch_lengths,
+                                                              batch_node_id,
+                                                              batch_labeled_node_id)
+        inf_or_nan = np.logical_or(np.isnan(calc_prob), np.isinf(calc_prob))
+        calc_prob[inf_or_nan] = INF_REPLACE
+        calc_prob[calc_prob == 0.0] = ZERO_REPLACE
             
-        return np.array(probabilities)
+        return np.append(probabilities, calc_prob)
 
         
     def identify(self, genome, actual_node):
