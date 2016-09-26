@@ -1,10 +1,14 @@
 from math import isnan
+from collections import namedtuple
 
 # import pyximport; pyximport.install()
 import numpy as np
 
 from classify_relationship import (LengthClassifier,
                                    shared_segment_length_genomes)
+
+ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
+                                                 "probabilities"])
 MINIMUM_LABELED_NODES = 5
 INF = float("inf")
 INF_REPLACE = 1.0
@@ -18,68 +22,29 @@ class BayesDeanonymize:
         else:
             self._length_classifier = classifier
 
-    def _compare_genome_node(self, node, genome, cache):
-        probabilities = []
-        batch_node_id = []
-        batch_labeled_node_id = []
-        batch_lengths = []
-        length_classifier = self._length_classifier
-        id_map = self._population.id_mapping
-        for labeled_node_id in length_classifier._labeled_nodes:
-            labeled_node = id_map[labeled_node_id]
-            if labeled_node in cache:
-                shared = cache[labeled_node]
-            else:
-                shared = shared_segment_length_genomes(genome,
-                                                       labeled_node.genome,
-                                                       0)
-                cache[labeled_node] = shared
-
-            if (node._id, labeled_node._id) not in length_classifier:
-                if shared == 0:
-                    probabilities.append(INF_REPLACE)
-                else:
-                    probabilities.append(ZERO_REPLACE)
-            else:
-                batch_node_id.append(node._id)
-                batch_labeled_node_id.append(labeled_node_id)
-                batch_lengths.append(shared)
-
-        if len(batch_lengths) > 0:
-            calc_prob = length_classifier.get_batch_probability(batch_lengths,
-                                                                batch_node_id,
-                                                                batch_labeled_node_id)
-            inf_or_nan = np.logical_or(np.isnan(calc_prob), np.isinf(calc_prob))
-            calc_prob[inf_or_nan] = INF_REPLACE
-            calc_prob[calc_prob == 0.0] = ZERO_REPLACE
-        else:
-            calc_prob = []
-            
-        return np.append(probabilities, calc_prob)
-
         
     def identify(self, genome, actual_node):
         node_probabilities = dict() # Probability that a node is a match
-        shared = dict()
+        shared_map = dict()
         id_map = self._population.id_mapping
+        length_classifier = self._length_classifier
         for labeled_node_id in length_classifier._labeled_nodes:
             labeled_node = id_map[labeled_node_id]
             s = shared_segment_length_genomes(genome, labeled_node.genome, 0)
-            shared[labeled_node] = s
+            shared_map[labeled_node] = s
 
-        node_data_i = dict()
+        node_data = dict()
         batch_node_id = []
         batch_labeled_node_id = []
         batch_lengths = []
         nodes = (member for member in self._population.members
                  if member.genome is not None)
-        # for node, labeled_node in zip(nodes, length_classifier._labeled_nodes):
         for node in nodes:
             node_probs = []
             node_start_i = len(batch_node_id)
             for labeled_node_id in length_classifier._labeled_nodes:
                 labeled_node = id_map[labeled_node_id]
-                shared = shared[labeled_node]
+                shared = shared_map[labeled_node]
                 if (node._id, labeled_node_id) not in length_classifier:
                     if shared == 0:
                         node_probs.append(INF_REPLACE)
@@ -89,16 +54,21 @@ class BayesDeanonymize:
                     batch_node_id.append(node._id)
                     batch_labeled_node_id.append(labeled_node_id)
                     batch_lengths.append(shared)
-
+            node_stop_i = len(batch_node_id)
+            node_data[node] = ProbabilityData(node_start_i, node_stop_i,
+                                              node_probs)
         calc_prob = length_classifier.get_batch_probability(batch_lengths,
                                                             batch_node_id,
                                                             batch_labeled_node_id)
         inf_or_nan = np.logical_or(np.isnan(calc_prob), np.isinf(calc_prob))
         calc_prob[inf_or_nan] = INF_REPLACE
         calc_prob[calc_prob == 0.0] = ZERO_REPLACE
-                    probabilities = self._compare_genome_node(member, genome,
-                                                      shared_genome_cache)
-            node_probabilities[member] = np.sum(np.log(probabilities))
+        node_probabilities = dict()
+        for node, prob_data in node_data.items():
+            node_calc = calc_prob[prob_data.start_i:prob_data.stop_i]
+            log_prob = (np.sum(np.log(node_calc)) +
+                        np.sum(np.log(prob_data.probabilities)))
+            node_probabilities[node] = log_prob
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
         return get_sibling_group(potential_node)
