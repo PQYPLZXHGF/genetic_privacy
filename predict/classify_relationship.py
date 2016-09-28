@@ -16,6 +16,7 @@ from population_statistics import ancestors_of
 from gamma import fit_gamma
 
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
+HurdleGammaParams = namedtuple("GammaParams", ["shape", "scale", "zero_prob"])
 
 class LengthClassifier:
     """
@@ -31,16 +32,29 @@ class LengthClassifier:
         Returns the probability that query_node and labeled_node have total
         shared segment length shared_length
         """
-        shape, scale =  self._distributions[query_node, labeled_node]
-        return gamma.pdf(shared_length, a = shape, scale = scale)
+        shape, scale, zero_prob =  self._distributions[query_node, labeled_node]
+        if shared_length == 0:
+            return zero_prob
+        return (1 - zero_prob) * gamma.pdf(shared_length, a = shape,
+                                           scale = scale)
 
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
+        zero_i = (lengths == 0)
+        nonzero_i = np.invert(zero_i)
         params = (self._distributions[query_node, labeled_node]
                   for query_node, labeled_node
                   in zip(query_nodes, labeled_nodes))
-        shape_and_scale = zip(*params)
-        shapes, scales = list(shape_and_scale)
-        return gamma.pdf(lengths, a = shapes, scale = scales)
+        shape_scale_zero = zip(*params)
+        shapes, scales, zero_prob = list(shape_and_scale)
+        zero_prob = np.array(zero_prob, np.dtype = np.float64)
+        ret = np.empty_like(lengths)
+        ret[zero_i] = zero_prob[zero_i]
+        gamma_probs = gamma.pdf(lengths[nonzero_i],
+                                a = shapes[nonzero_i],
+                                scale = scales[nonzero_i])
+        gamma_probs = gamma_probs * (1 - zero_prob[nonzero_i])
+        ret[nonzero_i] = gamma_probs
+        return ret
 
     def __contains__(self, item):
         return item in self._distributions
@@ -170,8 +184,11 @@ def distributions_from_directory(directory, id_mapping):
                     continue
                 lengths[unlabeled].append(shared_float)
         for unlabeled, lengths in lengths.items():
-            shape, scale = fit_gamma(np.array(lengths, dtype = np.float64))
-            params = GammaParams(shape, scale)
+            shape, scale, zero_prob = fit_gamma(np.array(lengths,
+                                                         dtype = np.float64))
+            if shape is None:
+                continue
+            params = HurdleGammaParams(shape, scale, zero_prob)
             distributions[unlabeled, labeled] = params
     return distributions
     
