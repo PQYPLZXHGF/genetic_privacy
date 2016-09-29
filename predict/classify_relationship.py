@@ -13,10 +13,10 @@ import numpy as np
 from common_segments import common_segment_lengths
 from population_genomes import generate_genomes
 from population_statistics import ancestors_of
-from gamma import fit_gamma
+from gamma import fit_hurdle_gamma
 
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
-HurdleGammaParams = namedtuple("GammaParams", ["shape", "scale", "zero_prob"])
+HurdleGammaParams = namedtuple("HurdleGammaParams", ["shape", "scale", "zero_prob"])
 
 class LengthClassifier:
     """
@@ -39,14 +39,16 @@ class LengthClassifier:
                                            scale = scale)
 
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
+        lengths = np.array(lengths, dtype = np.uint32)
         zero_i = (lengths == 0)
         nonzero_i = np.invert(zero_i)
         params = (self._distributions[query_node, labeled_node]
                   for query_node, labeled_node
                   in zip(query_nodes, labeled_nodes))
-        shape_scale_zero = zip(*params)
-        shapes, scales, zero_prob = list(shape_and_scale)
-        zero_prob = np.array(zero_prob, np.dtype = np.float64)
+        shape_scale_zero = list(zip(*params))
+        shapes = np.array(shape_scale_zero[0], dtype = np.float64)
+        scales = np.array(shape_scale_zero[1], dtype = np.float64)
+        zero_prob = np.array(shape_scale_zero[2], dtype = np.float64)
         ret = np.empty_like(lengths)
         ret[zero_i] = zero_prob[zero_i]
         gamma_probs = gamma.pdf(lengths[nonzero_i],
@@ -184,8 +186,8 @@ def distributions_from_directory(directory, id_mapping):
                     continue
                 lengths[unlabeled].append(shared_float)
         for unlabeled, lengths in lengths.items():
-            shape, scale, zero_prob = fit_gamma(np.array(lengths,
-                                                         dtype = np.float64))
+            shape, scale, zero_prob = fit_hurdle_gamma(np.array(lengths,
+                                                                dtype = np.uint32))
             if shape is None:
                 continue
             params = HurdleGammaParams(shape, scale, zero_prob)

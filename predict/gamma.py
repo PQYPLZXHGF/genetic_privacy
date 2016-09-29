@@ -3,7 +3,7 @@ from math import log # Python's built in log is faster for non vector operations
 import numpy as np
 from scipy.special import digamma, polygamma
 
-SUFFICIENT_DATA_POINTS = 10
+SUFFICIENT_DATA_POINTS = 5
 
 
 def fit_gamma(data):
@@ -35,12 +35,13 @@ def fit_gamma(data):
 
 def fit_hurdle_gamma(data):
     nonzero = data != 0
-    num_zero = len(data) - len(nonzero)
-    if len(nonzero) <= SUFFICIENT_DATA_POINTS:
+    num_nonzero = np.sum(nonzero)
+    num_zero = len(data) - num_nonzero
+    if num_nonzero <= SUFFICIENT_DATA_POINTS:
         # Handle this case better
         (None, None, None)
     prob_zero = num_zero / len(data)
-    data = data[nonzero]
+    data = np.array(data[nonzero], dtype = np.float64)
     # data += 1e-8 # Add small number to avoid 0s in the data causing issues.
     # Add small amount of noise to avoid 0s in the data causing issues
     # or all values being identical causing issues.

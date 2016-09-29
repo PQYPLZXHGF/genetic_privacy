@@ -67,6 +67,9 @@ del labeled_nodes
 del genome_generator
 del population
 
+# import pdb
+# pdb.set_trace()
+
 print("Pickling classifier")
 with open(args.output_pickle, "wb") as pickle_file:
     dump(classifier, pickle_file)
