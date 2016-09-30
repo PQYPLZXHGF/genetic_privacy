@@ -5,14 +5,14 @@ from collections import namedtuple
 import numpy as np
 
 from classify_relationship import (LengthClassifier,
-                                   shared_segment_length_genomes)
+                                   shared_segment_length_genomes,
+                                   ZERO_REPLACE)
 
 ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
                                                  "probabilities"])
 MINIMUM_LABELED_NODES = 5
 INF = float("inf")
 INF_REPLACE = 1.0
-ZERO_REPLACE = 1e-20
 
 class BayesDeanonymize:
     def __init__(self, population, classifier = None):
@@ -65,6 +65,9 @@ class BayesDeanonymize:
         calc_prob[calc_prob == 0.0] = ZERO_REPLACE
         node_probabilities = dict()
         for node, prob_data in node_data.items():
+            if node == actual_node:
+                import pdb
+                pdb.set_trace()
             node_calc = calc_prob[prob_data.start_i:prob_data.stop_i]
             log_prob = (np.sum(np.log(node_calc)) +
                         np.sum(np.log(prob_data.probabilities)))

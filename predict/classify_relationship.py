@@ -15,6 +15,8 @@ from population_genomes import generate_genomes
 from population_statistics import ancestors_of
 from gamma import fit_hurdle_gamma
 
+ZERO_REPLACE = 1e-20
+
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
 HurdleGammaParams = namedtuple("HurdleGammaParams", ["shape", "scale", "zero_prob"])
 
@@ -49,12 +51,17 @@ class LengthClassifier:
         shapes = np.array(shape_scale_zero[0], dtype = np.float64)
         scales = np.array(shape_scale_zero[1], dtype = np.float64)
         zero_prob = np.array(shape_scale_zero[2], dtype = np.float64)
-        ret = np.empty_like(lengths)
+        # import pdb
+        # pdb.set_trace()
+        ret = np.empty_like(lengths, dtype = np.float64)
         ret[zero_i] = zero_prob[zero_i]
         gamma_probs = gamma.pdf(lengths[nonzero_i],
                                 a = shapes[nonzero_i],
                                 scale = scales[nonzero_i])
-        gamma_probs = gamma_probs * (1 - zero_prob[nonzero_i])
+
+        gamma_probs[gamma_probs == 0.0] = ZERO_REPLACE
+
+        gamma_probs = np.exp(np.log(gamma_probs) + np.log(1 - zero_prob[nonzero_i]))
         ret[nonzero_i] = gamma_probs
         return ret
 
