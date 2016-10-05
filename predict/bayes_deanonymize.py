@@ -14,6 +14,32 @@ MINIMUM_LABELED_NODES = 5
 INF = float("inf")
 INF_REPLACE = 1.0
 
+def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map):
+    for labeled_node_id in length_classifier._labeled_nodes:
+        labeled_node = id_map[labeled_node_id]
+        shared = shared_map[labeled_node]
+        if ((node_a._id, labeled_node_id) not in length_classifier and
+            (node_b._id, labeled_node_id) not in length_classifier):
+            continue
+        if (node_a._id, labeled_node_id) in length_classifier:
+            p_a = length_classifier.get_probability(shared, node_a._id,
+                                                  labeled_node_id)
+        else:
+            if shared == 0:
+                p_a = INF_REPLACE
+            else:
+                p_a = ZERO_REPLACE
+        if (node_b._id, labeled_node_id) in length_classifier:
+            p_b = length_classifier.get_probability(shared, node_b._id,
+                                                    labeled_node_id)
+        else:
+            if shared == 0:
+                p_b = INF_REPLACE
+            else:
+                p_b = ZERO_REPLACE
+        print("IBD: {:12} p_guessed: {:.5e} p_actual: {:.5e}".format(shared, p_a,
+                                                              p_b))
+
 class BayesDeanonymize:
     def __init__(self, population, classifier = None):
         self._population = population
@@ -39,6 +65,7 @@ class BayesDeanonymize:
         batch_lengths = []
         nodes = (member for member in self._population.members
                  if member.genome is not None)
+        low_data_nodes = set()
         for node in nodes:
             node_probs = []
             node_start_i = len(batch_node_id)
@@ -50,11 +77,14 @@ class BayesDeanonymize:
                         node_probs.append(INF_REPLACE)
                     else:
                         node_probs.append(ZERO_REPLACE)
-                else:
+                else:                    
                     batch_node_id.append(node._id)
                     batch_labeled_node_id.append(labeled_node_id)
                     batch_lengths.append(shared)
+
             node_stop_i = len(batch_node_id)
+            if (node_stop_i - node_start_i) < 12:
+                low_data_nodes.add(node)
             node_data[node] = ProbabilityData(node_start_i, node_stop_i,
                                               node_probs)
         calc_prob = length_classifier.get_batch_probability(batch_lengths,
@@ -65,7 +95,7 @@ class BayesDeanonymize:
         calc_prob[calc_prob == 0.0] = ZERO_REPLACE
         node_probabilities = dict()
         for node, prob_data in node_data.items():
-            if node == actual_node:
+            if node == actual_node or node in low_data_nodes:
                 pass
                 # import pdb
                 # pdb.set_trace()
@@ -75,6 +105,8 @@ class BayesDeanonymize:
             node_probabilities[node] = log_prob
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
+        # calc_for_pair(potential_node, actual_node, length_classifier,
+        #               shared_map, id_map)
         return get_sibling_group(potential_node)
 
 def get_sibling_group(node):

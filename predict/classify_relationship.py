@@ -15,7 +15,9 @@ from population_genomes import generate_genomes
 from population_statistics import ancestors_of
 from gamma import fit_hurdle_gamma
 
-ZERO_REPLACE = 1e-20
+# ZERO_REPLACE = 1e-20
+ZERO_REPLACE = 0.0005
+GAMMA_SCALE = 3234830000 * 10
 
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
 HurdleGammaParams = namedtuple("HurdleGammaParams", ["shape", "scale", "zero_prob"])
@@ -38,7 +40,7 @@ class LengthClassifier:
         if shared_length == 0:
             return zero_prob
         return (1 - zero_prob) * gamma.pdf(shared_length, a = shape,
-                                           scale = scale)
+                                           scale = scale) * GAMMA_SCALE
 
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
         lengths = np.array(lengths, dtype = np.uint32)
@@ -54,9 +56,9 @@ class LengthClassifier:
         ret = np.empty_like(lengths, dtype = np.float64)
         ret[zero_i] = 1 - zero_prob[zero_i]
         # ret[zero_i] = 1.0
-        gamma_probs = gamma.cdf(lengths[nonzero_i],
+        gamma_probs = gamma.pdf(lengths[nonzero_i],
                                 a = shapes[nonzero_i],
-                                scale = scales[nonzero_i])
+                                scale = scales[nonzero_i]) * GAMMA_SCALE
 
         # gamma_probs = gamma_probs * (1 - gamma_probs)
         # gamma_probs = np.ones_like(lengths, dtype = np.float64)
@@ -67,7 +69,7 @@ class LengthClassifier:
         if np.any(np.isnan(gamma_probs)):
             import pdb
             pdb.set_trace()
-        gamma_probs = (1 - gamma_probs - zero_prob[nonzero_i])
+        # gamma_probs = (1 - gamma_probs - zero_prob[nonzero_i])
         ret[nonzero_i] = gamma_probs
         ret[ret <= 0.0] = ZERO_REPLACE
         ret[ret > 1.0] = 1.0
