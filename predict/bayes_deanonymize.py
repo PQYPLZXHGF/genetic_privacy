@@ -105,8 +105,8 @@ class BayesDeanonymize:
             node_probabilities[node] = log_prob
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
-        calc_for_pair(potential_node, actual_node, length_classifier,
-                      shared_map, id_map)
+        # calc_for_pair(potential_node, actual_node, length_classifier,
+        #               shared_map, id_map)
         return get_sibling_group(potential_node)
 
 def get_sibling_group(node):
