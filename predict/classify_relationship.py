@@ -38,12 +38,12 @@ class LengthClassifier:
         """
         shape, scale, zero_prob =  self._distributions[query_node, labeled_node]
         if shared_length == 0:
-            return 1 - zero_prob
+            # return 1 - zero_prob
+            return zero_prob
         # return (1 - zero_prob) * gamma.pdf(shared_length, a = shape,
         #                                    scale = scale) * GAMMA_SCALE
-        ret = (1 - zero_prob) * gamma.cdf(shared_length, a = shape,
-                                          scale = scale)
-        ret = 1 - zero_prob - ret
+        return 1 - gamma.cdf(shared_length, a = shape,
+                             scale = scale)
 
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
         lengths = np.array(lengths, dtype = np.uint32)
@@ -68,11 +68,11 @@ class LengthClassifier:
 
         gamma_probs[gamma_probs == 0.0] = ZERO_REPLACE
 
-        gamma_probs = np.exp(np.log(gamma_probs) + np.log(1 - zero_prob[nonzero_i]))
+        # gamma_probs = np.exp(np.log(gamma_probs) + np.log(1 - zero_prob[nonzero_i]))
         if np.any(np.isnan(gamma_probs)):
             import pdb
             pdb.set_trace()
-        gamma_probs = (1 - gamma_probs - zero_prob[nonzero_i])
+        gamma_probs = (1 - gamma_probs)
         ret[nonzero_i] = gamma_probs
         # ret[ret <= 0.0] = ZERO_REPLACE
         # ret[ret > 1.0] = 1.0
