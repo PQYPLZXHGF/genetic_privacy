@@ -16,7 +16,7 @@ from population_statistics import ancestors_of
 from gamma import fit_hurdle_gamma
 
 # ZERO_REPLACE = 1e-20
-ZERO_REPLACE = 0.0005
+ZERO_REPLACE = 0.05
 GAMMA_SCALE = 3234830000 * 2
 
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
