@@ -17,7 +17,7 @@ from gamma import fit_hurdle_gamma
 
 # ZERO_REPLACE = 1e-20
 ZERO_REPLACE = 0.0005
-GAMMA_SCALE = 3234830000 * 10
+GAMMA_SCALE = 3234830000 * 2
 
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
 HurdleGammaParams = namedtuple("HurdleGammaParams", ["shape", "scale", "zero_prob"])
@@ -38,9 +38,12 @@ class LengthClassifier:
         """
         shape, scale, zero_prob =  self._distributions[query_node, labeled_node]
         if shared_length == 0:
-            return zero_prob
-        return (1 - zero_prob) * gamma.pdf(shared_length, a = shape,
-                                           scale = scale) * GAMMA_SCALE
+            return 1 - zero_prob
+        # return (1 - zero_prob) * gamma.pdf(shared_length, a = shape,
+        #                                    scale = scale) * GAMMA_SCALE
+        ret = (1 - zero_prob) * gamma.cdf(shared_length, a = shape,
+                                          scale = scale)
+        ret = 1 - zero_prob - ret
 
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
         lengths = np.array(lengths, dtype = np.uint32)
@@ -54,13 +57,13 @@ class LengthClassifier:
         scales = np.array(shape_scale_zero[1], dtype = np.float64)
         zero_prob = np.array(shape_scale_zero[2], dtype = np.float64)
         ret = np.empty_like(lengths, dtype = np.float64)
-        ret[zero_i] = 1 - zero_prob[zero_i]
+        # ret[zero_i] = 1 - zero_prob[zero_i]
+        ret[zero_i] = zero_prob[zero_i]
         # ret[zero_i] = 1.0
-        gamma_probs = gamma.pdf(lengths[nonzero_i],
+        gamma_probs = gamma.cdf(lengths[nonzero_i],
                                 a = shapes[nonzero_i],
-                                scale = scales[nonzero_i]) * GAMMA_SCALE
+                                scale = scales[nonzero_i])# * GAMMA_SCALE
 
-        # gamma_probs = gamma_probs * (1 - gamma_probs)
         # gamma_probs = np.ones_like(lengths, dtype = np.float64)
 
         gamma_probs[gamma_probs == 0.0] = ZERO_REPLACE
@@ -69,10 +72,10 @@ class LengthClassifier:
         if np.any(np.isnan(gamma_probs)):
             import pdb
             pdb.set_trace()
-        # gamma_probs = (1 - gamma_probs - zero_prob[nonzero_i])
+        gamma_probs = (1 - gamma_probs - zero_prob[nonzero_i])
         ret[nonzero_i] = gamma_probs
-        ret[ret <= 0.0] = ZERO_REPLACE
-        ret[ret > 1.0] = 1.0
+        # ret[ret <= 0.0] = ZERO_REPLACE
+        # ret[ret > 1.0] = 1.0
         return ret
 
     def __contains__(self, item):
