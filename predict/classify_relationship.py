@@ -51,18 +51,37 @@ class LengthClassifier:
         shapes = np.array(shape_scale_zero[0], dtype = np.float64)
         scales = np.array(shape_scale_zero[1], dtype = np.float64)
         zero_prob = np.array(shape_scale_zero[2], dtype = np.float64)
-        # import pdb
-        # pdb.set_trace()
         ret = np.empty_like(lengths, dtype = np.float64)
-        ret[zero_i] = zero_prob[zero_i]
-        gamma_probs = gamma.pdf(lengths[nonzero_i],
+        ret[zero_i] = 1 - zero_prob[zero_i]
+        # ret[zero_i] = 1.0
+        # gamma_probs = gamma.cdf(lengths[nonzero_i],
+        #                         a = shapes[nonzero_i],
+        #                         scale = scales[nonzero_i])
+        gamma_probs_1 = gamma.cdf(lengths[nonzero_i] + 10000,
                                 a = shapes[nonzero_i],
                                 scale = scales[nonzero_i])
+        gamma_probs_2 = gamma.cdf(np.maximum(lengths[nonzero_i] - 10000,
+                                             np.zeros(np.sum(nonzero_i),
+                                                      dtype = np.uint32)),
+                                  a = shapes[nonzero_i],
+                                  scale = scales[nonzero_i])
+        gamma_probs = gamma_probs_1 - gamma_probs_2
+        close_i = np.where(1 <= lengths[nonzero_i] <= 10000)
+        gamma_probs[close_i] += zero_prob[nonzero_i][close_i]
+
+        # gamma_probs = gamma_probs * (1 - gamma_probs)
+        # gamma_probs = np.ones_like(lengths, dtype = np.float64)
 
         gamma_probs[gamma_probs == 0.0] = ZERO_REPLACE
 
         gamma_probs = np.exp(np.log(gamma_probs) + np.log(1 - zero_prob[nonzero_i]))
+        if np.any(np.isnan(gamma_probs)):
+            import pdb
+            pdb.set_trace()
+        # gamma_probs = (1 - gamma_probs - zero_prob[nonzero_i])
         ret[nonzero_i] = gamma_probs
+        ret[ret <= 0.0] = ZERO_REPLACE
+        ret[ret > 1.0] = 1.0
         return ret
 
     def __contains__(self, item):

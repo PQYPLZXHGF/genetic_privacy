@@ -66,8 +66,9 @@ class BayesDeanonymize:
         node_probabilities = dict()
         for node, prob_data in node_data.items():
             if node == actual_node:
-                import pdb
-                pdb.set_trace()
+                pass
+                # import pdb
+                # pdb.set_trace()
             node_calc = calc_prob[prob_data.start_i:prob_data.stop_i]
             log_prob = (np.sum(np.log(node_calc)) +
                         np.sum(np.log(prob_data.probabilities)))
