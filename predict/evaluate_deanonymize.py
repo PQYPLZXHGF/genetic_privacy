@@ -24,6 +24,8 @@ print("Loading classifier")
 with open(args.classifier, "rb") as pickle_file:
     classifier = load(pickle_file)
 
+# classifier._labeled_nodes = sample(classifier._labeled_nodes, 100)
+
 last_generation = population.generations[-1].members
 
 bayes = BayesDeanonymize(population, classifier)

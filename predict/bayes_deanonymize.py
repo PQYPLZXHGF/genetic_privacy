@@ -14,6 +14,8 @@ MINIMUM_LABELED_NODES = 5
 INF = float("inf")
 INF_REPLACE = 1.0
 
+import pdb
+
 def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map):
     for labeled_node_id in length_classifier._labeled_nodes:
         labeled_node = id_map[labeled_node_id]
@@ -38,7 +40,7 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map):
             else:
                 p_b = ZERO_REPLACE
         print("IBD: {:12} p_guessed: {:.5e} p_actual: {:.5e}".format(shared, p_a,
-                                                              p_b))
+                                                                         p_b))
 
 class BayesDeanonymize:
     def __init__(self, population, classifier = None):
@@ -105,8 +107,7 @@ class BayesDeanonymize:
             node_probabilities[node] = log_prob
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
-        calc_for_pair(potential_node, actual_node, length_classifier,
-                      shared_map, id_map)
+        # calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map)
         return get_sibling_group(potential_node)
 
 def get_sibling_group(node):
