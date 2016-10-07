@@ -26,21 +26,39 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map):
         if (node_a._id, labeled_node_id) in length_classifier:
             p_a = length_classifier.get_probability(shared, node_a._id,
                                                   labeled_node_id)
+            shape, scale, a_zero_prob =  length_classifier._distributions[node_a._id, labeled_node_id]
+            a_mean = shape * scale
         else:
             if shared == 0:
                 p_a = INF_REPLACE
             else:
                 p_a = ZERO_REPLACE
+            a_mean = float("NaN")
+            a_zero_prob = float("NaN")
         if (node_b._id, labeled_node_id) in length_classifier:
             p_b = length_classifier.get_probability(shared, node_b._id,
                                                     labeled_node_id)
+            shape, scale, b_zero_prob =  length_classifier._distributions[node_b._id, labeled_node_id]
+            b_mean = shape * scale
         else:
             if shared == 0:
                 p_b = INF_REPLACE
             else:
                 p_b = ZERO_REPLACE
-        print("IBD: {:12} p_guessed: {:.5e} p_actual: {:.5e}".format(shared, p_a,
-                                                                         p_b))
+            b_mean = float("NaN")
+            b_zero_prob = float("NaN")
+        # print("IBD: {:12} p_guessed: {:.5e}, p_actual: {:.5e}".format(shared, p_a,
+        #                                                                  p_b))
+        print("IBD: {:.5e}".format(shared))
+        print("p_guessed: {:.5e} p_actual: {:.5e}".format(p_a, p_b))
+        print("mean of guessed: {:.5e} mean of actual: {:.5e}".format(a_mean, b_mean))
+        print("Zero prob of guessed: {:.5e} Zero prob of actual: {:.5e}".format(a_zero_prob, b_zero_prob))
+        p_a = None
+        p_b = None
+        a_mean = None
+        b_mean = None
+        a_zero_prob = None
+        b_zero_prob = None
 
 class BayesDeanonymize:
     def __init__(self, population, classifier = None):
@@ -107,7 +125,12 @@ class BayesDeanonymize:
             node_probabilities[node] = log_prob
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
+        
         # calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map)
+        from random import choice
+        random_node = choice(list(member for member in self._population.members
+                                  if member.genome is not None))
+        calc_for_pair(random_node, actual_node, length_classifier, shared_map, id_map)
         return get_sibling_group(potential_node)
 
 def get_sibling_group(node):

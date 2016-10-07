@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from random import sample
+from random import sample, seed
 from pickle import load
 from argparse import ArgumentParser
 
@@ -34,6 +34,7 @@ id_mapping = population.id_mapping
 labeled_nodes = set(id_mapping[node_id] for node_id
                     in classifier._labeled_nodes)
 
+seed(98104)
 unlabeled = sample(list(set(last_generation) - labeled_nodes),
                    args.num_node)
 # unlabeled = [choice(list(set(last_generation) - labeled_nodes))]

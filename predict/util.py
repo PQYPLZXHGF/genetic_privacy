@@ -1,6 +1,14 @@
 from itertools import combinations, product, chain
 from random import sample
+from collections import deque
 
+def recent_common_ancestor(node_a, node_b):
+    a_ancestors = set()
+    b_ancestors = set()
+    a_nodes = set([node_a])
+    b_nodes = set([node_b])
+    while len(a_nodes) > 0 and len(b_nodes) > 0:
+        pass
 
 def get_sample_of_cousins(population, distance, percent_ancestors = 0.1,
                           percent_descendants = 0.1):
