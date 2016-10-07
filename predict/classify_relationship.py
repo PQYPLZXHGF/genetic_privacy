@@ -67,9 +67,9 @@ class LengthClassifier:
         # ret[zero_i] = 1 - zero_prob[zero_i]
         ret[zero_i] = zero_prob[zero_i]
         # ret[zero_i] = 1.0
-        gamma_probs = gamma.cdf(lengths[nonzero_i],
-                                a = shapes[nonzero_i],
-                                scale = scales[nonzero_i])# * GAMMA_SCALE
+        gamma_probs = 1 - gamma.cdf(lengths[nonzero_i],
+                                    a = shapes[nonzero_i],
+                                    scale = scales[nonzero_i])
 
         # gamma_probs = np.ones_like(lengths, dtype = np.float64)
 
