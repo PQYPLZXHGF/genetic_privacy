@@ -26,7 +26,8 @@ with open(args.classifier, "rb") as pickle_file:
 
 # classifier._labeled_nodes = sample(classifier._labeled_nodes, 100)
 
-last_generation = population.generations[-1].members
+nodes = set(member for member in population.members
+             if member.genome is not None)
 
 bayes = BayesDeanonymize(population, classifier)
 
@@ -35,15 +36,18 @@ labeled_nodes = set(id_mapping[node_id] for node_id
                     in classifier._labeled_nodes)
 
 seed(98104)
-unlabeled = sample(list(set(last_generation) - labeled_nodes),
+unlabeled = sample(list(nodes - labeled_nodes),
                    args.num_node)
 # unlabeled = [choice(list(set(last_generation) - labeled_nodes))]
+# correct_nodes = [id_mapping[x] for x in [93437, 92902]]
+# incorrect_nodes = [id_mapping[x] for x in [92635, 94587]]
+# unlabeled = sample(incorrect_nodes, args.num_node)
 correct = 0
 incorrect = 0
 print("Attempting to identify {} random nodes.".format(len(unlabeled)))
 i = 0
 for node in unlabeled:
-    print(i)
+    print("Iteration: {}".format(i + 1))
     identified = bayes.identify(node.genome, node)
     # pdb.set_trace()
     if node in identified:
