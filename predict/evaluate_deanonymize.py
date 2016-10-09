@@ -45,9 +45,8 @@ unlabeled = sample(list(nodes - labeled_nodes),
 correct = 0
 incorrect = 0
 print("Attempting to identify {} random nodes.".format(len(unlabeled)))
-i = 0
-for node in unlabeled:
-    print("Iteration: {}".format(i + 1))
+for i, node in enumerate(unlabeled):
+    print("Iteration: {}, actual node ID: {}".format(i + 1, node._id))
     identified = bayes.identify(node.genome, node)
     # pdb.set_trace()
     if node in identified:
@@ -56,7 +55,6 @@ for node in unlabeled:
     else:
         print("incorrect")
         incorrect += 1
-    i += 1
 
 
 print("{} correct, {} incorrect, {} total.".format(correct, incorrect,
