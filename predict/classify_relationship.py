@@ -47,11 +47,11 @@ class LengthClassifier:
         #                      scale = scale)
         ret = gamma.cdf(shared_length, a = shape,
                         scale = scale)
-        if ret <= 0.0:
-            return ZERO_REPLACE
         if ret > 0.5:
             ret = 1 - ret
         ret * 2 * (1 - zero_prob)
+        if ret <= 0.0:
+            return ZERO_REPLACE
         return ret
         
 
