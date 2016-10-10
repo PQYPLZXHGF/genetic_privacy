@@ -21,9 +21,6 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map):
     for labeled_node_id in length_classifier._labeled_nodes:
         labeled_node = id_map[labeled_node_id]
         shared = shared_map[labeled_node]
-        if ((node_a._id, labeled_node_id) not in length_classifier and
-            (node_b._id, labeled_node_id) not in length_classifier):
-            continue
         if (node_a._id, labeled_node_id) in length_classifier:
             p_a = length_classifier.get_probability(shared, node_a._id,
                                                   labeled_node_id)
@@ -129,7 +126,8 @@ class BayesDeanonymize:
 
         common_ancestor = recent_common_ancestor(potential_node, actual_node)
         print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor))
-        # calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map)
+        calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map)
+        print("Log probability for guessed {}, log probability for actual {}".format(node_probabililties[potential_node], node_probabilities[actual_node]))
         # from random import choice
         # random_node = choice(list(member for member in self._population.members
         #                           if member.genome is not None))
