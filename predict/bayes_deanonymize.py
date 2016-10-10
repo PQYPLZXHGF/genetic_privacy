@@ -21,9 +21,12 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map):
     for labeled_node_id in length_classifier._labeled_nodes:
         labeled_node = id_map[labeled_node_id]
         shared = shared_map[labeled_node]
+        if labeled_node_id == 90667:
+            pass
+            # pdb.set_trace()
         if (node_a._id, labeled_node_id) in length_classifier:
             p_a = length_classifier.get_probability(shared, node_a._id,
-                                                  labeled_node_id)
+                                                    labeled_node_id)
             shape, scale, a_zero_prob =  length_classifier._distributions[node_a._id, labeled_node_id]
             a_mean = shape * scale
         else:
@@ -45,12 +48,11 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map):
                 p_b = ZERO_REPLACE
             b_mean = float("NaN")
             b_zero_prob = float("NaN")
-        # print("IBD: {:12} p_guessed: {:.5e}, p_actual: {:.5e}".format(shared, p_a,
-        #                                                                  p_b))
+        assert p_a != 0.0 and p_b != 0.0
         print("IBD: {:.5e}".format(shared))
         print("p_guessed: {:.5e} p_actual: {:.5e}".format(p_a, p_b))
-        print("mean of guessed: {:.5e} mean of actual: {:.5e}".format(a_mean, b_mean))
-        print("Zero prob of guessed: {:.5e} Zero prob of actual: {:.5e}".format(a_zero_prob, b_zero_prob))
+        # print("mean of guessed: {:.5e} mean of actual: {:.5e}".format(a_mean, b_mean))
+        # print("Zero prob of guessed: {:.5e} Zero prob of actual: {:.5e}".format(a_zero_prob, b_zero_prob))
         p_a = None
         p_b = None
         a_mean = None
@@ -83,7 +85,6 @@ class BayesDeanonymize:
         batch_lengths = []
         nodes = (member for member in self._population.members
                  if member.genome is not None)
-        low_data_nodes = set()
         for node in nodes:
             node_probs = []
             node_start_i = len(batch_node_id)
@@ -101,19 +102,14 @@ class BayesDeanonymize:
                     batch_lengths.append(shared)
 
             node_stop_i = len(batch_node_id)
-            if (node_stop_i - node_start_i) < 12:
-                low_data_nodes.add(node)
             node_data[node] = ProbabilityData(node_start_i, node_stop_i,
                                               node_probs)
         calc_prob = length_classifier.get_batch_probability(batch_lengths,
                                                             batch_node_id,
                                                             batch_labeled_node_id)
-        inf_or_nan = np.logical_or(np.isnan(calc_prob), np.isinf(calc_prob))
-        calc_prob[inf_or_nan] = INF_REPLACE
-        calc_prob[calc_prob == 0.0] = ZERO_REPLACE
         node_probabilities = dict()
         for node, prob_data in node_data.items():
-            if node == actual_node or node in low_data_nodes:
+            if node == actual_node:
                 pass
                 # import pdb
                 # pdb.set_trace()
@@ -127,7 +123,7 @@ class BayesDeanonymize:
         common_ancestor = recent_common_ancestor(potential_node, actual_node)
         print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor))
         calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map)
-        print("Log probability for guessed {}, log probability for actual {}".format(node_probabililties[potential_node], node_probabilities[actual_node]))
+        print("Log probability for guessed {}, log probability for actual {}".format(node_probabilities[potential_node], node_probabilities[actual_node]))
         # from random import choice
         # random_node = choice(list(member for member in self._population.members
         #                           if member.genome is not None))

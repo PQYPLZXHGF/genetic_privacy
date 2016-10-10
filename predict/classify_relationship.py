@@ -5,6 +5,7 @@ from os.path import join, exists
 from shutil import rmtree
 from warnings import warn
 from pickle import dump, load
+import pdb
 
 from scipy.stats import gamma
 import numpy as np
@@ -46,6 +47,8 @@ class LengthClassifier:
         #                      scale = scale)
         ret = gamma.cdf(shared_length, a = shape,
                         scale = scale)
+        if ret <= 0.0:
+            return ZERO_REPLACE
         if ret > 0.5:
             ret = 1 - ret
         ret * 2 * (1 - zero_prob)
@@ -67,10 +70,9 @@ class LengthClassifier:
         # ret[zero_i] = 1 - zero_prob[zero_i]
         ret[zero_i] = zero_prob[zero_i]
         # ret[zero_i] = 1.0
-        gamma_probs = 1 - gamma.cdf(lengths[nonzero_i],
-                                    a = shapes[nonzero_i],
-                                    scale = scales[nonzero_i])
-
+        gamma_probs = gamma.cdf(lengths[nonzero_i],
+                                a = shapes[nonzero_i],
+                                scale = scales[nonzero_i])
         # gamma_probs = np.ones_like(lengths, dtype = np.float64)
 
         # gamma_probs[gamma_probs == 0.0] = ZERO_REPLACE
@@ -81,7 +83,7 @@ class LengthClassifier:
         gamma_probs[greater_i] = 1 - gamma_probs[greater_i]
         gamma_probs = gamma_probs * 2 * (1 - zero_prob[nonzero_i])
         ret[nonzero_i] = gamma_probs
-        # ret[ret <= 0.0] = ZERO_REPLACE
+        ret[ret <= 0.0] = ZERO_REPLACE
         # ret[ret > 1.0] = 1.0
         return ret
 
