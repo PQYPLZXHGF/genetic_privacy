@@ -7,8 +7,19 @@ def recent_common_ancestor(node_a, node_b):
     b_ancestors = set()
     a_nodes = set([node_a])
     b_nodes = set([node_b])
+    generation = 0
     while len(a_nodes) > 0 and len(b_nodes) > 0:
-        pass
+        if len(a_nodes.intersection(b_nodes)) is 0:
+            a_nodes = set(chain((node.mother for node in a_nodes),
+                                (node.father for node in a_nodes)))
+            b_nodes = set(chain((node.mother for node in b_nodes),
+                                (node.father for node in b_nodes)))
+            a_nodes.discard(None)
+            b_nodes.discard(None)
+            generation += 1
+        else:
+            return generation
+    return None
 
 def get_sample_of_cousins(population, distance, percent_ancestors = 0.1,
                           percent_descendants = 0.1):

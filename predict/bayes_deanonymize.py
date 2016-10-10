@@ -7,6 +7,7 @@ import numpy as np
 from classify_relationship import (LengthClassifier,
                                    shared_segment_length_genomes,
                                    ZERO_REPLACE)
+from util import recent_common_ancestor
 
 ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
                                                  "probabilities"])
@@ -125,12 +126,15 @@ class BayesDeanonymize:
             node_probabilities[node] = log_prob
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
-        
+
+        common_ancestor = recent_common_ancestor(potential_node, actual_node)
+        print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor))
         # calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map)
-        from random import choice
-        random_node = choice(list(member for member in self._population.members
-                                  if member.genome is not None))
-        calc_for_pair(random_node, actual_node, length_classifier, shared_map, id_map)
+        # from random import choice
+        # random_node = choice(list(member for member in self._population.members
+        #                           if member.genome is not None))
+        # calc_for_pair(random_node, actual_node, length_classifier, shared_map, id_map)
+        # calc_for_pair(random_node, potential_node, length_classifier, shared_map, id_map)
         return get_sibling_group(potential_node)
 
 def get_sibling_group(node):
