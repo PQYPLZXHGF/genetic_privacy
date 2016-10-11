@@ -49,7 +49,7 @@ class LengthClassifier:
                         scale = scale)
         if ret > 0.5:
             ret = 1 - ret
-        ret * 2 * (1 - zero_prob)
+        ret = ret * 2 * (1 - zero_prob)
         if ret <= 0.0:
             return ZERO_REPLACE
         return ret
