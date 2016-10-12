@@ -12,6 +12,13 @@
 * See if it is possible to do on demand determination of distributions.
 * Try to understand if the different types of relationships that share a vector have different distributions. eg for (2, 2) is the distribution of siblings vs siblings who have had a kid with eachother (compared to the grandparent) the same?
 
+10-12-16
+========
+
+* Play with smoothing parameter, what gives better accuracy in the case without full genealogy?
+* When running on the full genealogy, how many labeled nodes are necessary to get 50% accuracy.
+* How many labeled nodes in our model necessary wrt to the actual node to get 50 accuracy?
+
 
 Command to generate section headers:
 date +"%m-%d-%y"
