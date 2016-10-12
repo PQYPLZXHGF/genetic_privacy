@@ -17,7 +17,8 @@ INF_REPLACE = 1.0
 
 import pdb
 
-def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map):
+def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map,
+                  generation_map):
     for labeled_node_id in length_classifier._labeled_nodes:
         labeled_node = id_map[labeled_node_id]
         shared = shared_map[labeled_node]
@@ -51,6 +52,9 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map):
         assert p_a != 0.0 and p_b != 0.0
         print("IBD: {:.5e}".format(shared))
         print("p_guessed: {:.5e} p_actual: {:.5e}".format(p_a, p_b))
+        rca_a = recent_common_ancestor(node_a, labeled_node, generation_map)
+        rca_b = recent_common_ancestor(labeled_node, node_b, generation_map)
+        print("guessed rca {} actual rca {}".format(rca_a[1], rca_b[1]))
         # print("mean of guessed: {:.5e} mean of actual: {:.5e}".format(a_mean, b_mean))
         # print("Zero prob of guessed: {:.5e} Zero prob of actual: {:.5e}".format(a_zero_prob, b_zero_prob))
         p_a = None
@@ -69,7 +73,7 @@ class BayesDeanonymize:
             self._length_classifier = classifier
 
         
-    def identify(self, genome, actual_node):
+    def identify(self, genome, actual_node, population):
         node_probabilities = dict() # Probability that a node is a match
         shared_map = dict()
         id_map = self._population.id_mapping
@@ -120,9 +124,10 @@ class BayesDeanonymize:
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
 
-        common_ancestor = recent_common_ancestor(potential_node, actual_node)
-        print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor))
-        calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map)
+        common_ancestor = recent_common_ancestor(potential_node, actual_node,
+                                                 population.node_to_generation)
+        print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor[1]))
+        # calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map, population.node_to_generation)
         print("Log probability for guessed {}, log probability for actual {}".format(node_probabilities[potential_node], node_probabilities[actual_node]))
         # from random import choice
         # random_node = choice(list(member for member in self._population.members

@@ -50,7 +50,7 @@ incorrect_examples = set()
 print("Attempting to identify {} random nodes.".format(len(unlabeled)))
 for i, node in enumerate(unlabeled):
     print("Iteration: {}, actual node ID: {}".format(i + 1, node._id))
-    identified = bayes.identify(node.genome, node)
+    identified = bayes.identify(node.genome, node, population)
     # pdb.set_trace()
     if node in identified:
         correct += 1

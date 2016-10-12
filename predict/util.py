@@ -2,24 +2,39 @@ from itertools import combinations, product, chain
 from random import sample
 from collections import deque
 
-def recent_common_ancestor(node_a, node_b):
-    a_ancestors = set()
-    b_ancestors = set()
-    a_nodes = set([node_a])
-    b_nodes = set([node_b])
-    generation = 0
-    while len(a_nodes) > 0 and len(b_nodes) > 0:
-        if len(a_nodes.intersection(b_nodes)) is 0:
-            a_nodes = set(chain((node.mother for node in a_nodes),
-                                (node.father for node in a_nodes)))
-            b_nodes = set(chain((node.mother for node in b_nodes),
-                                (node.father for node in b_nodes)))
-            a_nodes.discard(None)
-            b_nodes.discard(None)
-            generation += 1
-        else:
-            return generation
-    return None
+def all_ancestors(node):
+    ancestors = set()
+    current_generation = set([node])
+    while len(current_generation) > 0:
+        mothers = set(node.mother for node in current_generation
+                      if node.mother is not None)
+        fathers = set(node.father for node in current_generation
+                      if node.father is not None)
+        current_generation = set(chain(mothers, fathers))
+        ancestors.update(current_generation)
+    return ancestors
+
+def recent_common_ancestor(node_a, node_b, generation_map):
+    if node_a == node_b:
+        return (node_a, 0)
+    if node_a.mother == node_b.mother:
+        return (node_a.mother, 1)
+    if node_a.father == node_b.father:
+        return (node_a.father, 1)
+    a_ancestors = all_ancestors(node_a)
+    b_ancestors = all_ancestors(node_b)
+    common_ancestors = a_ancestors.intersection(b_ancestors)
+    if len(common_ancestors) == 0:
+        return (None, None)
+    recent_generation = -1
+    ancestor = None
+    for common_ancestor in common_ancestors:
+        ancestor_generation = generation_map[common_ancestor]
+        if ancestor_generation > recent_generation:
+            recent_generation = ancestor_generation
+            ancestor = common_ancestor
+    younger_pair = max(generation_map[node_a], generation_map[node_b])    
+    return (ancestor, abs(younger_pair - recent_generation))
 
 def get_sample_of_cousins(population, distance, percent_ancestors = 0.1,
                           percent_descendants = 0.1):
