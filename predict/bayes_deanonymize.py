@@ -5,8 +5,7 @@ from collections import namedtuple
 import numpy as np
 
 from classify_relationship import (LengthClassifier,
-                                   shared_segment_length_genomes,
-                                   ZERO_REPLACE)
+                                   shared_segment_length_genomes)
 from util import recent_common_ancestor
 
 ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
@@ -14,6 +13,7 @@ ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
 MINIMUM_LABELED_NODES = 5
 INF = float("inf")
 INF_REPLACE = 1.0
+UNEXPECTED_IBD = 0.0000000000001
 
 import pdb
 
@@ -34,7 +34,7 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map,
             if shared == 0:
                 p_a = INF_REPLACE
             else:
-                p_a = ZERO_REPLACE
+                p_a = UNEXPECTED_IBD
             a_mean = float("NaN")
             a_zero_prob = float("NaN")
         if (node_b._id, labeled_node_id) in length_classifier:
@@ -46,7 +46,7 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map,
             if shared == 0:
                 p_b = INF_REPLACE
             else:
-                p_b = ZERO_REPLACE
+                p_b = UNEXPECTED_IBD
             b_mean = float("NaN")
             b_zero_prob = float("NaN")
         assert p_a != 0.0 and p_b != 0.0
@@ -99,7 +99,7 @@ class BayesDeanonymize:
                     if shared == 0:
                         node_probs.append(INF_REPLACE)
                     else:
-                        node_probs.append(ZERO_REPLACE)
+                        node_probs.append(UNEXPECTED_IBD)
                 else:                    
                     batch_node_id.append(node._id)
                     batch_labeled_node_id.append(labeled_node_id)
