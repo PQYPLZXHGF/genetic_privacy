@@ -19,6 +19,11 @@
 * When running on the full genealogy, how many labeled nodes are necessary to get 50% accuracy.
 * How many labeled nodes in our model necessary wrt to the actual node to get 50 accuracy?
 
+10-14-16
+========
+
+* Remind Arvind to look into theory of deanon for our project. Conversation about error lead into this discussion.
+
 
 Command to generate section headers:
 date +"%m-%d-%y"
