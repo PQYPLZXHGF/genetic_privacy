@@ -24,6 +24,10 @@
 
 * Remind Arvind to look into theory of deanon for our project. Conversation about error lead into this discussion.
 
+10-17-16
+========
+
+* Search for best smoothing parameter automatically, then generate graph with # labeled nodes x axis, % accuracy y axis
 
 Command to generate section headers:
 date +"%m-%d-%y"
