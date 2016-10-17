@@ -28,6 +28,7 @@
 ========
 
 * Search for best smoothing parameter automatically, then generate graph with # labeled nodes x axis, % accuracy y axis
+* Understand theory behind inference problem.
 
 Command to generate section headers:
 date +"%m-%d-%y"
