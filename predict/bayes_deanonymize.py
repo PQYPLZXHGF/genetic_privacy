@@ -1,4 +1,3 @@
-from math import isnan
 from collections import namedtuple
 
 # import pyximport; pyximport.install()
@@ -13,12 +12,12 @@ ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
 MINIMUM_LABELED_NODES = 5
 INF = float("inf")
 INF_REPLACE = 1.0
-UNEXPECTED_IBD = 0.0000000000001
+UNEXPECTED_IBD = 0.03
 
 import pdb
 
 def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map,
-                  generation_map):
+                  generation_map, unexpected = UNEXPECTED_IBD):
     for labeled_node_id in length_classifier._labeled_nodes:
         labeled_node = id_map[labeled_node_id]
         shared = shared_map[labeled_node]
@@ -34,7 +33,7 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map,
             if shared == 0:
                 p_a = INF_REPLACE
             else:
-                p_a = UNEXPECTED_IBD
+                p_a = unexpected
             a_mean = float("NaN")
             a_zero_prob = float("NaN")
         if (node_b._id, labeled_node_id) in length_classifier:
@@ -46,7 +45,7 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map,
             if shared == 0:
                 p_b = INF_REPLACE
             else:
-                p_b = UNEXPECTED_IBD
+                p_b = unexpected
             b_mean = float("NaN")
             b_zero_prob = float("NaN")
         assert p_a != 0.0 and p_b != 0.0
@@ -72,8 +71,9 @@ class BayesDeanonymize:
         else:
             self._length_classifier = classifier
 
-        
-    def identify(self, genome, actual_node, population):
+    @profile
+    def identify(self, genome, actual_node, population,
+                 unexpected = UNEXPECTED_IBD):
         node_probabilities = dict() # Probability that a node is a match
         shared_map = dict()
         id_map = self._population.id_mapping
@@ -81,27 +81,30 @@ class BayesDeanonymize:
         for labeled_node_id in length_classifier._labeled_nodes:
             labeled_node = id_map[labeled_node_id]
             s = shared_segment_length_genomes(genome, labeled_node.genome, 0)
-            shared_map[labeled_node] = s
+            shared_map[labeled_node_id] = s
 
         node_data = dict()
         batch_node_id = []
         batch_labeled_node_id = []
         batch_lengths = []
+        distributions = length_classifier._distributions
         nodes = (member for member in self._population.members
                  if member.genome is not None)
         for node in nodes:
             node_probs = []
             node_start_i = len(batch_node_id)
-            for labeled_node_id in length_classifier._labeled_nodes:
-                labeled_node = id_map[labeled_node_id]
-                shared = shared_map[labeled_node]
-                if (node._id, labeled_node_id) not in length_classifier:
+            node_id = node._id
+            for labeled_node_id, shared in shared.items():
+                # labeled_node = id_map[labeled_node_id]
+                # shared = shared_map[labeled_node]
+                # shared = shared_map[labeled_node_id]
+                if (node_id, labeled_node_id) not in distributions:
                     if shared == 0:
                         node_probs.append(INF_REPLACE)
                     else:
-                        node_probs.append(UNEXPECTED_IBD)
+                        node_probs.append(unexpected)
                 else:                    
-                    batch_node_id.append(node._id)
+                    batch_node_id.append(node_id)
                     batch_labeled_node_id.append(labeled_node_id)
                     batch_lengths.append(shared)
 
@@ -126,9 +129,9 @@ class BayesDeanonymize:
 
         common_ancestor = recent_common_ancestor(potential_node, actual_node,
                                                  population.node_to_generation)
-        print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor[1]))
+        # print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor[1]))
         # calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map, population.node_to_generation)
-        print("Log probability for guessed {}, log probability for actual {}".format(node_probabilities[potential_node], node_probabilities[actual_node]))
+        # print("Log probability for guessed {}, log probability for actual {}".format(node_probabilities[potential_node], node_probabilities[actual_node]))
         # from random import choice
         # random_node = choice(list(member for member in self._population.members
         #                           if member.genome is not None))

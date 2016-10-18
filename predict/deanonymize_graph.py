@@ -42,7 +42,7 @@ for labeled_size in range(20, len(labeled_nodes) + 1, 5):
     correct = 0
     incorrect = 0
     for i, node in enumerate(unlabeled):
-        identified = bayes.identify(node.genome, node, population)
+        identified = bayes.identify(node.genome, node, population, 0.03)
         if node in identified:
             correct += 1
         else:

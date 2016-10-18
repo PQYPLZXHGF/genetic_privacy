@@ -1,10 +1,10 @@
 from collections import namedtuple, defaultdict
 from itertools import chain, product
-from os import popen, listdir, makedirs
+from os import listdir, makedirs
 from os.path import join, exists
 from shutil import rmtree
 from warnings import warn
-from pickle import dump, load
+from pickle import load
 import pdb
 
 from scipy.stats import gamma
@@ -53,18 +53,20 @@ class LengthClassifier:
             return ZERO_REPLACE
         return ret
         
-
+    # @profile
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
         lengths = np.array(lengths, dtype = np.uint32)
         zero_i = (lengths == 0)
         nonzero_i = np.invert(zero_i)
-        params = (self._distributions[query_node, labeled_node]
+        distributions = self._distributions
+        params = (distributions[query_node, labeled_node]
                   for query_node, labeled_node
                   in zip(query_nodes, labeled_nodes))
         shape_scale_zero = list(zip(*params))
         shapes = np.array(shape_scale_zero[0], dtype = np.float64)
         scales = np.array(shape_scale_zero[1], dtype = np.float64)
         zero_prob = np.array(shape_scale_zero[2], dtype = np.float64)
+        del shape_scale_zero
         ret = np.empty_like(lengths, dtype = np.float64)
         # ret[zero_i] = 1 - zero_prob[zero_i]
         ret[zero_i] = zero_prob[zero_i]
