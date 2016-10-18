@@ -53,7 +53,7 @@ class LengthClassifier:
             return ZERO_REPLACE
         return ret
         
-    # @profile
+    @profile
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
         lengths = np.array(lengths, dtype = np.uint32)
         zero_i = (lengths == 0)

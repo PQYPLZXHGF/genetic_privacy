@@ -94,7 +94,7 @@ class BayesDeanonymize:
             node_probs = []
             node_start_i = len(batch_node_id)
             node_id = node._id
-            for labeled_node_id, shared in shared.items():
+            for labeled_node_id, shared in shared_map.items():
                 # labeled_node = id_map[labeled_node_id]
                 # shared = shared_map[labeled_node]
                 # shared = shared_map[labeled_node_id]
