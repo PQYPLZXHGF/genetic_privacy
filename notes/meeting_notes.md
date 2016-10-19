@@ -30,5 +30,11 @@
 * Search for best smoothing parameter automatically, then generate graph with # labeled nodes x axis, % accuracy y axis
 * Understand theory behind inference problem.
 
+10-19-16
+========
+
+* There will be some distribution for IBD between the founders. Find this in the literature and adapt it for use in our algorithm.
+* For now make up a gamma function and see how it performs. Maybe exponential.
+
 Command to generate section headers:
 date +"%m-%d-%y"
