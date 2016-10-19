@@ -71,7 +71,6 @@ class BayesDeanonymize:
         else:
             self._length_classifier = classifier
 
-    @profile
     def identify(self, genome, actual_node, population,
                  unexpected = UNEXPECTED_IBD):
         node_probabilities = dict() # Probability that a node is a match
