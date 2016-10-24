@@ -36,5 +36,11 @@
 * There will be some distribution for IBD between the founders. Find this in the literature and adapt it for use in our algorithm.
 * For now make up a gamma function and see how it performs. Maybe exponential.
 
+10-24-16
+========
+
+* Think about better organizational structures to manage personal task parallelism
+* Mess with parameters in parallel with thinking about theory for what those parameters should be and mean
+
 Command to generate section headers:
 date +"%m-%d-%y"
