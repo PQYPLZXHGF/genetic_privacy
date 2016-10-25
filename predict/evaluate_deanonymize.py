@@ -14,6 +14,8 @@ parser.add_argument("population")
 parser.add_argument("classifier")
 parser.add_argument("--num_node", "-n", type = int, default = 10)
 parser.add_argument("--test_node", "-t", type = int, action = "append")
+parser.add_argument("--subset_labeled", "-s", type = int, default = None,
+                    help = "Chose a random subset of s nodes from the set of labeled nodes.")
 args = parser.parse_args()
 
 
@@ -25,10 +27,12 @@ print("Loading classifier")
 with open(args.classifier, "rb") as pickle_file:
     classifier = load(pickle_file)
 
-# classifier._labeled_nodes = sample(classifier._labeled_nodes, 100)
-
 nodes = set(member for member in population.members
              if member.genome is not None)
+
+if args.subset_labeled:
+    classifier._labeled_nodes = sample(classifier._labeled_nodes,
+                                       args.subset_labeled)
 
 bayes = BayesDeanonymize(population, classifier)
 
@@ -40,10 +44,7 @@ if args.test_node is not None and len(args.test_node) > 0:
 else:
     unlabeled = sample(list(nodes - labeled_nodes),
                        args.num_node)
-# unlabeled = [choice(list(set(last_generation) - labeled_nodes))]
-# correct_nodes = [id_mapping[x] for x in [93437, 92902]]
-# incorrect_nodes = [id_mapping[x] for x in [92635, 94587]]
-# unlabeled = sample(incorrect_nodes, args.num_node)
+
 correct = 0
 incorrect = 0
 incorrect_examples = set()
