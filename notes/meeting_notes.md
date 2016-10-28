@@ -42,5 +42,11 @@
 * Think about better organizational structures to manage personal task parallelism
 * Mess with parameters in parallel with thinking about theory for what those parameters should be and mean
 
+10-28-16
+=========
+
+* Fix simulation next week
+* Determine some parameter to describe background level of sharing in any two founders.
+
 Command to generate section headers:
 date +"%m-%d-%y"
