@@ -138,6 +138,14 @@ def shared_to_directory(population, labeled_nodes, genome_generator,
                                           for generation
                                           in population.generations[-3:])
     unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
+    num_generations = population.num_generations
+    clear_index = num_generations - generations_back_shared - 1
+    to_clear = population.generations[clear_index].members
+    for node in to_clear:
+        node.suspected_mother = None
+        node.suspected_mother_id = None
+        node.suspected_father = None
+        node.suspected_father_id = None
     print("Finding related pairs.")
     pairs = related_pairs(unlabeled_nodes, labeled_nodes, population,
                           generations_back_shared)
