@@ -48,5 +48,10 @@
 * Fix simulation next week
 * Determine some parameter to describe background level of sharing in any two founders.
 
+11-14-16
+========
+
+* Only draw test nodes from last generation, see if that makes a difference with respect to distance to the cutoff.
+
 Command to generate section headers:
 date +"%m-%d-%y"
