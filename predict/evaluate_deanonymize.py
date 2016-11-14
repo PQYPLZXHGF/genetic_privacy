@@ -27,8 +27,10 @@ print("Loading classifier")
 with open(args.classifier, "rb") as pickle_file:
     classifier = load(pickle_file)
 
-nodes = set(member for member in population.members
-             if member.genome is not None)
+# nodes = set(member for member in population.members
+#              if member.genome is not None)
+nodes = set(member for member in population.generations[-1].members
+            if member.genome is not None)
 
 if args.subset_labeled:
     classifier._labeled_nodes = sample(classifier._labeled_nodes,
