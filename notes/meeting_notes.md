@@ -12,6 +12,46 @@
 * See if it is possible to do on demand determination of distributions.
 * Try to understand if the different types of relationships that share a vector have different distributions. eg for (2, 2) is the distribution of siblings vs siblings who have had a kid with eachother (compared to the grandparent) the same?
 
+10-12-16
+========
+
+* Play with smoothing parameter, what gives better accuracy in the case without full genealogy?
+* When running on the full genealogy, how many labeled nodes are necessary to get 50% accuracy.
+* How many labeled nodes in our model necessary wrt to the actual node to get 50 accuracy?
+
+10-14-16
+========
+
+* Remind Arvind to look into theory of deanon for our project. Conversation about error lead into this discussion.
+
+10-17-16
+========
+
+* Search for best smoothing parameter automatically, then generate graph with # labeled nodes x axis, % accuracy y axis
+* Understand theory behind inference problem.
+
+10-19-16
+========
+
+* There will be some distribution for IBD between the founders. Find this in the literature and adapt it for use in our algorithm.
+* For now make up a gamma function and see how it performs. Maybe exponential.
+
+10-24-16
+========
+
+* Think about better organizational structures to manage personal task parallelism
+* Mess with parameters in parallel with thinking about theory for what those parameters should be and mean
+
+10-28-16
+=========
+
+* Fix simulation next week
+* Determine some parameter to describe background level of sharing in any two founders.
+
+11-14-16
+========
+
+* Only draw test nodes from last generation, see if that makes a difference with respect to distance to the cutoff.
 
 Command to generate section headers:
 date +"%m-%d-%y"
