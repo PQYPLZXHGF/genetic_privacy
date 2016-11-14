@@ -21,9 +21,6 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map,
     for labeled_node_id in length_classifier._labeled_nodes:
         labeled_node = id_map[labeled_node_id]
         shared = shared_map[labeled_node]
-        if labeled_node_id == 90667:
-            pass
-            # pdb.set_trace()
         if (node_a._id, labeled_node_id) in length_classifier:
             p_a = length_classifier.get_probability(shared, node_a._id,
                                                     labeled_node_id)
@@ -86,6 +83,8 @@ class BayesDeanonymize:
         batch_node_id = []
         batch_labeled_node_id = []
         batch_lengths = []
+        cryptic_indices = dict()
+        batch_cryptic_lengths = []
         distributions = length_classifier._distributions
         nodes = (member for member in self._population.members
                  if member.genome is not None)
@@ -93,35 +92,46 @@ class BayesDeanonymize:
             node_probs = []
             node_start_i = len(batch_node_id)
             node_id = node._id
+            cryptic_start_i = len(batch_cryptic_lengths)
             for labeled_node_id, shared in shared_map.items():
                 # labeled_node = id_map[labeled_node_id]
                 # shared = shared_map[labeled_node]
                 # shared = shared_map[labeled_node_id]
                 if (node_id, labeled_node_id) not in distributions:
-                    if shared == 0:
-                        node_probs.append(INF_REPLACE)
-                    else:
-                        node_probs.append(unexpected)
+                    batch_cryptic_lengths.append(shared)
+                    # if shared == 0:
+                    #     node_probs.append(INF_REPLACE)
+                    # else:
+                    #     if shared < 30000000:
+                    #         node_probs.append(unexpected)
+                    #     else:
+                    #         node_probs.append(0.005)
                 else:                    
                     batch_node_id.append(node_id)
                     batch_labeled_node_id.append(labeled_node_id)
                     batch_lengths.append(shared)
-
+            cryptic_stop_i = len(batch_cryptic_lengths)
             node_stop_i = len(batch_node_id)
             node_data[node] = ProbabilityData(node_start_i, node_stop_i,
                                               node_probs)
+            cryptic_indices[node] = (cryptic_start_i, cryptic_stop_i)
         calc_prob = length_classifier.get_batch_probability(batch_lengths,
                                                             batch_node_id,
                                                             batch_labeled_node_id)
+        cryptic_prob = length_classifier.get_batch_cryptic(batch_cryptic_lengths)
         node_probabilities = dict()
         for node, prob_data in node_data.items():
+            cryptic_start_i, cryptic_stop_i = cryptic_indices[node]
             if node == actual_node:
                 pass
                 # import pdb
                 # pdb.set_trace()
             node_calc = calc_prob[prob_data.start_i:prob_data.stop_i]
+            node_cryptic = cryptic_prob[cryptic_start_i:cryptic_stop_i]
+            # log_prob = (np.sum(np.log(node_calc)) +
+            #             np.sum(np.log(prob_data.probabilities)))
             log_prob = (np.sum(np.log(node_calc)) +
-                        np.sum(np.log(prob_data.probabilities)))
+                        np.sum(np.log(node_cryptic)))
             node_probabilities[node] = log_prob
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
