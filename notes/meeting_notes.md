@@ -53,5 +53,12 @@
 
 * Only draw test nodes from last generation, see if that makes a difference with respect to distance to the cutoff.
 
+11-15-16
+========
+
+* Try more values for two point smoothing (eg 10,000,000 bases)
+* Try empirical distribution rather than fitted distribution, we have enough data
+* Test correctness of existing code.
+
 Command to generate section headers:
 date +"%m-%d-%y"
