@@ -59,6 +59,8 @@
 * Try more values for two point smoothing (eg 10,000,000 bases)
 * Try empirical distribution rather than fitted distribution, we have enough data
 * Test correctness of existing code.
+* Try single tailed test.
+* Try ignoring zero
 
 Command to generate section headers:
 date +"%m-%d-%y"
