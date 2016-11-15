@@ -100,8 +100,10 @@ class BayesDeanonymize:
                 if (node_id, labeled_node_id) not in distributions:
                     if shared == 0:
                         node_probs.append(INF_REPLACE)
-                    else:
+                    elif shared < 20000000:
                         node_probs.append(unexpected)
+                    else:
+                        node_probs.append(0.0001)
                 else:                    
                     batch_node_id.append(node_id)
                     batch_labeled_node_id.append(labeled_node_id)
