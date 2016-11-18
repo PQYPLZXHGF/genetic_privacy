@@ -118,7 +118,8 @@ class BayesDeanonymize:
         calc_prob = length_classifier.get_batch_probability(batch_lengths,
                                                             batch_node_id,
                                                             batch_labeled_node_id)
-        cryptic_prob = length_classifier.get_batch_cryptic(batch_cryptic_lengths)
+        # cryptic_prob = length_classifier.get_batch_cryptic(batch_cryptic_lengths)
+        cryptic_prob = length_classifier.get_batch_cryptic_ecdf(batch_cryptic_lengths)
         node_probabilities = dict()
         for node, prob_data in node_data.items():
             cryptic_start_i, cryptic_stop_i = cryptic_indices[node]
