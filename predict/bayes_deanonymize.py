@@ -98,7 +98,9 @@ class BayesDeanonymize:
                 # shared = shared_map[labeled_node]
                 # shared = shared_map[labeled_node_id]
                 if (node_id, labeled_node_id) not in distributions:
-                    if shared < 10000000:
+                    if shared == 0:
+                        node_probs.append(INF_REPLACE)
+                    elif shared < 10000000:
                         node_probs.append(unexpected)
                     else:
                         node_probs.append(0.0001)
