@@ -27,3 +27,8 @@ ECDF with zero special cased
 
 681 correct, 319 incorrect, 1000 total.
 0.681 percent accurate.
+
+Two tailed ecdf, zero special case.
+
+703 correct, 297 incorrect, 1000 total.
+0.703 percent accurate.
