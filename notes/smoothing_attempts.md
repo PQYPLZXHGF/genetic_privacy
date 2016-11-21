@@ -12,3 +12,18 @@ Smoothing using a single smoothing value:
 
 2310 correct, 1690 incorrect, 4000 total.
 0.5775 percent accurate
+
+Typical ECDF
+
+608 correct, 392 incorrect, 1000 total.
+0.608 percent accurate.
+
+
+599 correct, 401 incorrect, 1000 total.
+0.599 percent accurate.
+
+
+ECDF with zero special cased
+
+681 correct, 319 incorrect, 1000 total.
+0.681 percent accurate.
