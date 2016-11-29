@@ -2,4 +2,9 @@
 *.svg
 *.pickle
 *.shelve
+*.lprof
+*.prof
+*.so
+*.c
+build/
 genetic_map_chr*
