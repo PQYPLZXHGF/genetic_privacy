@@ -2,6 +2,7 @@ from collections import namedtuple, defaultdict
 from itertools import chain, product, combinations
 from os import listdir, makedirs
 from os.path import join, exists
+from random import sample
 from shutil import rmtree
 from warnings import warn
 import pdb
@@ -60,14 +61,28 @@ class LengthClassifier:
         return ret
 
     def get_batch_cryptic_ecdf(self, lengths):
+        """
+        Get probabilities for lengths based on ECDF of lengths of
+        unrelated pairs.
+        """
+        lengths = np.asarray(lengths, dtype = np.uint32) 
+        zero_len_i = (lengths == 0)
+        nonzero_len_i = np.invert(zero_len_i)
+        
         ret = 1 - self._empirical_cryptic_distribution(lengths)
-        ret[ret == 1.0] = self._cryptic_distribution.zero_prob
+        
         zero_i = (ret == 0)
         min_val = np.min(ret[np.invert(zero_i)])
         ret[zero_i] = min_val
+
+        ret[zero_len_i] = self._cryptic_distribution.zero_prob
         return ret
 
     def get_batch_cryptic(self, lengths):
+        """
+        Get probabilities for lengths based on a hurdle gamma fit of
+        unrelated pairs.
+        """
         assert self._cryptic_distribution is not None
         shape, scale, zero_prob = self._cryptic_distribution
         lengths = np.array(lengths, dtype = np.uint32)
@@ -170,7 +185,9 @@ def generate_classifier(population, labeled_nodes, genome_generator,
     generate_genomes(population, genome_generator, recombinators, 3,
                      true_genealogy = True)
     cryptic_lens = cryptic_lengths(population, labeled_nodes,
-                                generations_back_shared)
+                                   generations_back_shared)
+    # We still fit a hurdle gamma to get the zero probability, and to
+    # keep the option of switching back in the future easier.
     cryptic_params = HurdleGammaParams(*fit_hurdle_gamma(cryptic_lens))
     print("Generating classifiers.")
     classifier = classifier_from_directory(directory, population.id_mapping)
@@ -181,7 +198,6 @@ def generate_classifier(population, labeled_nodes, genome_generator,
 
 def cryptic_lengths(population, labeled_nodes, generations_back_shared,
                     min_segment_length = 0):
-    from random import sample
     nodes = sample(population.generations[-1].members, 1000)
     # related_labeled = related_pairs(labeled_nodes, labeled_nodes, population,
     #                                 generations_back_shared)
@@ -200,10 +216,7 @@ def cryptic_lengths(population, labeled_nodes, generations_back_shared,
                                                  node_b.genome,
                                                  min_segment_length)
                    for node_a, node_b in unrelated_pairs)
-    shared = np.fromiter(shared_iter, dtype = np.uint32)
-    return shared
-    # shape, scale, zero_prob = fit_hurdle_gamma(shared)
-    # return HurdleGammaParams(shape, scale, zero_prob)
+    return np.fromiter(shared_iter, dtype = np.uint32)
 
 def shared_to_directory(population, labeled_nodes, genome_generator,
                         recombinators, directory, min_segment_length = 0,
