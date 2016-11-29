@@ -7,6 +7,7 @@ Requirement
 * Python 3.4+ or Python 3.3+ with [enum](https://pypi.python.org/pypi/enum34) package
 * scipy/numpy
 * Cython
+* Statsmodels
 
 
 
