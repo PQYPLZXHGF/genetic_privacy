@@ -1,13 +1,14 @@
 from collections import namedtuple, defaultdict
-from itertools import chain, product
+from itertools import chain, product, combinations
 from os import listdir, makedirs
 from os.path import join, exists
+from random import sample
 from shutil import rmtree
 from warnings import warn
-from pickle import load
 import pdb
 
 from scipy.stats import gamma
+from statsmodels.distributions.empirical_distribution import ECDF
 import numpy as np
 # import pyximport; pyximport.install()
 
@@ -26,10 +27,16 @@ class LengthClassifier:
     """
     Classifies based total length of shared segments
     """
-    def __init__(self, distributions, labeled_nodes):
+    def __init__(self, distributions, labeled_nodes,
+                 cryptic_distribution = None,
+                 empirical_cryptic_lengths = None):
         self._distributions = distributions
         self._labeled_nodes = labeled_nodes
-
+        self._cryptic_distribution = cryptic_distribution
+        if empirical_cryptic_lengths is not None:
+            self._empirical_cryptic_distribution = ECDF(empirical_cryptic_lengths, "left")
+        else:
+            self._empirical_cryptic_distribution = None
             
     def get_probability(self, shared_length, query_node, labeled_node):
         """
@@ -52,6 +59,46 @@ class LengthClassifier:
         if ret <= 0.0:
             return ZERO_REPLACE
         return ret
+
+    def get_batch_cryptic_ecdf(self, lengths):
+        """
+        Get probabilities for lengths based on ECDF of lengths of
+        unrelated pairs.
+        """
+        lengths = np.asarray(lengths, dtype = np.uint32) 
+        zero_len_i = (lengths == 0)
+        nonzero_len_i = np.invert(zero_len_i)
+        
+        ret = 1 - self._empirical_cryptic_distribution(lengths)
+        
+        zero_i = (ret == 0)
+        min_val = np.min(ret[np.invert(zero_i)])
+        ret[zero_i] = min_val
+
+        ret[zero_len_i] = self._cryptic_distribution.zero_prob
+        return ret
+
+    def get_batch_cryptic(self, lengths):
+        """
+        Get probabilities for lengths based on a hurdle gamma fit of
+        unrelated pairs.
+        """
+        assert self._cryptic_distribution is not None
+        shape, scale, zero_prob = self._cryptic_distribution
+        lengths = np.array(lengths, dtype = np.uint32)
+        zero_i = (lengths == 0)
+        nonzero_i = np.invert(zero_i)
+        ret = np.empty_like(lengths, dtype = np.float64)
+        ret[zero_i] = zero_prob
+        
+        gamma_probs = gamma.cdf(lengths[nonzero_i], a = shape, scale = scale)
+        greater_i = gamma_probs > 0.5
+        gamma_probs[greater_i] = 1 - gamma_probs[greater_i]
+        gamma_probs = gamma_probs * 2 * (1 - zero_prob)
+        ret[nonzero_i] = gamma_probs
+        ret[ret <= 0.0] = ZERO_REPLACE
+        return ret
+
         
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
         lengths = np.array(lengths, dtype = np.uint32)
@@ -120,13 +167,56 @@ def generate_classifier(population, labeled_nodes, genome_generator,
     elif clobber:
         rmtree(directory)
         makedirs(directory)
+    num_generations = population.num_generations
+    clear_index = num_generations - generations_back_shared - 1
+    to_clear = population.generations[clear_index].members
+    for node in to_clear:
+        node.suspected_mother = None
+        node.suspected_mother_id = None
+        node.suspected_father = None
+        node.suspected_father_id = None
     if 0 < iterations:
         shared_to_directory(population, labeled_nodes, genome_generator,
                             recombinators, directory, clobber = clobber,
                             iterations = iterations,
                             generations_back_shared = generations_back_shared)
-    return classifier_from_directory(directory, population.id_mapping)
+    print("Generating cryptic relative parameters")
+    population.clean_genomes()
+    generate_genomes(population, genome_generator, recombinators, 3,
+                     true_genealogy = True)
+    cryptic_lens = cryptic_lengths(population, labeled_nodes,
+                                   generations_back_shared)
+    # We still fit a hurdle gamma to get the zero probability, and to
+    # keep the option of switching back in the future easier.
+    cryptic_params = HurdleGammaParams(*fit_hurdle_gamma(cryptic_lens))
+    print("Generating classifiers.")
+    classifier = classifier_from_directory(directory, population.id_mapping)
+    classifier._cryptic_distribution = cryptic_params
+    print("Generating ecdf")
+    classifier._empirical_cryptic_distribution = ECDF(cryptic_lens, "left")
+    return classifier
 
+def cryptic_lengths(population, labeled_nodes, generations_back_shared,
+                    min_segment_length = 0):
+    nodes = sample(population.generations[-1].members, 1000)
+    # related_labeled = related_pairs(labeled_nodes, labeled_nodes, population,
+    #                                 generations_back_shared)
+    related_labeled = related_pairs(nodes, nodes, population,
+                                    generations_back_shared)
+    related_map = defaultdict(set)
+    for node_a, node_b in related_labeled:
+        related_map[node_a].add(node_b)
+        related_map[node_b].add(node_a)
+
+    # labeled_pairs = combinations(labeled_nodes, 2)
+    labeled_pairs = combinations(nodes, 2)
+    unrelated_pairs = ((a, b) for a, b in labeled_pairs
+                       if a not in related_map[b])
+    shared_iter = (shared_segment_length_genomes(node_a.genome,
+                                                 node_b.genome,
+                                                 min_segment_length)
+                   for node_a, node_b in unrelated_pairs)
+    return np.fromiter(shared_iter, dtype = np.uint32)
 
 def shared_to_directory(population, labeled_nodes, genome_generator,
                         recombinators, directory, min_segment_length = 0,
@@ -138,14 +228,6 @@ def shared_to_directory(population, labeled_nodes, genome_generator,
                                           for generation
                                           in population.generations[-3:])
     unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
-    num_generations = population.num_generations
-    clear_index = num_generations - generations_back_shared - 1
-    to_clear = population.generations[clear_index].members
-    for node in to_clear:
-        node.suspected_mother = None
-        node.suspected_mother_id = None
-        node.suspected_father = None
-        node.suspected_father_id = None
     print("Finding related pairs.")
     pairs = related_pairs(unlabeled_nodes, labeled_nodes, population,
                           generations_back_shared)
