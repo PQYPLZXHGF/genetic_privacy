@@ -1,19 +1,23 @@
 Smoothing using hurdle gamme derived from labeled nodes:
+--------------------------------------------------------
 
 2908 correct, 1092 incorrect, 4000 total.
 0.727 percent accurate.
 
 Smoothing using a two smoothing values (value changes from 0.03 at 20 million to 0.0001 at greater values)
+------------------------------------------------------------------------------------------------------------
 
 3133 correct, 867 incorrect, 4000 total.
 0.78325 percent accurate.
 
 Smoothing using a single smoothing value:
+-------------------------------------------
 
 2310 correct, 1690 incorrect, 4000 total.
 0.5775 percent accurate
 
 Typical ECDF
+-------------
 
 608 correct, 392 incorrect, 1000 total.
 0.608 percent accurate.
@@ -24,18 +28,23 @@ Typical ECDF
 
 
 ECDF with zero special cased
+------------------------------
 
 681 correct, 319 incorrect, 1000 total.
 0.681 percent accurate.
 
 Two tailed ecdf, zero special case.
+-------------------------------------
 
 703 correct, 297 incorrect, 1000 total.
 0.703 percent accurate.
 
 Ignoring segments with less than 5 megabases
+---------------------------------------------
 
 571 correct, 429 incorrect, 1000 total.
 0.571 percent accurate.
+
 Relationship distance stats: DescribeResult(nobs=420, minmax=(1, 9), mean=5.5333333333333332, variance=5.2661893396976929, skewness=-0.4172305708966148, kurtosis=-1.1632814028756717)
+
 No common ancestor occured 9 times.
