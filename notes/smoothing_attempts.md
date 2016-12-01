@@ -32,3 +32,10 @@ Two tailed ecdf, zero special case.
 
 703 correct, 297 incorrect, 1000 total.
 0.703 percent accurate.
+
+Ignoring segments with less than 5 megabases
+
+571 correct, 429 incorrect, 1000 total.
+0.571 percent accurate.
+Relationship distance stats: DescribeResult(nobs=420, minmax=(1, 9), mean=5.5333333333333332, variance=5.2661893396976929, skewness=-0.4172305708966148, kurtosis=-1.1632814028756717)
+No common ancestor occured 9 times.
