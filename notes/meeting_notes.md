@@ -62,5 +62,15 @@
 * Try single tailed test.
 * Try ignoring zero
 
+12-02-16
+========
+
+* Try paternity error
+* Paper notes:
+     * Structure paper so its clear what and why I am talking about
+     * Defend our choices more than just stating them
+     * What will reviewers be skeptical of?
+         * Lots of questions about model, why it wont work in the real world?
+
 Command to generate section headers:
 date +"%m-%d-%y"
