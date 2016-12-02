@@ -54,5 +54,7 @@ Ignoring segments with less than 10 megabases
 
 414 correct, 586 incorrect, 1000 total.
 0.414 percent accurate.
+
 Relationship distance stats: DescribeResult(nobs=562, minmax=(1, 9), mean=5.827402135231317, variance=4.8667700661629913, skewness=-0.6232183666946493, kurtosis=-0.800250148509253)
+
 No common ancestor occured 24 time
