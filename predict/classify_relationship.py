@@ -159,9 +159,12 @@ def related_pairs(unlabeled_nodes, labeled_nodes, population, generations):
             if len(ancestors[unlabeled].intersection(ancestors[labeled])) != 0]
 
 
+# At some point this should probably be turned into a "builder" class,
+# too much state is getting passed along in this long parameter list.
 def generate_classifier(population, labeled_nodes, genome_generator,
                         recombinators, directory, clobber = True,
-                        iterations = 1000, generations_back_shared = 7):    
+                        iterations = 1000, generations_back_shared = 7,
+                        min_segment_length = 0):    
     if not exists(directory):
         makedirs(directory)
     elif clobber:
@@ -179,13 +182,15 @@ def generate_classifier(population, labeled_nodes, genome_generator,
         shared_to_directory(population, labeled_nodes, genome_generator,
                             recombinators, directory, clobber = clobber,
                             iterations = iterations,
+                            min_segment_length = min_segment_length,
                             generations_back_shared = generations_back_shared)
     print("Generating cryptic relative parameters")
     population.clean_genomes()
     generate_genomes(population, genome_generator, recombinators, 3,
                      true_genealogy = True)
     cryptic_lens = cryptic_lengths(population, labeled_nodes,
-                                   generations_back_shared)
+                                   generations_back_shared,
+                                   min_segment_length)
     # We still fit a hurdle gamma to get the zero probability, and to
     # keep the option of switching back in the future easier.
     cryptic_params = HurdleGammaParams(*fit_hurdle_gamma(cryptic_lens))

@@ -76,7 +76,8 @@ class BayesDeanonymize:
         length_classifier = self._length_classifier
         for labeled_node_id in length_classifier._labeled_nodes:
             labeled_node = id_map[labeled_node_id]
-            s = shared_segment_length_genomes(genome, labeled_node.genome, 0)
+            s = shared_segment_length_genomes(genome, labeled_node.genome,
+                                              5000000)
             shared_map[labeled_node_id] = s
 
         node_data = dict()
@@ -111,7 +112,7 @@ class BayesDeanonymize:
         calc_prob = length_classifier.get_batch_probability(batch_lengths,
                                                             batch_node_id,
                                                             batch_labeled_node_id)
-        # cryptic_prob = length_classifier.get_batch_cryptic(batch_cryptic_lengths)
+        # cryptic_prob = length_classifier.get_btach_cryptic(batch_cryptic_lengths)
         cryptic_prob = length_classifier.get_batch_cryptic_ecdf(batch_cryptic_lengths)
         node_probabilities = dict()
         for node, prob_data in node_data.items():
