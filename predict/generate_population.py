@@ -52,7 +52,7 @@ if not 0 <= args.adoption <= 1:
 
 multi_partner_prob = [float(x) for x in args.multi_partner_prob.split(",")]
 if not isclose(sum(multi_partner_prob), 1.0):
-    parser.error("Multi partner probabilities must sum to 1. Summed to {}".format(sum(args.multi_partner_prob)))
+    parser.error("Multi partner probabilities must sum to 1. Summed to {}".format(sum(multi_partner_prob)))
 
 cond_probs = conditionalize_partner_probs(multi_partner_prob)
 
