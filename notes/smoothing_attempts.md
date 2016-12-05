@@ -49,6 +49,13 @@ Relationship distance stats: DescribeResult(nobs=420, minmax=(1, 9), mean=5.5333
 
 No common ancestor occured 9 times.
 
+**Trained also ignoring segments less than 5 Mb
+
+529 correct, 471 incorrect, 1000 total.
+0.529 percent accurate.
+Relationship distance stats: DescribeResult(nobs=456, minmax=(1, 9), mean=5.5789473684210522, variance=5.101445922498554, skewness=-0.4475874186317736, kurtosis=-1.0791944620709029)
+No common ancestor occured 15 times.
+
 Ignoring segments with less than 10 megabases
 ---------------------------------------------
 
