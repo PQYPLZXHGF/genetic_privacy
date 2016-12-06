@@ -67,3 +67,14 @@ Ignoring segments with less than 10 megabases
 Relationship distance stats: DescribeResult(nobs=562, minmax=(1, 9), mean=5.827402135231317, variance=4.8667700661629913, skewness=-0.6232183666946493, kurtosis=-0.800250148509253)
 
 No common ancestor occured 24 time
+
+5% Non-paternity
+----------------
+
+
+357 correct, 643 incorrect, 1000 total.
+0.357 percent accurate.
+
+Relationship distance stats: DescribeResult(nobs=627, minmax=(1, 9), mean=5.9106858054226477, variance=4.2827450560761475, skewness=-0.7257056786931377, kurtosis=-0.5020040290800405)
+
+No common ancestor occured 16 times.
