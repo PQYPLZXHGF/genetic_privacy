@@ -72,9 +72,9 @@ No common ancestor occured 24 time
 ----------------
 
 
-357 correct, 643 incorrect, 1000 total.
-0.357 percent accurate.
+1379 correct, 2621 incorrect, 4000 total.
+0.34475 percent accurate.
 
-Relationship distance stats: DescribeResult(nobs=627, minmax=(1, 9), mean=5.9106858054226477, variance=4.2827450560761475, skewness=-0.7257056786931377, kurtosis=-0.5020040290800405)
+Relationship distance stats: DescribeResult(nobs=2543, minmax=(1, 9), mean=5.841918993314982, variance=4.6461256629868695, skewness=-0.6206490960353643, kurtosis=-0.750046314830997)
 
-No common ancestor occured 16 times.
+No common ancestor occured 78 times.
