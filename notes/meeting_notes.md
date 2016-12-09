@@ -71,6 +71,7 @@
      * Defend our choices more than just stating them
      * What will reviewers be skeptical of?
          * Lots of questions about model, why it wont work in the real world?
+         
 12-07-16
 =========
 
