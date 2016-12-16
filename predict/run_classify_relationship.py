@@ -8,7 +8,7 @@ from os import listdir
 
 from population import PopulationUnpickler
 from sex import Sex
-from classify_relationship import generate_classifier, classifier_from_directory
+from classify_relationship import generate_classifier
 from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
 
 parser = ArgumentParser(description = "Generate a classifier which can (hopefully) identify individuals in a population.")
@@ -26,6 +26,8 @@ parser.add_argument("--num_labeled_nodes", "-n", type = int, default = 0,
                     help = "Number of nodes to include in the 'known' set. Nodes are picked randomly from the last generation. If no value is given, the number is the population size multiplied by 0.01. (Note that this is not the same as a random sample of 1%% of the entire population as only the last generation is used.)")
 parser.add_argument("--output_pickle", default = "distributions.pickle",
                     help = "File to store distributions in. Pickle format will be used. Default is 'distributions.pickle'")
+parser.add_argument("--non_paternity", "-np", type = float, default = 0.0,
+                    help = "Non paternity rate for the adversary to assume.")
 
 args = parser.parse_args()
 

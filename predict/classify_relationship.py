@@ -2,7 +2,7 @@ from collections import namedtuple, defaultdict
 from itertools import chain, product, combinations
 from os import listdir, makedirs
 from os.path import join, exists
-from random import sample
+from random import sample, random
 from shutil import rmtree
 from warnings import warn
 import pdb
@@ -164,7 +164,7 @@ def related_pairs(unlabeled_nodes, labeled_nodes, population, generations):
 def generate_classifier(population, labeled_nodes, genome_generator,
                         recombinators, directory, clobber = True,
                         iterations = 1000, generations_back_shared = 7,
-                        min_segment_length = 0):    
+                        min_segment_length = 0, non_paternity = 0.0):    
     if not exists(directory):
         makedirs(directory)
     elif clobber:
@@ -183,7 +183,8 @@ def generate_classifier(population, labeled_nodes, genome_generator,
                             recombinators, directory, clobber = clobber,
                             iterations = iterations,
                             min_segment_length = min_segment_length,
-                            generations_back_shared = generations_back_shared)
+                            generations_back_shared = generations_back_shared,
+                            non_paternity = non_paternity)
     print("Generating cryptic relative parameters")
     population.clean_genomes()
     generate_genomes(population, genome_generator, recombinators, 3,
@@ -226,7 +227,8 @@ def cryptic_lengths(population, labeled_nodes, generations_back_shared,
 def shared_to_directory(population, labeled_nodes, genome_generator,
                         recombinators, directory, min_segment_length = 0,
                         clobber = True, iterations = 1000,
-                        generations_back_shared = 7):
+                        generations_back_shared = 7,
+                        non_paternity = 0.0):
 
     labeled_nodes = set(labeled_nodes)
     unlabeled_nodes = chain.from_iterable(generation.members
@@ -244,16 +246,21 @@ def shared_to_directory(population, labeled_nodes, genome_generator,
         mode = "a"
     fds = {node: open(join(directory, str(node._id)), mode)
            for node in labeled_nodes}
+    suppressor = ParentSuppressor(non_paternity, 0.0)
     print("Calculating shared lengths.")
     for i in range(iterations):
         print("iteration {}".format(i))
         print("Cleaning genomes.")
         population.clean_genomes()
+        print("Perturbing parentage")
+        suppressor.suppress(population)
         print("Generating genomes")
         generate_genomes(population, genome_generator, recombinators, 3,
                          true_genealogy = False)
         print("Calculating shared length")
         _calculate_shared_to_fds(pairs, fds, min_segment_length)
+        print("Fixing perturbation")
+        suppressor.unsuppress()
     for fd in fds.values():
         fd.close()
         
@@ -326,3 +333,49 @@ def shared_segment_length_genomes(genome_a, genome_b, minimum_length):
 def _shared_segment_length(node_a, node_b, minimum_length):
     return shared_segment_length_genomes(node_a.genome, node_b.genome,
                                           minimum_length)
+
+SuppressedParents = namedtuple("SuppressedParents", ["father", "mother"])
+class ParentSuppressor:
+    """
+    Supress the suspected father and mother of a node.
+    This is to simulate false paternity and adoption.
+    """
+    def __init__(self, father_percent = 0.0, mother_percent = 0.0):
+        self._father_percent = float(father_percent)
+        self._mother_percent = float(mother_percent)
+        self._changed_nodes = dict()
+
+    def suppress(self, population):
+        father = self._father_percent
+        mother = self._mother_percent
+        if father == 0.0 and mother == 0.0:
+            return
+        generations = (generation.members for generation in
+                       population.generations()[1:])
+        for node in chain.from_iterable(generations):
+            suppressed_father = None
+            suppressed_mother = None
+            if node.suspected_father is not None and random() < father:
+                suppressed_father = node.suspected_father
+                node.suspected_father = None
+                node._suspected_father_id = None
+                pass
+            if node.suspected_mother is not None and random() < mother:
+                suppressed_mother = node.suspected_mother
+                node.suspected_mother = None
+                node._suspected_mother_id = None
+            if suppressed_father is not None or suppressed_mother is not None:
+                self._changed_nodes[node] = SuppressedParents(suppressed_father,
+                                                              suppressed_mother)
+                
+
+    def unsuppress(self):
+        for node, parents in self._changed_nodes.items():
+            father, mother = parents
+            if father is not None:
+                node.suspected_father = father
+                node._suspected_father_id = father._id
+            if mother is not None:
+                node.suspected_mother = mother
+                node._suspected_mother_id = mother._id
+        self._changed_nodes = dict()
