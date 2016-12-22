@@ -77,5 +77,12 @@
 
 * Have an approach for each type of error by next meeting
 
+12-22-16
+========
+
+* Make list of simulations run and outcome
+* Plot accurracy against % of labeled nodes
+* Answer the question "How much of the genealogy do we need to know to get good results?"
+
 Command to generate section headers:
 date +"%m-%d-%y"
