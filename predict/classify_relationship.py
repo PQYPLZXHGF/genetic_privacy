@@ -351,7 +351,7 @@ class ParentSuppressor:
         if father == 0.0 and mother == 0.0:
             return
         generations = (generation.members for generation in
-                       population.generations()[1:])
+                       population.generations[1:])
         for node in chain.from_iterable(generations):
             suppressed_father = None
             suppressed_mother = None

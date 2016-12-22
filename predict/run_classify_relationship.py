@@ -63,7 +63,8 @@ classifier = generate_classifier(population, labeled_nodes,
                                  iterations = args.num_iterations,
                                  clobber = clobber,
                                  generations_back_shared = args.gen_back,
-                                 min_segment_length = 5000000)
+                                 min_segment_length = 5000000,
+                                 non_paternity = args.non_paternity)
 
 del recombinators
 del labeled_nodes
