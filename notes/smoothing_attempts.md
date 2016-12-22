@@ -78,3 +78,14 @@ No common ancestor occured 24 time
 Relationship distance stats: DescribeResult(nobs=2543, minmax=(1, 9), mean=5.841918993314982, variance=4.6461256629868695, skewness=-0.6206490960353643, kurtosis=-0.750046314830997)
 
 No common ancestor occured 78 times.
+
+Perturbation with 5% Non-paternity
+-----------------------------------
+
+61 correct, 139 incorrect, 200 total.
+0.305 percent accurate.
+
+
+Relationship distance stats: DescribeResult(nobs=133, minmax=(1, 9), mean=6.0375939849624061, variance=5.0213032581453634, skewness=-0.6472872903398937, kurtosis=-0.7229647571526283)
+
+No common ancestor occured 6 times.
