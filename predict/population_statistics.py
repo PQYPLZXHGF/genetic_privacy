@@ -50,8 +50,10 @@ def ancestors_of(node, distance, suspected = True):
         else:
             mother = current_node.mother
             father = current_node.father
-        to_visit.append((mother, current_distance + 1))
-        to_visit.append((father, current_distance + 1))
+        if mother is not None:
+            to_visit.append((mother, current_distance + 1))
+        if father is not None:
+            to_visit.append((father, current_distance + 1))
     return ancestors
     
 

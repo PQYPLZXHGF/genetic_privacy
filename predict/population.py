@@ -230,9 +230,14 @@ class HierarchicalIslandPopulation(Population):
                 new_nodes.append(child)
                 self.island_tree.add_individual(island, child)
 
-        apportioned = apportion(new_nodes, non_paternity_rate, adoption_rate,
-                                unknown_mother_rate, unknown_father_rate)
-        non_paternity, adopted, unknown_mother, unknown_father = apportioned
+        apportioned = apportion(new_nodes, non_paternity_rate, adoption_rate)
+        non_paternity, adopted = apportioned
+        already_error = non_paternity.union(adopted)
+        no_error = list(set(new_nodes) - already_error)
+        unknown_mother = sample(no_error,
+                                int(unknown_mother_rate * len(new_nodes)))
+        unknown_father = sample(no_error,
+                                int(unknown_father_rate * len(new_nodes)))
         for node in unknown_mother:
             node.set_suspected_mother(None)
         for node in unknown_father:
@@ -281,9 +286,9 @@ def apportion(original, *rates):
     for rate in rates:
         assert int(length * rate) < len(remainder)
         if rate == 0:
-            current_group = []
+            current_group = set()
         else:
-            current_group = sample(remainder, int(length * rate))
+            current_group = set(sample(remainder, int(length * rate)))
         assigned.update(current_group)
         subsets.append(current_group)
         if 0 < len(current_group):

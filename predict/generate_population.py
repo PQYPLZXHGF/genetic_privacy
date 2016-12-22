@@ -35,8 +35,13 @@ parser.add_argument("--non_paternity", "-p", type = float, default = 0,
                     help = "Rate with which the suspected father is not the true father.")
 parser.add_argument("--adoption", "-a", type = float, default = 0,
                     help = "Rate with which the suspected mother and father are not the true mother and father.")
+parser.add_argument("--missing_mother", "-mm", type = float, default = 0,
+                    help = "Rath with which the mother is unknown.")
+parser.add_argument("--missing_father", "-mf", type = float, default = 0,
+                    help = "Rate with which the father is unknown.")
 parser.add_argument("--multi_partner_prob", "-m", default = "1.0",
                     help = "Break down on number of partners people will have on average. Comma separated list of numbers between 0 and 1. First number the number of people who have 1 partner, next is 2 partners, etc. Numbers should sum up to 1.")
+
 parser.add_argument("--output_file", default = "population.pickle",
                     help = "Outputs a pickle file containing a Population object to this file. This file will be clobbered if it exists.")
 
@@ -68,7 +73,9 @@ population = HierarchicalIslandPopulation(tree)
 for _ in range(args.num_generations - 1):
     population.new_generation(non_paternity_rate = args.non_paternity,
                               adoption_rate = args.adoption,
-                              multi_partner_probs = cond_probs)
+                              multi_partner_probs = cond_probs,
+                              unknown_mother_rate = args.missing_mother,
+                              unknown_father_rate = args.missing_father)
 
 if not args.no_genomes:
     # tr = tracker.SummaryTracker()
