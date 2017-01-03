@@ -89,3 +89,14 @@ Perturbation with 5% Non-paternity
 Relationship distance stats: DescribeResult(nobs=133, minmax=(1, 9), mean=6.0375939849624061, variance=5.0213032581453634, skewness=-0.6472872903398937, kurtosis=-0.7229647571526283)
 
 No common ancestor occured 6 times.
+
+10% missing mother and father link (independent)
+------------------------------------------------
+
+549 correct, 3451 incorrect, 4000 total.
+0.13725 percent accurate.
+
+Relationship distance stats: DescribeResult(nobs=3349, minmax=(1, 9), mean=6.0830098536876678, variance=4.0068468520534131, skewness=-0.7307080943114279, kurtosis=-0.39759762448243974)
+
+No common ancestor occured 102 times.
+
