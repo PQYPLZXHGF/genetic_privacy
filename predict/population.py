@@ -234,6 +234,8 @@ class HierarchicalIslandPopulation(Population):
         non_paternity, adopted = apportioned
         already_error = non_paternity.union(adopted)
         no_error = list(set(new_nodes) - already_error)
+
+        # We don't use apportion here, because they are not mutually exclusive
         unknown_mother = sample(no_error,
                                 int(unknown_mother_rate * len(new_nodes)))
         unknown_father = sample(no_error,
