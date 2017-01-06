@@ -63,7 +63,7 @@ else:
     stop = min(len(classifier._labeled_nodes), args.stop)
 
 print("# labeled nodes\taccuracy")
-for i in range(args.start, len(classifier._labeled_nodes), args.stride):
+for i in range(args.start, stop, args.stride):
     classifier._labeled_nodes = labeled_copy[:i]
     accuracy = evaluate(unlabeled, bayes)
     print("{}\t{}".format(i, accuracy))
