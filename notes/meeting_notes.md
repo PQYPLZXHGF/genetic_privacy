@@ -84,5 +84,12 @@
 * Plot accurracy against % of labeled nodes
 * Answer the question "How much of the genealogy do we need to know to get good results?"
 
+01-17-17
+========
+
+* All expiriments should store comprehensive debugging information
+* What are the charactaristics of the relationships when we are innacurate? Is there error close to the node or far away? What is the nature of the error with respect to the correct node and the guessed node?
+
+
 Command to generate section headers:
 date +"%m-%d-%y"
