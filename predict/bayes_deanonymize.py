@@ -131,8 +131,8 @@ class BayesDeanonymize:
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
 
-        common_ancestor = recent_common_ancestor(potential_node, actual_node,
-                                                 population.node_to_generation)
+        # common_ancestor = recent_common_ancestor(potential_node, actual_node,
+        #                                          population.node_to_generation)
         # print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor[1]))
         # calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map, population.node_to_generation)
         # print("Log probability for guessed {}, log probability for actual {}".format(node_probabilities[potential_node], node_probabilities[actual_node]))
@@ -141,7 +141,8 @@ class BayesDeanonymize:
         #                           if member.genome is not None))
         # calc_for_pair(random_node, actual_node, length_classifier, shared_map, id_map)
         # calc_for_pair(random_node, potential_node, length_classifier, shared_map, id_map)
-        return get_sibling_group(potential_node)
+        siblings = get_sibling_group(potential_node)
+        return siblings
 
 def get_sibling_group(node):
     """

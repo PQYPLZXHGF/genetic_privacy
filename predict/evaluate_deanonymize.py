@@ -3,7 +3,7 @@
 from random import sample
 from pickle import load
 from argparse import ArgumentParser
-from util import recent_common_ancestor
+from util import recent_common_ancestor, error_between_nodes
 
 import pdb
 
@@ -59,6 +59,7 @@ print("Attempting to identify {} random nodes.".format(len(unlabeled)))
 for i, node in enumerate(unlabeled):
     print("Iteration: {}, actual node ID: {}".format(i + 1, node._id))
     identified = bayes.identify(node.genome, node, population)
+    assert len(identified) > 0
     # pdb.set_trace()
     if node in identified:
         correct += 1
@@ -67,6 +68,13 @@ for i, node in enumerate(unlabeled):
         incorrect_examples.add(node._id)
         print("incorrect")
         incorrect += 1
+        import pdb
+        for labeled_node in labeled_nodes:
+            error = error_between_nodes(node, labeled_node,
+                                        population.node_to_generation,
+                                        False)
+            if len(error[0]) > 0 or len(error[1]) > 0:
+                pdb.set_trace()
         rca, distance = recent_common_ancestor(node, next(iter(identified)),
                                                population.node_to_generation)
         if distance is None:

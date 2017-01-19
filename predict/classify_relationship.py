@@ -156,7 +156,8 @@ def related_pairs(unlabeled_nodes, labeled_nodes, population, generations):
         ancestors[node] = ancestors_of(node, generations_back)
     return [(unlabeled, labeled) for unlabeled, labeled
             in product(unlabeled_nodes, labeled_nodes)
-            if len(ancestors[unlabeled].intersection(ancestors[labeled])) != 0]
+            if (unlabeled != labeled and
+                len(ancestors[unlabeled].intersection(ancestors[labeled])) != 0)]
 
 
 # At some point this should probably be turned into a "builder" class,
@@ -234,7 +235,7 @@ def shared_to_directory(population, labeled_nodes, genome_generator,
     unlabeled_nodes = chain.from_iterable(generation.members
                                           for generation
                                           in population.generations[-3:])
-    unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
+    unlabeled_nodes = set(unlabeled_nodes)# - labeled_nodes
     print("Finding related pairs.")
     pairs = related_pairs(unlabeled_nodes, labeled_nodes, population,
                           generations_back_shared)
