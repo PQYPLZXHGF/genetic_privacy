@@ -43,10 +43,13 @@ if args.subset_labeled:
     # nodes is chosen.
     sorted_labeled = list(classifier._labeled_nodes)
     sorted_labeled.sort()
-    rand_state = getstate()
-    seed(42)
-    subset = shuffle(sorted_labeled)
-    setstate(rand_state)
+    if args.deterministic_random:
+        rand_state = getstate()
+        seed(42)
+        shuffle(sorted_labeled)
+        setstate(rand_state)
+    else:
+        shuffle(sorted_labeled)
     classifier._labeled_nodes = sorted_labeled[:args.subset_labeled]
 
 bayes = BayesDeanonymize(population, classifier)
@@ -57,8 +60,16 @@ labeled_nodes = set(id_mapping[node_id] for node_id
 if args.test_node is not None and len(args.test_node) > 0:
     unlabeled = [id_mapping[node_id] for node_id in args.test_node]
 else:
-    unlabeled = sample(list(nodes - labeled_nodes),
-                       args.num_node)
+    all_unlabeled = list(nodes - labeled_nodes)
+    all_unlabeled.sort(key = lambda node: node._id)
+    if args.deterministic_random:
+        rand_state = getstate()
+        seed(43)
+        shuffle(all_unlabeled)
+        setstate(rand_state)
+    else:
+        shuffle(all_unlabeled)
+    unlabeled = all_unlabeled[:args.num_node]
 
 correct = 0
 incorrect = 0
@@ -66,6 +77,8 @@ incorrect_examples = set()
 incorrect_distances = []
 from_error = []
 to_error = []
+from_error_correct = []
+to_error_correct = []
 one_path_error = 0
 both_path_error = 0
 no_path_error = 0
@@ -79,6 +92,14 @@ for i, node in enumerate(unlabeled):
     if node in identified:
         correct += 1
         print("correct")
+        for labeled_node in labeled_nodes:
+            error = error_between_nodes(node, labeled_node,
+                                        population.node_to_generation,
+                                        False)
+            if len(error[0]) > 0:
+                from_error_correct.append(error[0][0])
+            if len(error[1]) > 0:
+                to_error_correct.append(error[1][0])
     else:
         incorrect_examples.add(node._id)
         print("incorrect")
@@ -119,3 +140,5 @@ print("Error from labeled node to rca stats: {}".format(stats.describe(to_error)
 total_path_error = one_path_error + both_path_error + no_path_error
 print("Fraction there is error on one side of path: {}, both sides: {}".format(one_path_error / total_path_error, both_path_error / total_path_error))
 
+print("Error from correct node to rca when correct stats: {}".format(stats.describe(from_error_correct)))
+print("Error from labeled node to rca when correct stats: {}".format(stats.describe(to_error_correct)))

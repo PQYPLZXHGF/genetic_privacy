@@ -1,6 +1,7 @@
 from itertools import combinations, product, chain
 from random import sample
 from collections import deque
+from math import inf
 
 def all_ancestors(node, suspected = False):
     ancestors = set()
@@ -52,6 +53,22 @@ def get_path_descendant(node_a, node_b, suspected = False):
         path.append(previous[path[-1]])
     path.reverse()
     return path
+
+def first_missing_ancestor(node, suspected = True):
+    queue = deque([(node, 0)])
+    while len(queue) > 0:
+        current, distance = queue.pop()
+        if suspected:
+            father = current.suspected_father
+            mother = current.suspected_mother
+        else:
+            father = current.father
+            mother = current.mother
+        if mother is None or father is None:
+            return distance
+        queue.appendleft((current.mother, distance + 1))
+        queue.appendleft((current.father, distance + 1))
+    return inf
 
 def error_on_path(node_a, node_b, suspected = False):
     """

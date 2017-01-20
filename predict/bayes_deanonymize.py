@@ -5,7 +5,7 @@ import numpy as np
 
 from classify_relationship import (LengthClassifier,
                                    shared_segment_length_genomes)
-from util import recent_common_ancestor
+from util import recent_common_ancestor, first_missing_ancestor
 
 ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
                                                  "probabilities"])
@@ -67,6 +67,23 @@ class BayesDeanonymize:
             self._length_classifier = LengthClassifier(population, 1000)
         else:
             self._length_classifier = classifier
+        self.__remove_erroneous_labeled()
+
+    def __remove_erroneous_labeled(self):
+        print("Removing erroneous labeled nodes")
+        id_map = self._population.id_mapping
+        labeled_nodes = [id_map[labeled_node_id] for labeled_node_id
+                         in self._length_classifier._labeled_nodes]
+        to_remove = set()
+        for labeled_node in labeled_nodes:
+            missing = first_missing_ancestor(labeled_node)
+            if missing < 1:
+                to_remove.add(labeled_node._id)
+        new_labeled = set(self._length_classifier._labeled_nodes) - to_remove
+        print("Removeing {} labeled nodes."
+              " New size is {}.".format(len(to_remove), len(new_labeled)))
+        self._length_classifier._labeled_nodes = list(new_labeled)
+                
 
     def identify(self, genome, actual_node, population,
                  unexpected = UNEXPECTED_IBD):
