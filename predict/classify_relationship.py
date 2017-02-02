@@ -43,14 +43,16 @@ class LengthClassifier:
         Returns the probability that query_node and labeled_node have total
         shared segment length shared_length
         """
-        shape, scale, zero_prob =  self._distributions[query_node, labeled_node]
+        if (query_node, labeled_node) not in self._distributions:
+            if shared_length == 0:
+                return self._cryptic_distribution.zero_prob
+            ret = 1 - self._empirical_cryptic_distribution(shared_length)
+            if ret == 0:
+                return 1 - self._empirical_cryptic_distribution.y[-2]
+            return ret
+        shape, scale, zero_prob = self._distributions[query_node, labeled_node]
         if shared_length == 0:
-            # return 1 - zero_prob
             return zero_prob
-        # return (1 - zero_prob) * gamma.pdf(shared_length, a = shape,
-        #                                    scale = scale) * GAMMA_SCALE
-        # return 1 - gamma.cdf(shared_length, a = shape,
-        #                      scale = scale)
         ret = gamma.cdf(shared_length, a = shape,
                         scale = scale)
         if ret > 0.5:
@@ -72,7 +74,7 @@ class LengthClassifier:
         ret = 1 - self._empirical_cryptic_distribution(lengths)
         
         zero_i = (ret == 0)
-        min_val = np.min(ret[np.invert(zero_i)])
+        min_val = 1 - self._empirical_cryptic_distribution.y[-2]
         ret[zero_i] = min_val
 
         ret[zero_len_i] = self._cryptic_distribution.zero_prob
@@ -120,12 +122,6 @@ class LengthClassifier:
         gamma_probs = gamma.cdf(lengths[nonzero_i],
                                 a = shapes[nonzero_i],
                                 scale = scales[nonzero_i])
-        # gamma_probs = np.ones_like(lengths, dtype = np.float64)
-
-        # gamma_probs[gamma_probs == 0.0] = ZERO_REPLACE
-
-        # gamma_probs = np.exp(np.log(gamma_probs) + np.log(1 - zero_prob[nonzero_i]))
-        # gamma_probs = (1 - gamma_probs)
         greater_i = gamma_probs > 0.5
         gamma_probs[greater_i] = 1 - gamma_probs[greater_i]
         gamma_probs = gamma_probs * 2 * (1 - zero_prob[nonzero_i])
@@ -156,7 +152,8 @@ def related_pairs(unlabeled_nodes, labeled_nodes, population, generations):
         ancestors[node] = ancestors_of(node, generations_back)
     return [(unlabeled, labeled) for unlabeled, labeled
             in product(unlabeled_nodes, labeled_nodes)
-            if len(ancestors[unlabeled].intersection(ancestors[labeled])) != 0]
+            if (unlabeled != labeled and
+                len(ancestors[unlabeled].intersection(ancestors[labeled])) != 0)]
 
 
 # At some point this should probably be turned into a "builder" class,
@@ -234,7 +231,7 @@ def shared_to_directory(population, labeled_nodes, genome_generator,
     unlabeled_nodes = chain.from_iterable(generation.members
                                           for generation
                                           in population.generations[-3:])
-    unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
+    unlabeled_nodes = set(unlabeled_nodes)# - labeled_nodes
     print("Finding related pairs.")
     pairs = related_pairs(unlabeled_nodes, labeled_nodes, population,
                           generations_back_shared)

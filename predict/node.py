@@ -170,16 +170,22 @@ class Node:
 
     # TODO: Turn suspected mother and father into @property methods
     def set_suspected_mother(self, suspected_mother):
+        if self.suspected_mother is not None:
+            self.suspected_mother._suspected_children.remove(self._id)
         self.suspected_mother = suspected_mother
         if suspected_mother is not None:
             self._suspected_mother_id = suspected_mother._id
+            suspected_mother._suspected_children.append(self._id)
         else:
             self._suspected_mother_id = None
 
     def set_suspected_father(self, suspected_father):
+        if self.suspected_father is not None:
+            self.suspected_father._suspected_children.remove(self._id)
         self.suspected_father = suspected_father
         if suspected_father is not None:
             self._suspected_father_id = suspected_father._id
+            suspected_father._suspected_children.append(self._id)
         else:
             self._suspected_father_id = None
             

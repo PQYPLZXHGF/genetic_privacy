@@ -5,7 +5,7 @@ import numpy as np
 
 from classify_relationship import (LengthClassifier,
                                    shared_segment_length_genomes)
-from util import recent_common_ancestor
+from util import recent_common_ancestor, first_missing_ancestor
 
 ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
                                                  "probabilities"])
@@ -20,34 +20,35 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map,
                   generation_map, unexpected = UNEXPECTED_IBD):
     for labeled_node_id in length_classifier._labeled_nodes:
         labeled_node = id_map[labeled_node_id]
-        shared = shared_map[labeled_node]
+        shared = shared_map[labeled_node_id]
+        p_a = length_classifier.get_probability(shared, node_a._id,
+                                                labeled_node_id)
+        a_cryptic = False
+        b_cryptic = False
         if (node_a._id, labeled_node_id) in length_classifier:
-            p_a = length_classifier.get_probability(shared, node_a._id,
-                                                    labeled_node_id)
             shape, scale, a_zero_prob =  length_classifier._distributions[node_a._id, labeled_node_id]
             a_mean = shape * scale
         else:
-            if shared == 0:
-                p_a = INF_REPLACE
-            else:
-                p_a = unexpected
+            a_cyptic = True
             a_mean = float("NaN")
             a_zero_prob = float("NaN")
+        p_b = length_classifier.get_probability(shared, node_b._id,
+                                                labeled_node_id)
         if (node_b._id, labeled_node_id) in length_classifier:
-            p_b = length_classifier.get_probability(shared, node_b._id,
-                                                    labeled_node_id)
             shape, scale, b_zero_prob =  length_classifier._distributions[node_b._id, labeled_node_id]
             b_mean = shape * scale
         else:
-            if shared == 0:
-                p_b = INF_REPLACE
-            else:
-                p_b = unexpected
+            b_cryptic = True
             b_mean = float("NaN")
             b_zero_prob = float("NaN")
         assert p_a != 0.0 and p_b != 0.0
+        if p_a == p_b:
+            continue
+        print("labeled node id: {}".format(labeled_node_id))
         print("IBD: {:.5e}".format(shared))
         print("p_guessed: {:.5e} p_actual: {:.5e}".format(p_a, p_b))
+        print("guessed ecdf: {}. actual ecdf {}".format(a_cryptic,
+                                                             b_cryptic))
         rca_a = recent_common_ancestor(node_a, labeled_node, generation_map)
         rca_b = recent_common_ancestor(labeled_node, node_b, generation_map)
         print("guessed rca {} actual rca {}".format(rca_a[1], rca_b[1]))
@@ -67,6 +68,23 @@ class BayesDeanonymize:
             self._length_classifier = LengthClassifier(population, 1000)
         else:
             self._length_classifier = classifier
+        # self.__remove_erroneous_labeled()
+
+    def __remove_erroneous_labeled(self):
+        print("Removing erroneous labeled nodes")
+        id_map = self._population.id_mapping
+        labeled_nodes = [id_map[labeled_node_id] for labeled_node_id
+                         in self._length_classifier._labeled_nodes]
+        to_remove = set()
+        for labeled_node in labeled_nodes:
+            missing = first_missing_ancestor(labeled_node)
+            if missing < 1:
+                to_remove.add(labeled_node._id)
+        new_labeled = set(self._length_classifier._labeled_nodes) - to_remove
+        print("Removeing {} labeled nodes."
+              " New size is {}.".format(len(to_remove), len(new_labeled)))
+        self._length_classifier._labeled_nodes = list(new_labeled)
+                
 
     def identify(self, genome, actual_node, population,
                  unexpected = UNEXPECTED_IBD):
@@ -131,8 +149,8 @@ class BayesDeanonymize:
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
 
-        common_ancestor = recent_common_ancestor(potential_node, actual_node,
-                                                 population.node_to_generation)
+        # common_ancestor = recent_common_ancestor(potential_node, actual_node,
+        #                                          population.node_to_generation)
         # print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor[1]))
         # calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map, population.node_to_generation)
         # print("Log probability for guessed {}, log probability for actual {}".format(node_probabilities[potential_node], node_probabilities[actual_node]))
@@ -141,7 +159,8 @@ class BayesDeanonymize:
         #                           if member.genome is not None))
         # calc_for_pair(random_node, actual_node, length_classifier, shared_map, id_map)
         # calc_for_pair(random_node, potential_node, length_classifier, shared_map, id_map)
-        return get_sibling_group(potential_node)
+        siblings = get_sibling_group(potential_node)
+        return siblings
 
 def get_sibling_group(node):
     """
