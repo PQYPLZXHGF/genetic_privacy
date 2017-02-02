@@ -43,8 +43,7 @@ class LengthClassifier:
         Returns the probability that query_node and labeled_node have total
         shared segment length shared_length
         """
-        if (query_node, labeled_node) not in self._distributions[query_node,
-                                                                 labeled_node]:
+        if (query_node, labeled_node) not in self._distributions:
             if shared_length == 0:
                 return self._cryptic_distribution.zero_prob
             ret = 1 - self._empirical_cryptic_distribution(shared_length)

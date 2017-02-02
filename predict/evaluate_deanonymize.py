@@ -140,5 +140,7 @@ print("Error from labeled node to rca stats: {}".format(stats.describe(to_error)
 total_path_error = one_path_error + both_path_error + no_path_error
 print("Fraction there is error on one side of path: {}, both sides: {}".format(one_path_error / total_path_error, both_path_error / total_path_error))
 
-print("Error from correct node to rca when correct stats: {}".format(stats.describe(from_error_correct)))
-print("Error from labeled node to rca when correct stats: {}".format(stats.describe(to_error_correct)))
+if len(from_error_correct) > 0:
+    print("Error from correct node to rca when correct stats: {}".format(stats.describe(from_error_correct)))
+if len(to_error_correct) > 0:
+    print("Error from labeled node to rca when correct stats: {}".format(stats.describe(to_error_correct)))

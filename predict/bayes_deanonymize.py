@@ -23,10 +23,13 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map,
         shared = shared_map[labeled_node_id]
         p_a = length_classifier.get_probability(shared, node_a._id,
                                                 labeled_node_id)
+        a_cryptic = False
+        b_cryptic = False
         if (node_a._id, labeled_node_id) in length_classifier:
             shape, scale, a_zero_prob =  length_classifier._distributions[node_a._id, labeled_node_id]
             a_mean = shape * scale
         else:
+            a_cyptic = True
             a_mean = float("NaN")
             a_zero_prob = float("NaN")
         p_b = length_classifier.get_probability(shared, node_b._id,
@@ -35,11 +38,17 @@ def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map,
             shape, scale, b_zero_prob =  length_classifier._distributions[node_b._id, labeled_node_id]
             b_mean = shape * scale
         else:
+            b_cryptic = True
             b_mean = float("NaN")
             b_zero_prob = float("NaN")
         assert p_a != 0.0 and p_b != 0.0
+        if p_a == p_b:
+            continue
+        print("labeled node id: {}".format(labeled_node_id))
         print("IBD: {:.5e}".format(shared))
         print("p_guessed: {:.5e} p_actual: {:.5e}".format(p_a, p_b))
+        print("guessed ecdf: {}. actual ecdf {}".format(a_cryptic,
+                                                             b_cryptic))
         rca_a = recent_common_ancestor(node_a, labeled_node, generation_map)
         rca_b = recent_common_ancestor(labeled_node, node_b, generation_map)
         print("guessed rca {} actual rca {}".format(rca_a[1], rca_b[1]))
@@ -143,7 +152,7 @@ class BayesDeanonymize:
         # common_ancestor = recent_common_ancestor(potential_node, actual_node,
         #                                          population.node_to_generation)
         # print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor[1]))
-        calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map, population.node_to_generation)
+        # calc_for_pair(potential_node, actual_node, length_classifier, shared_map, id_map, population.node_to_generation)
         # print("Log probability for guessed {}, log probability for actual {}".format(node_probabilities[potential_node], node_probabilities[actual_node]))
         # from random import choice
         # random_node = choice(list(member for member in self._population.members
