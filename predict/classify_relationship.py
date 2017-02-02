@@ -101,6 +101,25 @@ class LengthClassifier:
         ret[ret <= 0.0] = ZERO_REPLACE
         return ret
 
+    def get_batch_ecdf(self, lengths, labeled_nodes):
+        lengths = np.asarray(lengths, dtype = np.uint32)
+        labeled_nodes = np.asarray(labeled_nodes, ndtype = p.uint32)
+        sort_i = np.argsort(labeled_nodes)
+        labeled_nodes = labeled_nodes[sort_i]
+        lengths = lengths[sort_i]
+        unique_labeled = np.unique(labeled_nodes)
+        left_i = np.searchsorted(labeled_nodes, unique_labeled, side = "left")
+        right_i = np.searchsorted(labeled_nodes, unique_labeled, side = "right")
+        
+        ecdf_map = self._cryptic_ecdf
+        probabilities = []
+        ret = np.zeros_like(lengths, dtype = np.float64)
+        for node_i, labeled_node in enumerate(unique_labeled.tolist()):
+            l = left_i[node_i]
+            r = right_i[node_i]
+            lengths = lengths[l:r]
+            probs = 1 - ecdf_map[labeled_node_id](lengths)
+            
         
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
         lengths = np.array(lengths, dtype = np.uint32)
@@ -189,6 +208,9 @@ def generate_classifier(population, labeled_nodes, genome_generator,
     cryptic_lens = cryptic_lengths(population, labeled_nodes,
                                    generations_back_shared,
                                    min_segment_length)
+    cryptic_ecdf = labeled_cryptic_ecdf(population, labeled_nodes,
+                                        generations_back_shared,
+                                        min_segment_length)
     # We still fit a hurdle gamma to get the zero probability, and to
     # keep the option of switching back in the future easier.
     cryptic_params = HurdleGammaParams(*fit_hurdle_gamma(cryptic_lens))
@@ -197,7 +219,35 @@ def generate_classifier(population, labeled_nodes, genome_generator,
     classifier._cryptic_distribution = cryptic_params
     print("Generating ecdf")
     classifier._empirical_cryptic_distribution = ECDF(cryptic_lens, "left")
+    classifier._cryptic_ecdf = cryptic_ecdf
     return classifier
+
+def labeled_cryptic_ecdf(population, labeled_nodes, generations_back_shared,
+                            min_segment_length = 0):
+    unlabeled = [node for node in population.members
+                 if node.genome is not None]
+    unlabeled = set(sample(unlabeled, len(unlabeled) // 2))
+    related = related_pairs(unlabeled, labeled_nodes, population,
+                            generations_back_shared)
+    related_map = defaultdict(set)
+    for node_a, node_b in related:
+        related_map[node_a].add(node_b)
+        related_map[node_b].add(node_a)
+        
+    cryptic_ecdf = dict()    
+    for labeled_node in labeled_nodes:
+        labeled_related = related_map[labeled_node]
+        unrelated_pairs = ((unlabeled_node, labeled_node)
+                           for unlabeled_node in unlabeled
+                           if unlabeled_node not in labeled_related)
+        lengths = [shared_segment_length_genomes(node_a.genome,
+                                                 node_b.genome,
+                                                 min_segment_length)
+                        for node_a, node_b in unrelated_pairs]
+        cryptic_ecdf[labeled_node._id] = ECDF(lengths)
+    return cryptic_ecdf
+                
+    
 
 def cryptic_lengths(population, labeled_nodes, generations_back_shared,
                     min_segment_length = 0):
@@ -231,7 +281,7 @@ def shared_to_directory(population, labeled_nodes, genome_generator,
     unlabeled_nodes = chain.from_iterable(generation.members
                                           for generation
                                           in population.generations[-3:])
-    unlabeled_nodes = set(unlabeled_nodes)# - labeled_nodes
+    unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
     print("Finding related pairs.")
     pairs = related_pairs(unlabeled_nodes, labeled_nodes, population,
                           generations_back_shared)
