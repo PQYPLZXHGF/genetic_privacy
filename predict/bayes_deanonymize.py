@@ -104,6 +104,7 @@ class BayesDeanonymize:
         batch_lengths = []
         cryptic_indices = dict()
         batch_cryptic_lengths = []
+        batch_cryptic_labeled_id = []
         distributions = length_classifier._distributions
         nodes = (member for member in self._population.members
                  if member.genome is not None)
@@ -118,6 +119,7 @@ class BayesDeanonymize:
                 # shared = shared_map[labeled_node_id]
                 if (node_id, labeled_node_id) not in distributions:
                     batch_cryptic_lengths.append(shared)
+                    batch_cryptic_labeled_id.append(labeled_node_id)
                 else:                    
                     batch_node_id.append(node_id)
                     batch_labeled_node_id.append(labeled_node_id)
@@ -127,11 +129,13 @@ class BayesDeanonymize:
             node_data[node] = ProbabilityData(node_start_i, node_stop_i,
                                               node_probs)
             cryptic_indices[node] = (cryptic_start_i, cryptic_stop_i)
+
         calc_prob = length_classifier.get_batch_probability(batch_lengths,
                                                             batch_node_id,
                                                             batch_labeled_node_id)
-        # cryptic_prob = length_classifier.get_btach_cryptic(batch_cryptic_lengths)
-        cryptic_prob = length_classifier.get_batch_cryptic_ecdf(batch_cryptic_lengths)
+        # cryptic_prob = length_classifier.get_batch_cryptic_ecdf(batch_cryptic_lengths)
+        cryptic_prob = length_classifier.get_batch_ecdf(batch_cryptic_lengths,
+                                                        batch_cryptic_labeled_id)
         node_probabilities = dict()
         for node, prob_data in node_data.items():
             cryptic_start_i, cryptic_stop_i = cryptic_indices[node]

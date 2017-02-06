@@ -103,23 +103,34 @@ class LengthClassifier:
 
     def get_batch_ecdf(self, lengths, labeled_nodes):
         lengths = np.asarray(lengths, dtype = np.uint32)
-        labeled_nodes = np.asarray(labeled_nodes, ndtype = p.uint32)
+        labeled_nodes = np.asarray(labeled_nodes, dtype = np.uint32)
         sort_i = np.argsort(labeled_nodes)
         labeled_nodes = labeled_nodes[sort_i]
         lengths = lengths[sort_i]
         unique_labeled = np.unique(labeled_nodes)
-        left_i = np.searchsorted(labeled_nodes, unique_labeled, side = "left")
         right_i = np.searchsorted(labeled_nodes, unique_labeled, side = "right")
-        
+        partitioned_lengths = np.split(lengths, right_i)
         ecdf_map = self._cryptic_ecdf
         probabilities = []
-        ret = np.zeros_like(lengths, dtype = np.float64)
         for node_i, labeled_node in enumerate(unique_labeled.tolist()):
-            l = left_i[node_i]
-            r = right_i[node_i]
-            lengths = lengths[l:r]
-            probs = 1 - ecdf_map[labeled_node_id](lengths)
-            
+            sub_lengths = partitioned_lengths[node_i]
+            temp_probs = np.empty_like(sub_lengths, dtype = np.float64)
+            zero_i = (sub_lengths == 0)
+            nonzero_i = np.invert(zero_i)
+            frac_zero, ecdf = ecdf_map[labeled_node]
+            temp_probs[nonzero_i] = (1 - frac_zero) * (1 - ecdf(sub_lengths[nonzero_i]))
+            temp_probs[zero_i] = frac_zero
+            # temp_probs = 1 - ecdf_map[labeled_node](lengths)
+            probabilities.append(temp_probs)
+        ret = np.concatenate(probabilities)
+
+        # inverse initial argsort so that probabilities are returned
+        # in the order given
+        # see https://arogozhnikov.github.io/2015/09/29/NumpyTipsAndTricks1.html#Even-faster-inverse-permutation
+        inverse_i = np.empty(len(sort_i), dtype = np.uint32)
+        inverse_i[sort_i] = np.arange(len(sort_i))
+        
+        return ret[inverse_i]
         
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
         lengths = np.array(lengths, dtype = np.uint32)
@@ -240,11 +251,15 @@ def labeled_cryptic_ecdf(population, labeled_nodes, generations_back_shared,
         unrelated_pairs = ((unlabeled_node, labeled_node)
                            for unlabeled_node in unlabeled
                            if unlabeled_node not in labeled_related)
-        lengths = [shared_segment_length_genomes(node_a.genome,
-                                                 node_b.genome,
-                                                 min_segment_length)
-                        for node_a, node_b in unrelated_pairs]
-        cryptic_ecdf[labeled_node._id] = ECDF(lengths)
+        lengths_iter = (shared_segment_length_genomes(node_a.genome,
+                                                      node_b.genome,
+                                                      min_segment_length)
+                        for node_a, node_b in unrelated_pairs)
+        lengths = np.fromiter(lengths_iter, dtype = np.uint32)
+        nonzero_i = (lengths != 0)
+        frac_zero = (len(lengths) - np.sum(nonzero_i)) / len(lengths)
+        ecdf = ECDF(lengths[nonzero_i], "left")
+        cryptic_ecdf[labeled_node._id] = (frac_zero, ecdf)
     return cryptic_ecdf
                 
     
