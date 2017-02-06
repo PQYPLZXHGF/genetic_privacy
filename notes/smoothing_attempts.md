@@ -100,7 +100,7 @@ Relationship distance stats: DescribeResult(nobs=3349, minmax=(1, 9), mean=6.083
 
 No common ancestor occured 102 times.
 
-10% missing mother and father link; standard (what changed from above case?)
+10% missing mother and father link; with 250 labeled nodes.
 -----------------------------------
 
 89 correct, 211 incorrect, 300 total.
