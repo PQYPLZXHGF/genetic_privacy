@@ -100,3 +100,19 @@ Relationship distance stats: DescribeResult(nobs=3349, minmax=(1, 9), mean=6.083
 
 No common ancestor occured 102 times.
 
+10% missing mother and father link; standard (what changed from above case?)
+-----------------------------------
+
+89 correct, 211 incorrect, 300 total.
+0.2966666666666667 percent accurate.
+
+No common ancestor occured 6 times.
+
+
+10% missing mother and father link; ecdf for each labeled node
+-----------------------------------
+
+146 correct, 254 incorrect, 400 total.
+0.365 percent accurate.
+
+Relationship distance stats: DescribeResult(nobs=247, minmax=(1, 9), mean=5.3562753036437245, variance=4.9863730621111886, skewness=-0.2781128557821518, kurtosis=-1.1996602874633828)
