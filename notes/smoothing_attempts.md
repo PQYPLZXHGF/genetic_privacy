@@ -112,7 +112,9 @@ No common ancestor occured 6 times.
 10% missing mother and father link; ecdf for each labeled node
 -----------------------------------
 
-146 correct, 254 incorrect, 400 total.
-0.365 percent accurate.
+151 correct, 249 incorrect, 400 total.
+0.3775 percent accurate.
 
-Relationship distance stats: DescribeResult(nobs=247, minmax=(1, 9), mean=5.3562753036437245, variance=4.9863730621111886, skewness=-0.2781128557821518, kurtosis=-1.1996602874633828)
+
+Relationship distance stats: DescribeResult(nobs=246, minmax=(1, 9), mean=5.1300813008130079, variance=5.2891322382611587, skewness=-0.14533186121524308, kurtosis=-1.373677255119877)
+No common ancestor occured 3 times.
