@@ -90,6 +90,11 @@
 * All expiriments should store comprehensive debugging information
 * What are the charactaristics of the relationships when we are innacurate? Is there error close to the node or far away? What is the nature of the error with respect to the correct node and the guessed node?
 
+02-08-17
+========
+
+* Investigate why the ECDF soemtimes assigns a higher probability to the wrong node than the hurdle gamma does to the correct node.
+
 
 Command to generate section headers:
 date +"%m-%d-%y"
