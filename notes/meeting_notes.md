@@ -95,6 +95,14 @@
 
 * Investigate why the ECDF soemtimes assigns a higher probability to the wrong node than the hurdle gamma does to the correct node.
 
+02-13-17
+========
+
+* investigagte -inf prob output for node 70155
+* Try custom smoothing values again rather than ECDF
+* Try customizing smoothing to the amount of error (eg on distance to first missing link)
+* Put a floor on ECDF probability.
+
 
 Command to generate section headers:
 date +"%m-%d-%y"
