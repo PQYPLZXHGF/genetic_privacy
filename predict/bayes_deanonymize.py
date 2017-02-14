@@ -133,9 +133,9 @@ class BayesDeanonymize:
         calc_prob = length_classifier.get_batch_probability(batch_lengths,
                                                             batch_node_id,
                                                             batch_labeled_node_id)
-        # cryptic_prob = length_classifier.get_batch_cryptic_ecdf(batch_cryptic_lengths)
-        cryptic_prob = length_classifier.get_batch_ecdf(batch_cryptic_lengths,
-                                                        batch_cryptic_labeled_id)
+        cryptic_prob = length_classifier.get_batch_cryptic_ecdf(batch_cryptic_lengths)
+        # cryptic_prob = length_classifier.get_batch_ecdf(batch_cryptic_lengths,
+        #                                                 batch_cryptic_labeled_id)
         node_probabilities = dict()
         for node, prob_data in node_data.items():
             cryptic_start_i, cryptic_stop_i = cryptic_indices[node]
@@ -152,7 +152,6 @@ class BayesDeanonymize:
             node_probabilities[node] = log_prob
         potential_node = max(node_probabilities.items(),
                              key = lambda x: x[1])[0]
-
         # common_ancestor = recent_common_ancestor(potential_node, actual_node,
         #                                          population.node_to_generation)
         # print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor[1]))

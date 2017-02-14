@@ -67,17 +67,22 @@ class LengthClassifier:
         Get probabilities for lengths based on ECDF of lengths of
         unrelated pairs.
         """
+        # len_zero_prob = self._cryptic_distribution.zero_prob
         lengths = np.asarray(lengths, dtype = np.uint32) 
         zero_len_i = (lengths == 0)
         nonzero_len_i = np.invert(zero_len_i)
         
+        # ret = (1 - self._empirical_cryptic_distribution(lengths)) * (1 - len_zero_prob)
         ret = 1 - self._empirical_cryptic_distribution(lengths)
-        
-        zero_i = (ret == 0)
-        min_val = 1 - self._empirical_cryptic_distribution.y[-2]
-        ret[zero_i] = min_val
+
+        # zero_i = (ret == 0)
+        # min_val = 1 - self._empirical_cryptic_distribution.y[-2]
+        min_val = 0.000001
+        ret[ret < min_val] = min_val
+        # ret[zero_i] = min_val
 
         ret[zero_len_i] = self._cryptic_distribution.zero_prob
+        # ret[zero_len_i] = len_zero_prob
         return ret
 
     def get_batch_cryptic(self, lengths):
