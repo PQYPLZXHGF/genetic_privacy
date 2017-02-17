@@ -98,7 +98,7 @@
 02-13-17
 ========
 
-* investigagte -inf prob output for node 70155
+* investigate -inf prob output for node 70155
 * Try custom smoothing values again rather than ECDF
 * Try customizing smoothing to the amount of error (eg on distance to first missing link)
 * Put a floor on ECDF probability.
