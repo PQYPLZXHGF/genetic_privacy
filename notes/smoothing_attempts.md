@@ -118,3 +118,35 @@ No common ancestor occured 6 times.
 
 Relationship distance stats: DescribeResult(nobs=246, minmax=(1, 9), mean=5.1300813008130079, variance=5.2891322382611587, skewness=-0.14533186121524308, kurtosis=-1.373677255119877)
 No common ancestor occured 3 times.
+
+
+10% missing mother and father link; replacing 0 in ecdf with min possible value; 300 labeled nodes.
+-----------------------------------
+
+370 correct, 630 incorrect, 1000 total.
+0.37 percent accurate.
+
+Relationship distance stats: DescribeResult(nobs=616, minmax=(1, 9), mean=5.2808441558441555, variance=5.0510796114454655, skewness=-0.21042520119758587, kurtosis=-1.266861223296635)
+No common ancestor occured 14 times.
+Error from correct node to rca stats: DescribeResult(nobs=95465, minmax=(0, 8), mean=2.3874089980621171, variance=4.278681656076329, skewness=0.5665300216286012, kurtosis=-0.7389988159390182)
+Error from labeled node to rca stats: DescribeResult(nobs=89097, minmax=(0, 8), mean=2.6821778511060979, variance=4.1640615763869473, skewness=0.4223465504133544, kurtosis=-0.8122822227230837)
+Fraction there is error on one side of path: 0.31675716320466196, both sides: 0.17522105978555574
+Error from correct node to rca when correct stats: DescribeResult(nobs=44956, minmax=(0, 8), mean=2.9420099652994041, variance=3.9702328991110125, skewness=0.144100369293417, kurtosis=-0.9090301920527599)
+Error from labeled node to rca when correct stats: DescribeResult(nobs=51473, minmax=(0, 8), mean=2.728848133973151, variance=4.268855560418543, skewness=0.41216377215533406, kurtosis=-0.8134281045417495)
+
+
+10% missing mother and father link; using ECDF created with no 0 entries, 0 is special case; 300 labeled nodes.
+-----------------------------------
+21 correct, 379 incorrect, 400 total.
+0.0525 percent accurate.
+
+
+Relationship distance stats: DescribeResult(nobs=356, minmax=(1, 9), mean=6.4943820224719104, variance=3.7830669409716724, skewness=-0.8644443348511213, kurtosis=-0.032510706499715436)
+No common ancestor occured 23 times.
+Error from correct node to rca stats: DescribeResult(nobs=184424, minmax=(0, 8), mean=2.5479547130525311, variance=4.3114139153888793, skewness=0.47810198207676974, kurtosis=-0.8277122104407169)
+Error from labeled node to rca stats: DescribeResult(nobs=179798, minmax=(0, 8), mean=2.5897896528326232, variance=4.1891129209312172, skewness=0.44136766869415445, kurtosis=-0.8092671662515682)
+Fraction there is error on one side of path: 0.3143398847946276, both sides: 0.172292456653255
+Error from correct node to rca when correct stats: DescribeResult(nobs=9621, minmax=(0, 7), mean=1.9104043238748571, variance=3.2225331109334849, skewness=0.6325043711027413, kurtosis=-0.6616980189629644)
+Error from labeled node to rca when correct stats: DescribeResult(nobs=9403, minmax=(0, 8), mean=2.7356162926725514, variance=4.6122890984454337, skewness=0.42323811590505633, kurtosis=-0.8760906082584978)
+
+
