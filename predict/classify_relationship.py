@@ -62,27 +62,35 @@ class LengthClassifier:
             return ZERO_REPLACE
         return ret
 
+    def get_batch_smoothing(self, lengths):
+        lengths = np.asarray(lengths, dtype = np.uint64)
+        probs = np.empty_like(lengths, dtype = np.float64)
+        probs[lengths >= 30000000] = 0.005
+        probs[lengths < 30000000] = 0.03
+        probs[lengths == 0] = 1
+        return probs
+
     def get_batch_cryptic_ecdf(self, lengths):
         """
         Get probabilities for lengths based on ECDF of lengths of
         unrelated pairs.
         """
-        # len_zero_prob = self._cryptic_distribution.zero_prob
+        len_zero_prob = self._cryptic_distribution.zero_prob
         lengths = np.asarray(lengths, dtype = np.uint32) 
         zero_len_i = (lengths == 0)
         nonzero_len_i = np.invert(zero_len_i)
         
         # ret = (1 - self._empirical_cryptic_distribution(lengths)) * (1 - len_zero_prob)
-        ret = 1 - self._empirical_cryptic_distribution(lengths)
+        # ret = 1 - self._empirical_cryptic_distribution(lengths)
+        ret = 1 - self._empirical_cryptic_distribution_nozero(lengths) * (1 - len_zero_prob)
+        zero_i = (ret == 0)
+        min_val = 1 - self._empirical_cryptic_distribution.y[-2]
+        # min_val = 0.00000005
+        # ret[ret < min_val] = min_val
+        ret[zero_i] = min_val
 
-        # zero_i = (ret == 0)
-        # min_val = 1 - self._empirical_cryptic_distribution.y[-2]
-        min_val = 0.000001
-        ret[ret < min_val] = min_val
-        # ret[zero_i] = min_val
-
-        ret[zero_len_i] = self._cryptic_distribution.zero_prob
-        # ret[zero_len_i] = len_zero_prob
+        # ret[zero_len_i] = self._cryptic_distribution.zero_prob
+        ret[zero_len_i] = len_zero_prob
         return ret
 
     def get_batch_cryptic(self, lengths):
@@ -224,9 +232,10 @@ def generate_classifier(population, labeled_nodes, genome_generator,
     cryptic_lens = cryptic_lengths(population, labeled_nodes,
                                    generations_back_shared,
                                    min_segment_length)
-    cryptic_ecdf = labeled_cryptic_ecdf(population, labeled_nodes,
-                                        generations_back_shared,
-                                        min_segment_length)
+    # cryptic_ecdf = labeled_cryptic_ecdf(population, labeled_nodes,
+    #                                     generations_back_shared,
+    #                                     min_segment_length)
+    # classifier._cryptic_ecdf = cryptic_ecfd
     # We still fit a hurdle gamma to get the zero probability, and to
     # keep the option of switching back in the future easier.
     cryptic_params = HurdleGammaParams(*fit_hurdle_gamma(cryptic_lens))
@@ -235,7 +244,10 @@ def generate_classifier(population, labeled_nodes, genome_generator,
     classifier._cryptic_distribution = cryptic_params
     print("Generating ecdf")
     classifier._empirical_cryptic_distribution = ECDF(cryptic_lens, "left")
-    classifier._cryptic_ecdf = cryptic_ecdf
+    nonzero_cryptic_lens = cryptic_lens[np.nonzero(cryptic_lens)]
+    classifier._empirical_cryptic_distribution_nozero = ECDF(nonzero_cryptic_lens,
+                                                             "left")
+
     return classifier
 
 def labeled_cryptic_ecdf(population, labeled_nodes, generations_back_shared,
