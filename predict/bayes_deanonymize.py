@@ -18,6 +18,8 @@ import pdb
 
 def calc_for_pair(node_a, node_b, length_classifier, shared_map, id_map,
                   generation_map, unexpected = UNEXPECTED_IBD):
+    nonzero_ibd_count = sum(1 for x in shared_map.values() if x > 0)
+    print("Nonzero IBD with {} labeled nodes".format(nonzero_ibd_count))
     for labeled_node_id in length_classifier._labeled_nodes:
         labeled_node = id_map[labeled_node_id]
         shared = shared_map[labeled_node_id]
