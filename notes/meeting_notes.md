@@ -103,6 +103,12 @@
 * Try customizing smoothing to the amount of error (eg on distance to first missing link)
 * Put a floor on ECDF probability.
 
+02-20-17
+========
+
+* Look at prediction accuracy where parents are missing vs where parents are not missing
+* Look at first missing ancestor
+* Look at a plot of % labeled nodes vs accuracy
 
 Command to generate section headers:
 date +"%m-%d-%y"
