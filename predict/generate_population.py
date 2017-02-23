@@ -62,6 +62,7 @@ if not isclose(sum(multi_partner_prob), 1.0):
 cond_probs = conditionalize_partner_probs(multi_partner_prob)
 
 node_generator = NodeGenerator()
+print("Generating founders")
 founders = [node_generator.generate_node() for _ in range(args.generation_size)]
 
 tree = tree_from_file(args.tree_file)
@@ -70,6 +71,7 @@ for person in founders:
     tree.add_individual(choice(leaves), person)
 population = HierarchicalIslandPopulation(tree)
 
+print("Adding more generations")
 for _ in range(args.num_generations - 1):
     population.new_generation(non_paternity_rate = args.non_paternity,
                               adoption_rate = args.adoption,
@@ -102,4 +104,5 @@ if args.output_file:
         # python functions, you may need to increase the native stack
         # depth using ulimit -s
         # https://docs.python.org/3.4/library/pickle.html#what-can-be-pickled-and-unpickled
+        print("Saving population file to {}".format(args.output_file))
         dump(population, pickle_file, protocol = HIGHEST_PROTOCOL)
