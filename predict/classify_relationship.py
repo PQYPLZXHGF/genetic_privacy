@@ -65,9 +65,9 @@ class LengthClassifier:
     def get_batch_smoothing(self, lengths):
         lengths = np.asarray(lengths, dtype = np.uint64)
         probs = np.empty_like(lengths, dtype = np.float64)
-        probs[lengths >= 30000000] = 0.005
-        probs[lengths < 30000000] = 0.03
-        probs[lengths == 0] = 1
+        probs[lengths >= 30000000] = 0.00117543 # 0.00109784412 # 0.00145073 # 0.005
+        probs[lengths < 30000000] = 0.01963307 # 0.0188414224 # 0.01967879 # 0.03
+        probs[lengths == 0] = 0.98162761 # 1
         return probs
 
     def get_batch_cryptic_ecdf(self, lengths):
@@ -313,7 +313,7 @@ def shared_to_directory(population, labeled_nodes, genome_generator,
     unlabeled_nodes = chain.from_iterable(generation.members
                                           for generation
                                           in population.generations[-3:])
-    unlabeled_nodes = set(unlabeled_nodes) - labeled_nodes
+    unlabeled_nodes = set(unlabeled_nodes) # - labeled_nodes
     print("Finding related pairs.")
     pairs = related_pairs(unlabeled_nodes, labeled_nodes, population,
                           generations_back_shared)
@@ -331,15 +331,15 @@ def shared_to_directory(population, labeled_nodes, genome_generator,
         print("iteration {}".format(i))
         print("Cleaning genomes.")
         population.clean_genomes()
-        print("Perturbing parentage")
-        suppressor.suppress(population)
+        # print("Perturbing parentage")
+        # suppressor.suppress(population)
         print("Generating genomes")
         generate_genomes(population, genome_generator, recombinators, 3,
                          true_genealogy = False)
         print("Calculating shared length")
         _calculate_shared_to_fds(pairs, fds, min_segment_length)
-        print("Fixing perturbation")
-        suppressor.unsuppress()
+        # print("Fixing perturbation")
+        # suppressor.unsuppress()
     for fd in fds.values():
         fd.close()
         
