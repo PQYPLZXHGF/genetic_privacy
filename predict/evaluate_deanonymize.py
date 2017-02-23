@@ -4,6 +4,7 @@ from random import sample, shuffle, getstate, setstate, seed
 from pickle import load
 from argparse import ArgumentParser
 from util import recent_common_ancestor, error_between_nodes
+from math import sqrt
 
 import pdb
 
@@ -82,6 +83,9 @@ to_error_correct = []
 one_path_error = 0
 both_path_error = 0
 no_path_error = 0
+one_path_error_correct = 0
+both_path_error_correct = 0
+no_path_error_correct = 0
 no_common_ancestor = 0
 print("Attempting to identify {} random nodes.".format(len(unlabeled)))
 for i, node in enumerate(unlabeled):
@@ -92,23 +96,34 @@ for i, node in enumerate(unlabeled):
     if node in identified:
         correct += 1
         print("correct")
-        for labeled_node in labeled_nodes:
-            error = error_between_nodes(node, labeled_node,
-                                        population.node_to_generation,
-                                        False)
-            if len(error[0]) > 0:
-                from_error_correct.append(error[0][0])
-            if len(error[1]) > 0:
-                to_error_correct.append(error[1][0])
     else:
         incorrect_examples.add(node._id)
         print("incorrect")
         incorrect += 1
-        for labeled_node in labeled_nodes:
-            error = error_between_nodes(node, labeled_node,
-                                        population.node_to_generation,
-                                        False)
-            path_error = 0
+        rca, distance = recent_common_ancestor(node, next(iter(identified)),
+                                               population.node_to_generation)
+        if distance is None:
+            no_common_ancestor += 1
+        else:
+            incorrect_distances.append(distance)
+    for labeled_node in labeled_nodes:
+        error = error_between_nodes(node, labeled_node,
+                                    population.node_to_generation, False)
+        path_error = 0
+        if node in identified:
+            if len(error[0]) > 0:
+                from_error_correct.append(error[0][0])
+                path_error += 1
+            if len(error[1]) > 0:
+                to_error_correct.append(error[1][0])
+                path_error += 1
+            if path_error == 1:
+                one_path_error_correct += 1
+            elif path_error == 2:
+                both_path_error_correct += 1
+            else:
+                no_path_error_correct += 1
+        else:
             if len(error[0]) > 0:
                 path_error += 1
                 from_error.append(error[0][0])
@@ -117,30 +132,29 @@ for i, node in enumerate(unlabeled):
                 to_error.append(error[1][0])
             if path_error == 1:
                 one_path_error += 1
-            if path_error == 2:
+            elif path_error == 2:
                 both_path_error += 1
             else:
                 no_path_error += 1
-        rca, distance = recent_common_ancestor(node, next(iter(identified)),
-                                               population.node_to_generation)
-        if distance is None:
-            no_common_ancestor += 1
-        else:
-            incorrect_distances.append(distance)
-
 
 print("{} correct, {} incorrect, {} total.".format(correct, incorrect,
                                                   len(unlabeled)))
-print("{} percent accurate.".format(correct / len(unlabeled)))
-print("Incorrectly guessed nodes: {}".format(incorrect_examples))
+percent_accurate = correct / len(unlabeled)
+std_dev = sqrt(percent_accurate * (1 - percent_accurate) * len(unlabeled)) / len(unlabeled)
+print("{}±{} percent accurate.".format(percent_accurate, std_dev))
+# print("Incorrectly guessed nodes: {}".format(incorrect_examples))
 print("Relationship distance stats: {}".format(stats.describe(incorrect_distances)))
-print("No common ancestor occured {} times.".format(no_common_ancestor))
-print("Error from correct node to rca stats: {}".format(stats.describe(from_error)))
-print("Error from labeled node to rca stats: {}".format(stats.describe(to_error)))
+# print("No common ancestor occured {} times.".format(no_common_ancestor))
+print("Error from correct node to rca mean: {}".format(stats.describe(from_error).mean))
+print("Error from labeled node to rca mean: {}".format(stats.describe(to_error).mean))
 total_path_error = one_path_error + both_path_error + no_path_error
-print("Fraction there is error on one side of path: {}, both sides: {}".format(one_path_error / total_path_error, both_path_error / total_path_error))
+print("Fraction there is error on one side of path when prediction is wrong: {}, both sides: {}".format(one_path_error / total_path_error, both_path_error / total_path_error))
+
+
 
 if len(from_error_correct) > 0:
-    print("Error from correct node to rca when correct stats: {}".format(stats.describe(from_error_correct)))
+    print("Error from correct node to rca when correct mean: {}".format(stats.describe(from_error_correct).mean))
 if len(to_error_correct) > 0:
-    print("Error from labeled node to rca when correct stats: {}".format(stats.describe(to_error_correct)))
+    print("Error from labeled node to rca when correct stats: {}".format(stats.describe(to_error_correct).mean))
+total_path_error_correct = one_path_error_correct + both_path_error_correct + no_path_error_correct
+print("Fraction there is error on one side of path when prediction is correct: {}, both sides: {}".format(one_path_error_correct / total_path_error_correct, both_path_error_correct / total_path_error_correct))

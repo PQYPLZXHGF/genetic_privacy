@@ -1,4 +1,5 @@
 from collections import namedtuple
+from pickle import dump
 
 # import pyximport; pyximport.install()
 import numpy as np
@@ -8,7 +9,8 @@ from classify_relationship import (LengthClassifier,
 from util import recent_common_ancestor, first_missing_ancestor
 
 ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
-                                                 "probabilities"])
+                                                 "cryptic_start_i",
+                                                 "cryptic_stop_i"])
 MINIMUM_LABELED_NODES = 5
 INF = float("inf")
 INF_REPLACE = 1.0
@@ -104,14 +106,12 @@ class BayesDeanonymize:
         batch_node_id = []
         batch_labeled_node_id = []
         batch_lengths = []
-        cryptic_indices = dict()
         batch_cryptic_lengths = []
         batch_cryptic_labeled_id = []
         distributions = length_classifier._distributions
         nodes = (member for member in self._population.members
                  if member.genome is not None)
         for node in nodes:
-            node_probs = []
             node_start_i = len(batch_node_id)
             node_id = node._id
             cryptic_start_i = len(batch_cryptic_lengths)
@@ -129,8 +129,7 @@ class BayesDeanonymize:
             cryptic_stop_i = len(batch_cryptic_lengths)
             node_stop_i = len(batch_node_id)
             node_data[node] = ProbabilityData(node_start_i, node_stop_i,
-                                              node_probs)
-            cryptic_indices[node] = (cryptic_start_i, cryptic_stop_i)
+                                              cryptic_start_i, cryptic_stop_i)
 
         calc_prob = length_classifier.get_batch_probability(batch_lengths,
                                                             batch_node_id,
@@ -139,17 +138,27 @@ class BayesDeanonymize:
         cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
         # cryptic_prob = length_classifier.get_batch_ecdf(batch_cryptic_lengths,
         #                                                 batch_cryptic_labeled_id)
+        
+        # index_data = {node._id: tuple(indices)
+        #               for node, indices in node_data.items()}
+        # siblings = {node._id for node in get_sibling_group(actual_node)}
+        # to_dump = {"actual_node_id": actual_node._id,
+        #            "calc_prob": calc_prob,
+        #            "cryptic_lengths": batch_cryptic_lengths,
+        #            "siblings": siblings,
+        #            "index_data": index_data}
+        # output_filename = "/media/paul/Fast Storage/optimize_data/{}.pickle".format(actual_node._id)
+        # with open(output_filename, "wb") as pickle_file:
+        #     dump(to_dump, pickle_file)
         node_probabilities = dict()
         for node, prob_data in node_data.items():
-            cryptic_start_i, cryptic_stop_i = cryptic_indices[node]
+            start_i, stop_i, cryptic_start_i, cryptic_stop_i = prob_data
             if node == actual_node:
                 pass
                 # import pdb
                 # pdb.set_trace()
-            node_calc = calc_prob[prob_data.start_i:prob_data.stop_i]
+            node_calc = calc_prob[start_i:stop_i]
             node_cryptic = cryptic_prob[cryptic_start_i:cryptic_stop_i]
-            # log_prob = (np.sum(np.log(node_calc)) +
-            #             np.sum(np.log(prob_data.probabilities)))
             log_prob = (np.sum(np.log(node_calc)) +
                         np.sum(np.log(node_cryptic)))
             node_probabilities[node] = log_prob

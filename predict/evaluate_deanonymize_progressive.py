@@ -16,7 +16,6 @@ parser = ArgumentParser(description = "Evaluate performance of classification.")
 parser.add_argument("population")
 parser.add_argument("classifier")
 parser.add_argument("--num_node", "-n", type = int, default = 10)
-parser.add_argument("--test_node", "-t", type = int, action = "append")
 parser.add_argument("--start", "-st", type = int, default = 5,
                     help = "Number of labeled nodes to start with.")
 parser.add_argument("--stride", "-s", type = int, default = 5,
