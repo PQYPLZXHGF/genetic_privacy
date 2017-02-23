@@ -80,22 +80,12 @@ for _ in range(args.num_generations - 1):
                               unknown_father_rate = args.missing_father)
 
 if not args.no_genomes:
-    # tr = tracker.SummaryTracker()
-    import time
     print("Loading recombination rates")
-    start = time.perf_counter()
     recombinators = recombinators_from_directory(args.recombination_dir)
-    stop = time.perf_counter()
-    print("Recombination rates loaded. Took {} seconds".format(stop - start))
     chrom_sizes = recombinators[Sex.Male]._num_bases
     genome_generator = RecombGenomeGenerator(chrom_sizes)
+    print("Generating genomes")
     generate_genomes(population, genome_generator, recombinators, 3)
-    # tr.print_diff()
-    # summary.print_(summary.summarize(muppy.get_objects()))
-
-# genomes = [m.genome for m in population.members]
-# print("genome sizes: " + str(asizeof.asizeof(genomes) // 1024))
-# print("population size: " + str(asizeof.asizeof(population) // 1024))
 
 if args.output_file:
     with open(args.output_file, "wb") as pickle_file:
