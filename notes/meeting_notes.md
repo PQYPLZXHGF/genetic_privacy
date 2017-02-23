@@ -110,5 +110,13 @@
 * Look at first missing ancestor
 * Look at a plot of % labeled nodes vs accuracy
 
+02-23-17
+========
+
+* Look at accuracty with respect to generation
+* Look into using a jupyter notebook for analyzing results
+* How often is our target node in the top 5 results returned
+* The probability of the target node vs the probability of the next most likely node can be a measure of confidence.
+
 Command to generate section headers:
 date +"%m-%d-%y"
