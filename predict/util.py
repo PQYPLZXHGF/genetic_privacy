@@ -1,7 +1,8 @@
 from itertools import combinations, product, chain
 from random import sample
 from collections import deque
-from math import inf
+
+inf = float("inf")
 
 def all_ancestors(node, suspected = False):
     ancestors = set()
