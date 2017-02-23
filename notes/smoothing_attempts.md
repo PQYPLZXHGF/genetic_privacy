@@ -161,4 +161,15 @@ Error from correct node to rca when correct stats: DescribeResult(nobs=9621, min
 
 Error from labeled node to rca when correct stats: DescribeResult(nobs=9403, minmax=(0, 8), mean=2.7356162926725514, variance=4.6122890984454337, skewness=0.42323811590505633, kurtosis=-0.8760906082584978)
 
+10% missing mother and father link; using piecewise smoothing function, 300 labeled nodes.
+-----------------------------------
+3979 correct, 6021 incorrect, 10000 total.
+0.3979 percent accurate.
+Relationship distance stats: DescribeResult(nobs=5874, minmax=(1, 9), mean=5.0822267620020432, variance=5.0923351734978732, skewness=-0.14818114631598264, kurtosis=-1.3131075090549345)
+Error from correct node to rca mean: 2.406436959358237
+Error from labeled node to rca mean: 2.537692194762754
+Fraction there is error on one side of path when prediction is wrong: 0.4592038974699662, both sides: 0.26761833582461386
+Error from correct node to rca when correct mean: 2.9864610031470007
+Error from labeled node to rca when correct stats: 2.559767074783499
+Fraction there is error on one side of path when prediction is correct: 0.45030577196950655, both sides: 0.21706542682416016
 
