@@ -5,6 +5,8 @@ from types import GeneratorType
 from pickle import Unpickler
 from collections import defaultdict
 
+import json
+
 from random_queue import RandomQueue
 from generation import Generation
 from sex import Sex

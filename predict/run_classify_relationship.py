@@ -8,8 +8,9 @@ from os import listdir
 
 from population import PopulationUnpickler
 from sex import Sex
-from classify_relationship import generate_classifier
+from classify_relationship import generate_classifier, related_pairs
 from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
+from to_json import to_json
 
 parser = ArgumentParser(description = "Generate a classifier which can (hopefully) identify individuals in a population.")
 parser.add_argument("population_file", help = "Pickled file with population")
@@ -28,17 +29,14 @@ parser.add_argument("--output_pickle", default = "distributions.pickle",
                     help = "File to store distributions in. Pickle format will be used. Default is 'distributions.pickle'")
 parser.add_argument("--non_paternity", "-np", type = float, default = 0.0,
                     help = "Non paternity rate for the adversary to assume.")
+parser.add_argument("--to_json", default = None,
+                    help = "If this flag is present, will instead store the population as json for faster computation in another language")
 
 args = parser.parse_args()
 
 print("Loading population")
 with open(args.population_file, "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
-
-print("Loading recombination data.")
-recombinators = recombinators_from_directory("../data/recombination_rates/")
-chrom_sizes = recombinators[Sex.Male]._num_bases
-genome_generator = RecombGenomeGenerator(chrom_sizes)
 
 if not args.recover:
     potentially_labeled = list(chain.from_iterable([generation.members
@@ -53,6 +51,24 @@ else:
     print("Recovering run")
     labeled_nodes = [population.id_mapping[int(filename)]
                      for filename in listdir(args.work_dir)]
+
+if args.to_json:
+    unlabeled_nodes = set(chain.from_iterable(generation.members
+                                          for generation
+                                          in population.generations[-3:]))
+    related_nodes = related_pairs(unlabeled_nodes, labeled_nodes, population,
+                                  args.gen_back)
+    json = to_json(population, labeled_nodes, related_nodes)
+    with open(args.to_json, "w") as json_file:
+        json_file.write(json)
+    exit()
+
+print("Loading recombination data.")
+recombinators = recombinators_from_directory("../data/recombination_rates/")
+chrom_sizes = recombinators[Sex.Male]._num_bases
+genome_generator = RecombGenomeGenerator(chrom_sizes)
+
+
 print("Populating length classifier.")
 
 clobber = not (args.recover or args.num_iterations == 0)
