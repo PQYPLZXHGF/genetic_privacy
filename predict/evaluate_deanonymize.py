@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from collections import Counter, defaultdict
 from random import sample, shuffle, getstate, setstate, seed
 from pickle import load
 from argparse import ArgumentParser
@@ -12,6 +13,7 @@ from scipy import stats
 
 from bayes_deanonymize import BayesDeanonymize
 from population import PopulationUnpickler
+# from data_logging import write_log
 
 parser = ArgumentParser(description = "Evaluate performance of classification.")
 parser.add_argument("population")
@@ -74,6 +76,9 @@ else:
 
 correct = 0
 incorrect = 0
+common_guessed = Counter()
+# Maps generation -> counter with keys "correct" and "incorrect"
+generation_error = defaultdict(Counter)
 incorrect_examples = set()
 incorrect_distances = []
 from_error = []
@@ -87,16 +92,28 @@ one_path_error_correct = 0
 both_path_error_correct = 0
 no_path_error_correct = 0
 no_common_ancestor = 0
+generation_map = population.node_to_generation
+skipped = 0
+# write_log("labeled_nodes", [node._id for node in labeled_nodes])
+# write_log("target_nodes", [node._id for node in unlabeled])
 print("Attempting to identify {} random nodes.".format(len(unlabeled)))
 for i, node in enumerate(unlabeled):
     print("Iteration: {}, actual node ID: {}".format(i + 1, node._id))
-    identified = bayes.identify(node.genome, node, population)
+    # identified = bayes.identify(node.genome, node, population)
+    identified, ln_ratio = bayes.identify(node.genome, node, population)
+    # if ln_ratio < 0.1:
+    #     skipped += 1
+    #     continue
+    common_guessed[frozenset(identified)] += 1
     assert len(identified) > 0
     # pdb.set_trace()
+    node_generation = generation_map[node]
     if node in identified:
+        generation_error[node_generation]["correct"] += 1
         correct += 1
         print("correct")
     else:
+        generation_error[node_generation]["incorrect"] += 1
         incorrect_examples.add(node._id)
         print("incorrect")
         incorrect += 1
@@ -137,11 +154,19 @@ for i, node in enumerate(unlabeled):
             else:
                 no_path_error += 1
 
+print("{} skipped".format(skipped))
 print("{} correct, {} incorrect, {} total.".format(correct, incorrect,
                                                   len(unlabeled)))
-percent_accurate = correct / len(unlabeled)
-std_dev = sqrt(percent_accurate * (1 - percent_accurate) * len(unlabeled)) / len(unlabeled)
-print("{}±{} percent accurate.".format(percent_accurate, std_dev))
+total = correct + incorrect
+percent_accurate = correct / total
+std_dev = sqrt(percent_accurate * (1 - percent_accurate) * total) / total
+print("{}±{:0.3} percent accurate.".format(percent_accurate, std_dev))
+for generation, counter in generation_error.items():
+    gen_correct = counter["correct"]
+    gen_incorrect = counter["incorrect"]
+    total = gen_correct + gen_incorrect
+    format_string = "For generation {}: {} accuracy, {} total."
+    print(format_string.format(generation, gen_correct / total, total))
 # print("Incorrectly guessed nodes: {}".format(incorrect_examples))
 print("Relationship distance stats: {}".format(stats.describe(incorrect_distances)))
 # print("No common ancestor occured {} times.".format(no_common_ancestor))
@@ -158,3 +183,5 @@ if len(to_error_correct) > 0:
     print("Error from labeled node to rca when correct stats: {}".format(stats.describe(to_error_correct).mean))
 total_path_error_correct = one_path_error_correct + both_path_error_correct + no_path_error_correct
 print("Fraction there is error on one side of path when prediction is correct: {}, both sides: {}".format(one_path_error_correct / total_path_error_correct, both_path_error_correct / total_path_error_correct))
+
+# pdb.set_trace()
