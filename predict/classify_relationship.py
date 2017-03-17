@@ -13,6 +13,7 @@ import numpy as np
 # import pyximport; pyximport.install()
 
 from common_segments import common_segment_lengths
+from data_logging import write_log
 from population_genomes import generate_genomes
 from population_statistics import ancestors_of
 from gamma import fit_hurdle_gamma
