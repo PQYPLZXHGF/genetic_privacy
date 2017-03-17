@@ -129,14 +129,6 @@ def _read_recombination_file(filename):
             rows.append(row)
     return rows
 
-def _inverse_cumulative_sum(x):
-    """
-    Given some vector x which is the cumulative sum of another vector
-    y, returns y.
-    http://stackoverflow.com/a/16541726/300539
-    """
-    return np.cumsum(x[::-1])[::-1]
-
 def read_sex_lengths(filename):
     """
     Read in file from decode paper that has the centimorgan length of
