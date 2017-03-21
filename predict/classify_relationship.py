@@ -212,7 +212,7 @@ def generate_classifier(population, labeled_nodes, genome_generator,
         rmtree(directory)
         makedirs(directory)
     num_generations = population.num_generations
-    clear_index = num_generations - generations_back_shared - 1
+    clear_index = num_generations - generations_back_shared
     to_clear = population.generations[clear_index].members
     for node in to_clear:
         node.suspected_mother = None
