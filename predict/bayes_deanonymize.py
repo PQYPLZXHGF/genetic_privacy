@@ -1,4 +1,6 @@
 from collections import namedtuple
+from itertools import chain
+from heapq import nlargest
 from pickle import dump
 
 # import pyximport; pyximport.install()
@@ -6,6 +8,7 @@ import numpy as np
 
 from classify_relationship import (LengthClassifier,
                                    shared_segment_length_genomes)
+from data_logging import write_log
 from util import recent_common_ancestor, first_missing_ancestor
 
 ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
@@ -138,7 +141,7 @@ class BayesDeanonymize:
         cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
         # cryptic_prob = length_classifier.get_batch_ecdf(batch_cryptic_lengths,
         #                                                 batch_cryptic_labeled_id)
-        
+
         # index_data = {node._id: tuple(indices)
         #               for node, indices in node_data.items()}
         # siblings = {node._id for node in get_sibling_group(actual_node)}
@@ -162,8 +165,10 @@ class BayesDeanonymize:
             log_prob = (np.sum(np.log(node_calc)) +
                         np.sum(np.log(node_cryptic)))
             node_probabilities[node] = log_prob
-        potential_node = max(node_probabilities.items(),
-                             key = lambda x: x[1])[0]
+        # potential_node = max(node_probabilities.items(),
+        #                      key = lambda x: x[1])[0]
+        potential_nodes = nlargest(8, node_probabilities.items(),
+                                   key = lambda x: x[1])
         # common_ancestor = recent_common_ancestor(potential_node, actual_node,
         #                                          population.node_to_generation)
         # print("Actual node and guessed node have a common ancestor {} generations back.".format(common_ancestor[1]))
@@ -174,8 +179,28 @@ class BayesDeanonymize:
         #                           if member.genome is not None))
         # calc_for_pair(random_node, actual_node, length_classifier, shared_map, id_map)
         # calc_for_pair(random_node, potential_node, length_classifier, shared_map, id_map)
-        siblings = get_sibling_group(potential_node)
-        return siblings
+        # return get_sibling_group(potential_node)
+        top, top_log_prob = potential_nodes[0]
+        sibling_group = get_sibling_group(top)
+        for node, log_prob in potential_nodes[1:]:
+            if node in sibling_group:
+                continue
+            next_node = node
+            next_log_prob = log_prob
+            break
+        else:
+            next_node, next_log_prob = potential_nodes[1]
+                
+        log_ratio  = top_log_prob - next_log_prob
+        log_data = {"actual_node_id": actual_node._id,
+                    "prob_indices": prob_data,
+                    "calc_prob": calc_prob,
+                    "cryptic_prob": cryptic_prob
+                    "sibling_group": [node._id for node in sibling_group]}
+        write_log("run_data", log_data)
+        return (sibling_group, log_ratio)
+        # return set(chain.from_iterable(get_sibling_group(potential[0])
+        #                                for potential in potential_nodes))
 
 def get_sibling_group(node):
     """
