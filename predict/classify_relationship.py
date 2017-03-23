@@ -147,6 +147,8 @@ class LengthClassifier:
         return ret[inverse_i]
         
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
+        assert len(lengths) == len(query_nodes) == len(labeled_nodes)
+        assert len(lengths) > 0
         lengths = np.array(lengths, dtype = np.uint32)
         zero_i = (lengths == 0)
         nonzero_i = np.invert(zero_i)
