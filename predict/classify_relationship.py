@@ -15,7 +15,7 @@ import numpy as np
 from common_segments import common_segment_lengths
 from data_logging import write_log
 from population_genomes import generate_genomes
-from population_statistics import ancestors_of
+from population_statistics import ancestors_of, all_ancestors_of
 from gamma import fit_hurdle_gamma
 
 # ZERO_REPLACE = 1e-20
@@ -189,15 +189,14 @@ def related_pairs(unlabeled_nodes, labeled_nodes, population, generations):
     if type(labeled_nodes) != set:
         labeled_nodes = set(labeled_nodes)
     ancestors = dict()
-    for node in chain(unlabeled_nodes, labeled_nodes):
-        node_generation = generation_map[node]
-        from_latest = (num_generations - node_generation - 1)
-        generations_back =  generations - from_latest
-        ancestors[node] = ancestors_of(node, generations_back)
+    ancestors = {node: all_ancestors_of(node)
+                 for node
+                 in chain(unlabeled_nodes, labeled_nodes)}
+
     return [(unlabeled, labeled) for unlabeled, labeled
             in product(unlabeled_nodes, labeled_nodes)
             if (unlabeled != labeled and
-                len(ancestors[unlabeled].intersection(ancestors[labeled])) != 0)]
+                !ancestors[unlabeled].isdisjoint(ancestors[labeled]))]
 
 
 # At some point this should probably be turned into a "builder" class,
