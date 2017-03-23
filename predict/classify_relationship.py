@@ -196,7 +196,7 @@ def related_pairs(unlabeled_nodes, labeled_nodes, population, generations):
     return [(unlabeled, labeled) for unlabeled, labeled
             in product(unlabeled_nodes, labeled_nodes)
             if (unlabeled != labeled and
-                !ancestors[unlabeled].isdisjoint(ancestors[labeled]))]
+                not ancestors[unlabeled].isdisjoint(ancestors[labeled]))]
 
 
 # At some point this should probably be turned into a "builder" class,
