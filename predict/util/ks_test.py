@@ -10,6 +10,7 @@ from scipy import stats
 parser = ArgumentParser("Compare two simulation directories for discrepancies.")
 parser.add_argument("dir1")
 parser.add_argument("dir2")
+parser.add_argument("--subset", action = "store_true", default = False)
 args = parser.parse_args()
 
 def file_to_lengths(full_path):
@@ -39,22 +40,26 @@ def file_to_lengths(full_path):
 
 dir1_files = set(listdir(args.dir1))
 dir2_files = set(listdir(args.dir2))
-if  dir1_files != dir2_files:
+files = dir2_files
+if  dir1_files != dir2_files and not args.subset:
     print("Directories don't have same files")
     print("Difference is {}".format(dir1_files ^ dir2_files))
     exit()
+else:
+    files = dir1_files.intersection(dir2_files)
+    assert len(files) > 0
+    print("Using subset of size {}".format(len(files)))
 
 total = 0
 above = 0
 below = 0
-for filename_1, filename_2 in zip(sorted(list(dir1_files)),
-                                  sorted(list(dir2_files))):
+for filename in files:
     lengths_1 = {node_id: np.array(shared)
                  for node_id, shared
-                 in file_to_lengths(join(args.dir1, filename_1)).items()}
+                 in file_to_lengths(join(args.dir1, filename)).items()}
     lengths_2 = {node_id: np.array(shared)
                  for node_id, shared
-                 in file_to_lengths(join(args.dir2, filename_2)).items()}
+                 in file_to_lengths(join(args.dir2, filename)).items()}
     for node_id in lengths_1:
         statistic, p_value = stats.ks_2samp(lengths_1[node_id],
                                             lengths_2[node_id])
