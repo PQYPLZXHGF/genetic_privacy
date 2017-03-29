@@ -55,7 +55,25 @@ def ancestors_of(node, distance, suspected = True):
         if father is not None:
             to_visit.append((father, current_distance + 1))
     return ancestors
-    
+
+def all_ancestors_of(node, suspected = True):
+    to_visit = [node]
+    ancestors = set()
+    while len(to_visit) > 0:
+        current_node = to_visit.pop()
+        if suspected:
+            mother = current_node.suspected_mother
+            father = current_node.suspected_father
+        else:
+            mother = current_node.mother
+            father = current_node.father
+        if mother is not None:
+            ancestors.add(mother)
+            to_visit.append(mother)
+        if father is not None:
+            ancestors.add(father)
+            to_visit.append(father)
+    return ancestors
 
 def cdf_num_labeled_within_distance(population, distance, percent_labeled):
     # TODO: This function only works if there is strict monogamy
