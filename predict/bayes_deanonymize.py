@@ -182,23 +182,25 @@ class BayesDeanonymize:
         # return get_sibling_group(potential_node)
         top, top_log_prob = potential_nodes[0]
         sibling_group = get_sibling_group(top)
-        for node, log_prob in potential_nodes[1:]:
-            if node in sibling_group:
-                continue
-            next_node = node
-            next_log_prob = log_prob
-            break
-        else:
-            next_node, next_log_prob = potential_nodes[1]
+        # for node, log_prob in potential_nodes[1:]:
+        #     if node in sibling_group:
+        #         continue
+        #     next_node = node
+        #     next_log_prob = log_prob
+        #     break
+        # else:
+        #     next_node, next_log_prob = potential_nodes[1]
                 
-        log_ratio  = top_log_prob - next_log_prob
-        log_data = {"actual_node_id": actual_node._id,
-                    "prob_indices": prob_data,
-                    "calc_prob": calc_prob,
-                    "cryptic_prob": cryptic_prob
-                    "sibling_group": [node._id for node in sibling_group]}
-        write_log("run_data", log_data)
-        return (sibling_group, log_ratio)
+        # log_ratio  = top_log_prob - next_log_prob
+        # log_data = {"actual_node_id": actual_node._id,
+        #             "prob_indices": prob_data,
+        #             "calc_prob": calc_prob,
+        #             "cryptic_prob": cryptic_prob
+        #             "sibling_group": [node._id for node in sibling_group]}
+        # write_log("run_data", log_data)
+        # return (sibling_group, log_ratio)
+        # return (sibling_group, log_ratio)
+        return (sibling_group, 0)
         # return set(chain.from_iterable(get_sibling_group(potential[0])
         #                                for potential in potential_nodes))
 

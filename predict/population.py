@@ -64,24 +64,9 @@ class Population:
         self._node_to_generation = (node_to_generation, len(self._generations))
         return node_to_generation
 
-    def clean_genomes(self, generations = None):
-        """
-        Remove genomes from the first n given number of generations.
-        If generations is not specified, clears all generations genomes.
-        """
-        # TODO: This only works if generations is None
-        if generations is None:
-            generations = self.num_generations
-        # We want to start with the nodes that have genomes defined.
-        if self._generations_with_genomes is None:
-            start = 0
-        else:
-            start = self.num_generations - self._generations_with_genomes
-        generations_to_clear = self._generations[start:generations]
-        for person in chain.from_iterable(generation.members for generation
-                                          in generations_to_clear):
+    def clean_genomes(self):
+        for person in self.members:
             person.genome = None
-        self._generations_with_genomes = self._generations_with_genomes - generations
 
 
     @property

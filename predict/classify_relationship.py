@@ -358,8 +358,10 @@ def _calculate_shared_to_fds(pairs, fds, min_segment_length):
                                                   labeled.genome,
                                                   min_segment_length))
                    for unlabeled, labeled in pairs)
+    # for unlabeled, labeled, (avg, count) in shared_iter:
     for unlabeled, labeled, shared in shared_iter:
         fd = fds[labeled]
+        # fd.write("{}\t{}\t{}\n".format(unlabeled._id, avg, count))
         fd.write("{}\t{}\n".format(unlabeled._id, shared))
 
 def classifier_from_directory(directory, id_mapping):
@@ -410,6 +412,14 @@ def shared_segment_length_genomes(genome_a, genome_b, minimum_length):
     lengths = common_segment_lengths(genome_a, genome_b)
     seg_lengths = (x for x in lengths if x >= minimum_length)
     return sum(seg_lengths)
+
+def shared_stats_genomes(genome_a, genome_b, minimum_length):
+    lengths = [x for x in common_segment_lengths(genome_a, genome_b)
+               if x >= minimum_length]
+    num_segments = len(lengths)
+    if num_segments == 0:
+        return (0.0, 0)
+    return (sum(lengths) / num_segments, num_segments)
     
 def _shared_segment_length(node_a, node_b, minimum_length):
     return shared_segment_length_genomes(node_a.genome, node_b.genome,
