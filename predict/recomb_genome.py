@@ -50,6 +50,9 @@ class RecombGenomeGenerator():
         self._genome_id += 2
         return RecombGenome(mother, father)
 
+    def reset(self):
+        self._genome_id = 0
+
 def recombinators_from_directory(directory):
     """
     Given a directory of files downloaded from, returns a Recombinator
