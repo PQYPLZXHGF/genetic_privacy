@@ -227,28 +227,28 @@ def generate_classifier(population, labeled_nodes, genome_generator,
                             min_segment_length = min_segment_length,
                             generations_back_shared = generations_back_shared,
                             non_paternity = non_paternity)
-    print("Generating cryptic relative parameters")
-    population.clean_genomes()
-    generate_genomes(population, genome_generator, recombinators, 3,
-                     true_genealogy = True)
-    cryptic_lens = cryptic_lengths(population, labeled_nodes,
-                                   generations_back_shared,
-                                   min_segment_length)
+    # print("Generating cryptic relative parameters")
+    # population.clean_genomes()
+    # generate_genomes(population, genome_generator, recombinators, 3,
+    #                  true_genealogy = True)
+    # cryptic_lens = cryptic_lengths(population, labeled_nodes,
+    #                                generations_back_shared,
+    #                                min_segment_length)
     # cryptic_ecdf = labeled_cryptic_ecdf(population, labeled_nodes,
     #                                     generations_back_shared,
     #                                     min_segment_length)
     # classifier._cryptic_ecdf = cryptic_ecfd
     # We still fit a hurdle gamma to get the zero probability, and to
     # keep the option of switching back in the future easier.
-    cryptic_params = HurdleGammaParams(*fit_hurdle_gamma(cryptic_lens))
+    # cryptic_params = HurdleGammaParams(*fit_hurdle_gamma(cryptic_lens))
     print("Generating classifiers.")
     classifier = classifier_from_directory(directory, population.id_mapping)
-    classifier._cryptic_distribution = cryptic_params
-    print("Generating ecdf")
-    classifier._empirical_cryptic_distribution = ECDF(cryptic_lens, "left")
-    nonzero_cryptic_lens = cryptic_lens[np.nonzero(cryptic_lens)]
-    classifier._empirical_cryptic_distribution_nozero = ECDF(nonzero_cryptic_lens,
-                                                             "left")
+    # classifier._cryptic_distribution = cryptic_params
+    # print("Generating ecdf")
+    # classifier._empirical_cryptic_distribution = ECDF(cryptic_lens, "left")
+    # nonzero_cryptic_lens = cryptic_lens[np.nonzero(cryptic_lens)]
+    # classifier._empirical_cryptic_distribution_nozero = ECDF(nonzero_cryptic_lens,
+    #                                                          "left")
 
     return classifier
 
