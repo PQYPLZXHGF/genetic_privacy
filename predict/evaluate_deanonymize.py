@@ -47,7 +47,7 @@ if args.subset_labeled:
     # nodes is chosen.
     sorted_labeled = list(classifier._labeled_nodes)
     sorted_labeled.sort()
-     if args.deterministic_random:
+    if args.deterministic_random:
         rand_state = getstate()
         seed(42)
         shuffle(sorted_labeled)
