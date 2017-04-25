@@ -177,6 +177,10 @@ print("{} skipped".format(skipped))
 print("{} correct, {} incorrect, {} total.".format(correct, incorrect,
                                                    len(unlabeled)))
 stdout.flush()
+
+write_log("correct", correct)
+write_log("incorrect", incorrect)
+write_log("total", len(unlabeled))
 total = correct + incorrect
 percent_accurate = correct / total
 std_dev = sqrt(percent_accurate * (1 - percent_accurate) * total) / total
