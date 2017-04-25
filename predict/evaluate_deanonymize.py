@@ -14,11 +14,14 @@ from scipy import stats
 
 from bayes_deanonymize import BayesDeanonymize
 from population import PopulationUnpickler
-# from data_logging import write_log
+from data_logging import (write_log, change_logfile_name,
+                          stop_logging, start_logging)
 
 parser = ArgumentParser(description = "Evaluate performance of classification.")
 parser.add_argument("population")
 parser.add_argument("classifier")
+parser.add_argument("--data-logfile",
+                    help = "Filename to write log data to.")
 parser.add_argument("--num_node", "-n", type = int, default = 10)
 parser.add_argument("--test_node", "-t", type = int, action = "append")
 parser.add_argument("--subset_labeled", "-s", type = int, default = None,
@@ -27,6 +30,13 @@ parser.add_argument("--deterministic_random", "-d", action = "store_true",
                     help = "Seed the random number generator such that the same labeled nodes will be chosen on runs with the same number of nodes.")
 args = parser.parse_args()
 
+if args.data_logfile:
+    change_logfile_name(args.data_logfile)
+    start_logging()
+else:
+    stop_logging()
+
+write_log("args", args)
 
 print("Loading population.", flush = True)
 with open(args.population, "rb") as pickle_file:
@@ -56,6 +66,8 @@ if args.subset_labeled:
         shuffle(sorted_labeled)
     classifier._labeled_nodes = sorted_labeled[:args.subset_labeled]
 
+write_log("labeled nodes", [node._id for node in classifier._labeled_nodes])
+
 bayes = BayesDeanonymize(population, classifier)
 
 id_mapping = population.id_mapping
@@ -75,6 +87,8 @@ else:
         shuffle(all_unlabeled)
     unlabeled = all_unlabeled[:args.num_node]
 
+write_log("to identify", [node._id for node in unlabeled])
+
 correct = 0
 incorrect = 0
 common_guessed = Counter()
@@ -82,16 +96,16 @@ common_guessed = Counter()
 generation_error = defaultdict(Counter)
 incorrect_examples = set()
 incorrect_distances = []
-from_error = []
-to_error = []
-from_error_correct = []
-to_error_correct = []
-one_path_error = 0
-both_path_error = 0
-no_path_error = 0
-one_path_error_correct = 0
-both_path_error_correct = 0
-no_path_error_correct = 0
+# from_error = []
+# to_error = []
+# from_error_correct = []
+# to_error_correct = []
+# one_path_error = 0
+# both_path_error = 0
+# no_path_error = 0
+# one_path_error_correct = 0
+# both_path_error_correct = 0
+# no_path_error_correct = 0
 no_common_ancestor = 0
 generation_map = population.node_to_generation
 skipped = 0
@@ -125,36 +139,38 @@ for i, node in enumerate(unlabeled):
             no_common_ancestor += 1
         else:
             incorrect_distances.append(distance)
-    for labeled_node in labeled_nodes:
-        error = error_between_nodes(node, labeled_node,
-                                    population.node_to_generation, False)
-        path_error = 0
-        if node in identified:
-            if len(error[0]) > 0:
-                from_error_correct.append(error[0][0])
-                path_error += 1
-            if len(error[1]) > 0:
-                to_error_correct.append(error[1][0])
-                path_error += 1
-            if path_error == 1:
-                one_path_error_correct += 1
-            elif path_error == 2:
-                both_path_error_correct += 1
-            else:
-                no_path_error_correct += 1
-        else:
-            if len(error[0]) > 0:
-                path_error += 1
-                from_error.append(error[0][0])
-            if len(error[1]) > 0:
-                path_error += 1
-                to_error.append(error[1][0])
-            if path_error == 1:
-                one_path_error += 1
-            elif path_error == 2:
-                both_path_error += 1
-            else:
-                no_path_error += 1
+    write_log("evaluate", {"target node": node._id, "log ratio": ln_ratio,
+                           "identified": set(x._id for x in identified)})
+    # for labeled_node in labeled_nodes:
+    #     error = error_between_nodes(node, labeled_node,
+    #                                 population.node_to_generation, False)
+    #     path_error = 0
+    #     if node in identified:
+    #         if len(error[0]) > 0:
+    #             from_error_correct.append(error[0][0])
+    #             path_error += 1
+    #         if len(error[1]) > 0:
+    #             to_error_correct.append(error[1][0])
+    #             path_error += 1
+    #         if path_error == 1:
+    #             one_path_error_correct += 1
+    #         elif path_error == 2:
+    #             both_path_error_correct += 1
+    #         else:
+    #             no_path_error_correct += 1
+    #     else:
+    #         if len(error[0]) > 0:
+    #             path_error += 1
+    #             from_error.append(error[0][0])
+    #         if len(error[1]) > 0:
+    #             path_error += 1
+    #             to_error.append(error[1][0])
+    #         if path_error == 1:
+    #             one_path_error += 1
+    #         elif path_error == 2:
+    #             both_path_error += 1
+    #         else:
+    #             no_path_error += 1
     stdout.flush()
 
 print("{} skipped".format(skipped))
@@ -174,18 +190,18 @@ for generation, counter in generation_error.items():
 # print("Incorrectly guessed nodes: {}".format(incorrect_examples))
 print("Relationship distance stats: {}".format(stats.describe(incorrect_distances)))
 # print("No common ancestor occured {} times.".format(no_common_ancestor))
-print("Error from correct node to rca mean: {}".format(stats.describe(from_error).mean))
-print("Error from labeled node to rca mean: {}".format(stats.describe(to_error).mean))
-total_path_error = one_path_error + both_path_error + no_path_error
-print("Fraction there is error on one side of path when prediction is wrong: {}, both sides: {}".format(one_path_error / total_path_error, both_path_error / total_path_error))
+# print("Error from correct node to rca mean: {}".format(stats.describe(from_error).mean))
+# print("Error from labeled node to rca mean: {}".format(stats.describe(to_error).mean))
+# total_path_error = one_path_error + both_path_error + no_path_error
+# print("Fraction there is error on one side of path when prediction is wrong: {}, both sides: {}".format(one_path_error / total_path_error, both_path_error / total_path_error))
 
 
 
-if len(from_error_correct) > 0:
-    print("Error from correct node to rca when correct mean: {}".format(stats.describe(from_error_correct).mean))
-if len(to_error_correct) > 0:
-    print("Error from labeled node to rca when correct stats: {}".format(stats.describe(to_error_correct).mean))
-total_path_error_correct = one_path_error_correct + both_path_error_correct + no_path_error_correct
-print("Fraction there is error on one side of path when prediction is correct: {}, both sides: {}".format(one_path_error_correct / total_path_error_correct, both_path_error_correct / total_path_error_correct))
+# if len(from_error_correct) > 0:
+#     print("Error from correct node to rca when correct mean: {}".format(stats.describe(from_error_correct).mean))
+# if len(to_error_correct) > 0:
+#     print("Error from labeled node to rca when correct stats: {}".format(stats.describe(to_error_correct).mean))
+# total_path_error_correct = one_path_error_correct + both_path_error_correct + no_path_error_correct
+# print("Fraction there is error on one side of path when prediction is correct: {}, both sides: {}".format(one_path_error_correct / total_path_error_correct, both_path_error_correct / total_path_error_correct))
 
 # pdb.set_trace()

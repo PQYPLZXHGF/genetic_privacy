@@ -167,6 +167,10 @@ class BayesDeanonymize:
             node_probabilities[node] = log_prob
         # potential_node = max(node_probabilities.items(),
         #                      key = lambda x: x[1])[0]
+        write_log("identify", {"node": actual_node._id,
+                               "probs": {node._id: prob
+                                         for node, prob
+                                         in node_probabilities.items()}})
         potential_nodes = nlargest(8, node_probabilities.items(),
                                    key = lambda x: x[1])
         # common_ancestor = recent_common_ancestor(potential_node, actual_node,
