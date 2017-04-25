@@ -28,11 +28,11 @@ parser.add_argument("--deterministic_random", "-d", action = "store_true",
 args = parser.parse_args()
 
 
-print("Loading population.")
+print("Loading population.", flush = True)
 with open(args.population, "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
 
-print("Loading classifier")
+print("Loading classifier", flush = True)
 with open(args.classifier, "rb") as pickle_file:
     classifier = load(pickle_file)
 
@@ -97,7 +97,8 @@ generation_map = population.node_to_generation
 skipped = 0
 # write_log("labeled_nodes", [node._id for node in labeled_nodes])
 # write_log("target_nodes", [node._id for node in unlabeled])
-print("Attempting to identify {} random nodes.".format(len(unlabeled)))
+print("Attempting to identify {} random nodes.".format(len(unlabeled)),
+      flush = True)
 for i, node in enumerate(unlabeled):
     print("Iteration: {}, actual node ID: {}".format(i + 1, node._id))
     # identified = bayes.identify(node.genome, node, population)
@@ -158,7 +159,8 @@ for i, node in enumerate(unlabeled):
 
 print("{} skipped".format(skipped))
 print("{} correct, {} incorrect, {} total.".format(correct, incorrect,
-                                                  len(unlabeled)))
+                                                   len(unlabeled)))
+stdout.flush()
 total = correct + incorrect
 percent_accurate = correct / total
 std_dev = sqrt(percent_accurate * (1 - percent_accurate) * total) / total
