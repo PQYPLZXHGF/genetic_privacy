@@ -6,6 +6,7 @@ from pickle import load
 from argparse import ArgumentParser
 from util import recent_common_ancestor, error_between_nodes
 from math import sqrt
+from sys import stdout
 
 import pdb
 
@@ -46,7 +47,7 @@ if args.subset_labeled:
     # nodes is chosen.
     sorted_labeled = list(classifier._labeled_nodes)
     sorted_labeled.sort()
-    if args.deterministic_random:
+     if args.deterministic_random:
         rand_state = getstate()
         seed(42)
         shuffle(sorted_labeled)
@@ -153,6 +154,7 @@ for i, node in enumerate(unlabeled):
                 both_path_error += 1
             else:
                 no_path_error += 1
+    stdout.flush()
 
 print("{} skipped".format(skipped))
 print("{} correct, {} incorrect, {} total.".format(correct, incorrect,
