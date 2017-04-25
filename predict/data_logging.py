@@ -1,10 +1,11 @@
+from collections import defaultdict
 from datetime import datetime
 from os import rename
 from pickle import dump, load
 
 import os.path
 
-timestamp = datetime.now().strftime("%Y-%m-%dT%H_%M_%S%z")
+timestamp = datetime.now().strftime("%Y-%m-%d_%H_%M_%S%z")
 log_filename = "logfile_{}.pickle".format(timestamp)
 logging = True
 
@@ -13,26 +14,17 @@ def write_log(key, data):
         return
     # TODO: Keep file open?
     with open(log_filename, "ab") as log_file:
-        dump(log_file, (key, data))
+        dump((key, data), log_file)
 
 def load_log(log_file):
-    items = []
+    ret = defaultdict(list)
     with open(log_file, "rb") as log_file:
         while True:
             try:
-                items.append(load(log_file))
+                key, data = load(log_file)
+                ret[key].append(data)
             except EOFError:
                 break
-    ret = dict()
-    for key, data in items:
-        if key in ret:
-            entry = ret[key]
-            if type(entry) == list:
-                entry.append(data)
-            else:
-                ret[key] = [entry, data]
-        else:
-            ret[key] = data
     return ret
 
 def change_logfile_name(new_filename):
@@ -40,6 +32,9 @@ def change_logfile_name(new_filename):
     if os.path.exists(log_filename):
         os.rename(log_filename, new_filename)
     log_filename = new_filename
+
+def get_logfile_name():
+    return log_filename
 
 def stop_logging():
     logging = False
