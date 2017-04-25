@@ -66,7 +66,7 @@ if args.subset_labeled:
         shuffle(sorted_labeled)
     classifier._labeled_nodes = sorted_labeled[:args.subset_labeled]
 
-write_log("labeled nodes", [node._id for node in classifier._labeled_nodes])
+write_log("labeled nodes", classifier._labeled_nodes)
 
 bayes = BayesDeanonymize(population, classifier)
 
