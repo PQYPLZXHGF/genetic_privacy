@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 
 from collections import Counter, defaultdict
-from random import sample, shuffle, getstate, setstate, seed
+from random import shuffle, getstate, setstate, seed
 from pickle import load
 from argparse import ArgumentParser
-from util import recent_common_ancestor, error_between_nodes
 from math import sqrt
 from sys import stdout
 
 import pdb
-
-from scipy import stats
 
 from bayes_deanonymize import BayesDeanonymize
 from population import PopulationUnpickler
@@ -133,44 +130,8 @@ for i, node in enumerate(unlabeled):
         incorrect_examples.add(node._id)
         print("incorrect")
         incorrect += 1
-        rca, distance = recent_common_ancestor(node, next(iter(identified)),
-                                               population.node_to_generation)
-        if distance is None:
-            no_common_ancestor += 1
-        else:
-            incorrect_distances.append(distance)
     write_log("evaluate", {"target node": node._id, "log ratio": ln_ratio,
                            "identified": set(x._id for x in identified)})
-    # for labeled_node in labeled_nodes:
-    #     error = error_between_nodes(node, labeled_node,
-    #                                 population.node_to_generation, False)
-    #     path_error = 0
-    #     if node in identified:
-    #         if len(error[0]) > 0:
-    #             from_error_correct.append(error[0][0])
-    #             path_error += 1
-    #         if len(error[1]) > 0:
-    #             to_error_correct.append(error[1][0])
-    #             path_error += 1
-    #         if path_error == 1:
-    #             one_path_error_correct += 1
-    #         elif path_error == 2:
-    #             both_path_error_correct += 1
-    #         else:
-    #             no_path_error_correct += 1
-    #     else:
-    #         if len(error[0]) > 0:
-    #             path_error += 1
-    #             from_error.append(error[0][0])
-    #         if len(error[1]) > 0:
-    #             path_error += 1
-    #             to_error.append(error[1][0])
-    #         if path_error == 1:
-    #             one_path_error += 1
-    #         elif path_error == 2:
-    #             both_path_error += 1
-    #         else:
-    #             no_path_error += 1
     stdout.flush()
 
 print("{} skipped".format(skipped))
@@ -191,21 +152,3 @@ for generation, counter in generation_error.items():
     total = gen_correct + gen_incorrect
     format_string = "For generation {}: {} accuracy, {} total."
     print(format_string.format(generation, gen_correct / total, total))
-# print("Incorrectly guessed nodes: {}".format(incorrect_examples))
-print("Relationship distance stats: {}".format(stats.describe(incorrect_distances)))
-# print("No common ancestor occured {} times.".format(no_common_ancestor))
-# print("Error from correct node to rca mean: {}".format(stats.describe(from_error).mean))
-# print("Error from labeled node to rca mean: {}".format(stats.describe(to_error).mean))
-# total_path_error = one_path_error + both_path_error + no_path_error
-# print("Fraction there is error on one side of path when prediction is wrong: {}, both sides: {}".format(one_path_error / total_path_error, both_path_error / total_path_error))
-
-
-
-# if len(from_error_correct) > 0:
-#     print("Error from correct node to rca when correct mean: {}".format(stats.describe(from_error_correct).mean))
-# if len(to_error_correct) > 0:
-#     print("Error from labeled node to rca when correct stats: {}".format(stats.describe(to_error_correct).mean))
-# total_path_error_correct = one_path_error_correct + both_path_error_correct + no_path_error_correct
-# print("Fraction there is error on one side of path when prediction is correct: {}, both sides: {}".format(one_path_error_correct / total_path_error_correct, both_path_error_correct / total_path_error_correct))
-
-# pdb.set_trace()
