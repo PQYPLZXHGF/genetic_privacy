@@ -25,6 +25,8 @@ parser.add_argument("--subset_labeled", "-s", type = int, default = None,
                     help = "Chose a random subset of s nodes from the set of labeled nodes.")
 parser.add_argument("--deterministic_random", "-d", action = "store_true",
                     help = "Seed the random number generator such that the same labeled nodes will be chosen on runs with the same number of nodes.")
+parser.add_argument("--deterministic_labeled", "-ds", action = "store_true",
+                    help = "Seed the random number generator to ensure labeled node subset is deterministic.")
 args = parser.parse_args()
 
 if args.data_logfile:
@@ -54,7 +56,7 @@ if args.subset_labeled:
     # nodes is chosen.
     sorted_labeled = list(classifier._labeled_nodes)
     sorted_labeled.sort()
-    if args.deterministic_random:
+    if args.deterministic_random or args.deterministic_labeled:
         rand_state = getstate()
         seed(42)
         shuffle(sorted_labeled)
