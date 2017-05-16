@@ -91,21 +91,8 @@ write_log("to identify", [node._id for node in unlabeled])
 
 correct = 0
 incorrect = 0
-common_guessed = Counter()
 # Maps generation -> counter with keys "correct" and "incorrect"
 generation_error = defaultdict(Counter)
-incorrect_examples = set()
-incorrect_distances = []
-# from_error = []
-# to_error = []
-# from_error_correct = []
-# to_error_correct = []
-# one_path_error = 0
-# both_path_error = 0
-# no_path_error = 0
-# one_path_error_correct = 0
-# both_path_error_correct = 0
-# no_path_error_correct = 0
 no_common_ancestor = 0
 generation_map = population.node_to_generation
 skipped = 0
@@ -121,7 +108,6 @@ for i, node in enumerate(unlabeled):
     # if ln_ratio < 0.1:
     #     skipped += 1
     #     continue
-    common_guessed[frozenset(identified)] += 1
     assert len(identified) > 0
     # pdb.set_trace()
     node_generation = generation_map[node]
@@ -131,7 +117,6 @@ for i, node in enumerate(unlabeled):
         print("correct")
     else:
         generation_error[node_generation]["incorrect"] += 1
-        incorrect_examples.add(node._id)
         print("incorrect")
         incorrect += 1
     write_log("evaluate", {"target node": node._id, "log ratio": ln_ratio,
