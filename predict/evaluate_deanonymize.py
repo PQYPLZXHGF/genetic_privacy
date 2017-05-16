@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from collections import Counter, defaultdict
+from datetime import datetime
 from random import shuffle, getstate, setstate, seed
 from pickle import load
 from argparse import ArgumentParser
@@ -112,6 +113,7 @@ skipped = 0
 # write_log("target_nodes", [node._id for node in unlabeled])
 print("Attempting to identify {} random nodes.".format(len(unlabeled)),
       flush = True)
+write_log("start time", datetime.now())
 for i, node in enumerate(unlabeled):
     print("Iteration: {}, actual node ID: {}".format(i + 1, node._id))
     # identified = bayes.identify(node.genome, node, population)
@@ -136,6 +138,7 @@ for i, node in enumerate(unlabeled):
                            "identified": set(x._id for x in identified)})
     stdout.flush()
 
+write_log("end time", datetime.now())
 print("{} skipped".format(skipped))
 print("{} correct, {} incorrect, {} total.".format(correct, incorrect,
                                                    len(unlabeled)))
