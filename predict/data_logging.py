@@ -25,7 +25,7 @@ def load_log(log_file):
                 ret[key].append(data)
             except EOFError:
                 break
-    return ret
+    return dict(ret)
 
 def change_logfile_name(new_filename):
     global log_filename
