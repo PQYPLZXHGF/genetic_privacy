@@ -16,13 +16,14 @@ def write_log(key, data):
     with open(log_filename, "ab") as log_file:
         dump((key, data), log_file)
 
-def load_log(log_file):
+def load_log(log_file, exclude_keys = set()):
     ret = defaultdict(list)
     with open(log_file, "rb") as log_file:
         while True:
             try:
                 key, data = load(log_file)
-                ret[key].append(data)
+                if key not in exclude_keys:
+                    ret[key].append(data)
             except EOFError:
                 break
     return dict(ret)
