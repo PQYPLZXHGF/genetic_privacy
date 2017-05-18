@@ -1,7 +1,5 @@
 from collections import namedtuple
-from itertools import chain
 from heapq import nlargest
-from pickle import dump
 
 # import pyximport; pyximport.install()
 import numpy as np
@@ -96,21 +94,23 @@ class BayesDeanonymize:
     def identify(self, genome, actual_node, population,
                  unexpected = UNEXPECTED_IBD):
         node_probabilities = dict() # Probability that a node is a match
-        shared_map = dict()
         id_map = self._population.id_mapping
         length_classifier = self._length_classifier
+        shared_list = []
         for labeled_node_id in length_classifier._labeled_nodes:
             labeled_node = id_map[labeled_node_id]
             s = shared_segment_length_genomes(genome, labeled_node.genome,
                                               5000000)
-            shared_map[labeled_node_id] = s
+            shared_list.append((labeled_node_id, s))
 
         node_data = dict()
         batch_node_id = []
         batch_labeled_node_id = []
         batch_lengths = []
         batch_cryptic_lengths = []
-        batch_cryptic_labeled_id = []
+        # This is done for performance reasons, as appending to this
+        # list is the hottest part of the loop.
+        append_cryptic = batch_cryptic_lengths.append
         distributions = length_classifier._distributions
         nodes = (member for member in self._population.members
                  if member.genome is not None)
@@ -118,13 +118,9 @@ class BayesDeanonymize:
             node_start_i = len(batch_node_id)
             node_id = node._id
             cryptic_start_i = len(batch_cryptic_lengths)
-            for labeled_node_id, shared in shared_map.items():
-                # labeled_node = id_map[labeled_node_id]
-                # shared = shared_map[labeled_node]
-                # shared = shared_map[labeled_node_id]
+            for labeled_node_id, shared in shared_list:
                 if (node_id, labeled_node_id) not in distributions:
-                    batch_cryptic_lengths.append(shared)
-                    batch_cryptic_labeled_id.append(labeled_node_id)
+                    append_cryptic(shared)
                 else:                    
                     batch_node_id.append(node_id)
                     batch_labeled_node_id.append(labeled_node_id)
@@ -137,10 +133,7 @@ class BayesDeanonymize:
         calc_prob = length_classifier.get_batch_probability(batch_lengths,
                                                             batch_node_id,
                                                             batch_labeled_node_id)
-        # cryptic_prob = length_classifier.get_batch_cryptic_ecdf(batch_cryptic_lengths)
         cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
-        # cryptic_prob = length_classifier.get_batch_ecdf(batch_cryptic_lengths,
-        #                                                 batch_cryptic_labeled_id)
 
         # index_data = {node._id: tuple(indices)
         #               for node, indices in node_data.items()}
