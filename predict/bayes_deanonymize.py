@@ -112,6 +112,9 @@ class BayesDeanonymize:
         # list is the hottest part of the loop.
         append_cryptic = batch_cryptic_lengths.append
         distributions = length_classifier._distributions
+        # Set membership testing is faster than dictionary key
+        # membership testing, so we use a set.
+        distribution_members = set(distributions.keys())
         nodes = (member for member in self._population.members
                  if member.genome is not None)
         for node in nodes:
@@ -119,7 +122,7 @@ class BayesDeanonymize:
             node_id = node._id
             cryptic_start_i = len(batch_cryptic_lengths)
             for labeled_node_id, shared in shared_list:
-                if (node_id, labeled_node_id) not in distributions:
+                if (node_id, labeled_node_id) not in distribution_members:
                     append_cryptic(shared)
                 else:                    
                     batch_node_id.append(node_id)
