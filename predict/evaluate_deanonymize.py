@@ -106,8 +106,7 @@ print("Attempting to identify {} random nodes.".format(len(unlabeled)),
 write_log("start time", datetime.now())
 for i, node in enumerate(unlabeled):
     print("Iteration: {}, actual node ID: {}".format(i + 1, node._id))
-    # identified = bayes.identify(node.genome, node, population)
-    identified, ln_ratio = bayes.identify(node.genome, node, population)
+    identified, ln_ratio = bayes.identify(node.genome, node, args.ibd-threshold)
     # if ln_ratio < 0.1:
     #     skipped += 1
     #     continue
