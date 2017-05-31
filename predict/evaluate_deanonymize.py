@@ -24,6 +24,9 @@ parser.add_argument("--num_node", "-n", type = int, default = 10)
 parser.add_argument("--test_node", "-t", type = int, action = "append")
 parser.add_argument("--subset_labeled", "-s", type = int, default = None,
                     help = "Chose a random subset of s nodes from the set of labeled nodes.")
+parser.add_argument("--ibd-threshold", type = int, default = 5000000,
+                    help = "IBD segments smaller than this value will "
+                    "go undetected")
 parser.add_argument("--deterministic_random", "-d", action = "store_true",
                     help = "Seed the random number generator such that the same labeled nodes will be chosen on runs with the same number of nodes.")
 parser.add_argument("--deterministic_labeled", "-ds", action = "store_true",
