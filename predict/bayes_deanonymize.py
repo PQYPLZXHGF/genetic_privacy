@@ -157,4 +157,6 @@ def get_sibling_group(node):
     """
     Returns the set containing node and all its full siblings
     """
+    if node.mother is None or node.father is None:
+        return set([node])
     return set(node.mother.children).intersection(node.father.children)
