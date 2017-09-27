@@ -57,8 +57,11 @@ def ancestors_of(node, distance, suspected = True):
     return ancestors
 
 def all_ancestors_of(node, suspected = True):
+    """
+    Return the set set of all ancestors, including the given node.
+    """
     to_visit = [node]
-    ancestors = set()
+    ancestors = set([node])
     while len(to_visit) > 0:
         current_node = to_visit.pop()
         if suspected:
