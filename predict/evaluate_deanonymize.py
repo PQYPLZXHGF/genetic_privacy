@@ -41,6 +41,21 @@ else:
 
 write_log("args", args)
 
+class Evaluation:
+    #TODO: Finish this class
+    def __init__(self, population, classifier, labeled_nodes = None):
+        self._population = population
+        self._classifier = classifier
+        if labeled_nodes is not None:
+            self.set_labeled_nodes(labeled_nodes)
+        self._bayes = BayesDeanonymize(population, classifier)
+
+    def set_labeled_nodes(self, labeled_nodes):
+        self._classifier._labeled_nodes = labeled_nodes
+
+    def run_evaluation(self):
+        pass
+
 print("Loading population.", flush = True)
 with open(args.population, "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
