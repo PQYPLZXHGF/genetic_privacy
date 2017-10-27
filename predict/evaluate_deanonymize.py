@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from collections import Counter, defaultdict
+from collections import Counter, defaultdict, namedtuple
 from datetime import datetime
 from random import shuffle, getstate, setstate, seed
 from pickle import load
@@ -41,20 +41,95 @@ else:
 
 write_log("args", args)
 
+IdentifyResult = namedtuple("IdentifyResult", ["target_node",
+                                               "identified_node",
+                                               "ln_ratio",
+                                               "correct",
+                                               "run_number"])
+
 class Evaluation:
     #TODO: Finish this class
-    def __init__(self, population, classifier, labeled_nodes = None):
+    def __init__(self, population, classifier, labeled_nodes = None,
+                 ibd_threshold = 0):
         self._population = population
         self._classifier = classifier
         if labeled_nodes is not None:
             self.set_labeled_nodes(labeled_nodes)
         self._bayes = BayesDeanonymize(population, classifier)
+        self._run_number = 0
+        self._ibd_threshold = ibd_threshold
 
     def set_labeled_nodes(self, labeled_nodes):
         self._classifier._labeled_nodes = labeled_nodes
 
-    def run_evaluation(self):
-        pass
+    @property
+    def labeled_nodes(self):
+        return self._classifier._labeled_nodes.copy()
+
+    def print_metrics(self):
+        print("{} correct, {} incorrect, {} total.".format(self.correct,
+                                                           self.incorrect,
+                                                           len(unlabeled)))
+        stdout.flush()
+
+        write_log("correct", self.correct)
+        write_log("incorrect", self.incorrect)
+        write_log("total", len(unlabeled))
+        total = self.correct + self.incorrect
+        percent_accurate = self.correct / total
+        std_dev = sqrt(percent_accurate * (1 - percent_accurate) * total) / total
+        print("{}±{:0.3} percent accurate.".format(percent_accurate, std_dev))
+        for generation, counter in self.generation_error.items():
+            gen_correct = counter["correct"]
+            gen_incorrect = counter["incorrect"]
+            total = gen_correct + gen_incorrect
+            format_string = "For generation {}: {} accuracy, {} total."
+            print(format_string.format(generation, gen_correct / total, total))
+
+    def _evaluate_node(self, node):
+        identified, ln_ratio = self._bayes.identify(node.genome, node,
+                                                    self._ibd_threshold)
+        assert len(identified) > 0
+        node_generation = self._population.node_to_generation[node]
+        if node in identified:
+            self.generation_error[node_generation]["correct"] += 1
+            self.correct += 1
+            print("correct")
+        else:
+            self.generation_error[node_generation]["incorrect"] += 1
+            print("incorrect")
+            self.incorrect += 1
+        self.identify_results.append(IdentifyResult(node, identified,
+                                                    ln_ratio,
+                                                    node in identified,
+                                                    self._run_number))
+        write_log("evaluate", {"target node": node._id,
+                               "log ratio": ln_ratio,
+                               "identified": set(x._id for x in identified),
+                               "run_number": self._run_number})
+        stdout.flush()
+
+    def run_evaluation(self, unlabeled):
+        self.identify_results = []
+        self.correct = 0
+        self.incorrect = 0
+        # Maps generation -> counter with keys "correct" and "incorrect"
+        self.generation_error = defaultdict(Counter)
+        self.unlabeled = unlabeled
+        generation_map = population.node_to_generation
+        # write_log("labeled_nodes", [node._id for node in labeled_nodes])
+        # write_log("target_nodes", [node._id for node in unlabeled])
+        print("Attempting to identify {} random nodes.".format(len(unlabeled)),
+              flush = True)
+        write_log("start time", datetime.now())
+        for i, node in enumerate(unlabeled):
+            print("Iteration: {}, actual node ID: {}".format(i + 1, node._id))
+            self._evaluate_node(node)
+
+        write_log("end time", datetime.now())
+        self._run_number += 1
+        return self.identify_results
+
 
 print("Loading population.", flush = True)
 with open(args.population, "rb") as pickle_file:
@@ -64,11 +139,12 @@ print("Loading classifier", flush = True)
 with open(args.classifier, "rb") as pickle_file:
     classifier = load(pickle_file)
 
-nodes = set(member for member in population.members
-             if member.genome is not None)
+
 # nodes = set(member for member in population.generations[-1].members
 #             if member.genome is not None)
 
+evaluation = Evaluation(population, classifier,
+                        ibd_threshold = args.ibd_threshold)
 if args.subset_labeled:
     # we want the labeled nodes to be chosen randomly, but the same
     # random nodes chosen every time if the same number of labeled
@@ -82,15 +158,16 @@ if args.subset_labeled:
         setstate(rand_state)
     else:
         shuffle(sorted_labeled)
-    classifier._labeled_nodes = sorted_labeled[:args.subset_labeled]
+    
+    evaluation.set_labeled_nodes(sorted_labeled[:args.subset_labeled])
 
-write_log("labeled nodes", classifier._labeled_nodes)
-
-bayes = BayesDeanonymize(population, classifier)
+write_log("labeled nodes", evaluation.labeled_nodes)
 
 id_mapping = population.id_mapping
+nodes = set(member for member in population.members
+             if member.genome is not None)
 labeled_nodes = set(id_mapping[node_id] for node_id
-                    in classifier._labeled_nodes)
+                    in evaluation.labeled_nodes)
 if args.test_node is not None and len(args.test_node) > 0:
     unlabeled = [id_mapping[node_id] for node_id in args.test_node]
 else:
@@ -107,55 +184,5 @@ else:
 
 write_log("to identify", [node._id for node in unlabeled])
 
-correct = 0
-incorrect = 0
-# Maps generation -> counter with keys "correct" and "incorrect"
-generation_error = defaultdict(Counter)
-no_common_ancestor = 0
-generation_map = population.node_to_generation
-skipped = 0
-# write_log("labeled_nodes", [node._id for node in labeled_nodes])
-# write_log("target_nodes", [node._id for node in unlabeled])
-print("Attempting to identify {} random nodes.".format(len(unlabeled)),
-      flush = True)
-write_log("start time", datetime.now())
-for i, node in enumerate(unlabeled):
-    print("Iteration: {}, actual node ID: {}".format(i + 1, node._id))
-    identified, ln_ratio = bayes.identify(node.genome, node, args.ibd_threshold)
-    # if ln_ratio < 0.1:
-    #     skipped += 1
-    #     continue
-    assert len(identified) > 0
-    # pdb.set_trace()
-    node_generation = generation_map[node]
-    if node in identified:
-        generation_error[node_generation]["correct"] += 1
-        correct += 1
-        print("correct")
-    else:
-        generation_error[node_generation]["incorrect"] += 1
-        print("incorrect")
-        incorrect += 1
-    write_log("evaluate", {"target node": node._id, "log ratio": ln_ratio,
-                           "identified": set(x._id for x in identified)})
-    stdout.flush()
-
-write_log("end time", datetime.now())
-print("{} skipped".format(skipped))
-print("{} correct, {} incorrect, {} total.".format(correct, incorrect,
-                                                   len(unlabeled)))
-stdout.flush()
-
-write_log("correct", correct)
-write_log("incorrect", incorrect)
-write_log("total", len(unlabeled))
-total = correct + incorrect
-percent_accurate = correct / total
-std_dev = sqrt(percent_accurate * (1 - percent_accurate) * total) / total
-print("{}±{:0.3} percent accurate.".format(percent_accurate, std_dev))
-for generation, counter in generation_error.items():
-    gen_correct = counter["correct"]
-    gen_incorrect = counter["incorrect"]
-    total = gen_correct + gen_incorrect
-    format_string = "For generation {}: {} accuracy, {} total."
-    print(format_string.format(generation, gen_correct / total, total))
+evaluation.run_evaluation(unlabeled)
+evaluation.print_metrics()
