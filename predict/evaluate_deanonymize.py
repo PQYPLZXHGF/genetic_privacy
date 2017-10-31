@@ -195,9 +195,10 @@ if args.expansion_rounds <= 1:
     evaluation.print_metrics()
 else:
     total_added = 0
+    to_evaluate = set(id_mapping[node] for node in original_labeled)
     for i in range(args.expansion_rounds):
         print("On expansion round {}".format(i))
-        evaluation.run_evaluation(original_labeled)
+        evaluation.run_evaluation(to_evaluate)
         evaluation.print_metrics()
         labeled_to_add = []
         for result in evaluation.identify_results:
@@ -209,4 +210,5 @@ else:
         print("Adding {} nodes this round.".format(len(labeled_to_add)))
         total_added += len(labeled_to_add)
         evaluation.labeled_nodes = evaluation.labeled_nodes + labeled_to_add
+        to_evaluate -= set(labeled_to_add)
     print("{} total nodes added to the labeled set.")
