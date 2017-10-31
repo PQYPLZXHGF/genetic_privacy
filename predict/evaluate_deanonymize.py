@@ -23,7 +23,7 @@ parser.add_argument("--data-logfile",
 parser.add_argument("--num_node", "-n", type = int, default = 10)
 parser.add_argument("--test_node", "-t", type = int, action = "append")
 parser.add_argument("--subset_labeled", "-s", type = int, default = None,
-                    help = "Chose a random subset of s nodes from the set of labeled nodes.")
+                    help = "Chose a random subset of s nodes from the set of labeled nodes. If using expansion rounds, this is the size of the initial set of labeled nodes.")
 parser.add_argument("--ibd-threshold", type = int, default = 5000000,
                     help = "IBD segments smaller than this value will "
                     "go undetected")
@@ -31,6 +31,8 @@ parser.add_argument("--deterministic_random", "-d", action = "store_true",
                     help = "Seed the random number generator such that the same labeled nodes will be chosen on runs with the same number of nodes.")
 parser.add_argument("--deterministic_labeled", "-ds", action = "store_true",
                     help = "Seed the random number generator to ensure labeled node subset is deterministic.")
+parser.add_argument("--expansion-rounds", type = int, default = 1)
+
 args = parser.parse_args()
 
 if args.data_logfile:
@@ -59,12 +61,13 @@ class Evaluation:
         self._run_number = 0
         self._ibd_threshold = ibd_threshold
 
-    def set_labeled_nodes(self, labeled_nodes):
-        self._classifier._labeled_nodes = labeled_nodes
-
     @property
     def labeled_nodes(self):
         return self._classifier._labeled_nodes.copy()
+
+    @labeled_nodes.setter
+    def set_labeled_nodes(self, labeled_nodes):
+        self._classifier._labeled_nodes = labeled_nodes
 
     def print_metrics(self):
         print("{} correct, {} incorrect, {} total.".format(self.correct,
@@ -116,7 +119,7 @@ class Evaluation:
         # Maps generation -> counter with keys "correct" and "incorrect"
         self.generation_error = defaultdict(Counter)
         self.unlabeled = unlabeled
-        generation_map = population.node_to_generation
+        # generation_map = population.node_to_generation
         # write_log("labeled_nodes", [node._id for node in labeled_nodes])
         # write_log("target_nodes", [node._id for node in unlabeled])
         print("Attempting to identify {} random nodes.".format(len(unlabeled)),
@@ -145,6 +148,7 @@ with open(args.classifier, "rb") as pickle_file:
 
 evaluation = Evaluation(population, classifier,
                         ibd_threshold = args.ibd_threshold)
+original_labeled = set(evaluation.labeled_nodes)
 if args.subset_labeled:
     # we want the labeled nodes to be chosen randomly, but the same
     # random nodes chosen every time if the same number of labeled
@@ -159,7 +163,7 @@ if args.subset_labeled:
     else:
         shuffle(sorted_labeled)
     
-    evaluation.set_labeled_nodes(sorted_labeled[:args.subset_labeled])
+    evaluation.labeled_nodes = sorted_labeled[:args.subset_labeled]
 
 write_log("labeled nodes", evaluation.labeled_nodes)
 
@@ -184,5 +188,17 @@ else:
 
 write_log("to identify", [node._id for node in unlabeled])
 
-evaluation.run_evaluation(unlabeled)
-evaluation.print_metrics()
+if args.expansion_rounds <= 1:
+    evaluation.run_evaluation(unlabeled)
+    evaluation.print_metrics()
+else:
+    for i in range(args.expansion_rounds):
+        print("On expansion round {}".format(i))
+        evaluation.run_evaluation(original_labeled)
+        evaluation.print_metrics()
+        labeled_to_add = []
+        for result in evaluation.identify_results:
+            if result.correct and result.ln_ratio > 10:
+                labeled_to_add.append(result.target_node)
+        print("Adding {} nodes this round.".format(len(labeled_to_add)))
+        evaluation.labeled_nodes = evaluation.labeled_nodes + labeled_to_add
