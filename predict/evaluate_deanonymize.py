@@ -65,7 +65,7 @@ class Evaluation:
 
     @property
     def labeled_nodes(self):
-        return self._classifier._labeled_nodes.copy()
+        return self._classifier._labeled_nodes
 
     @labeled_nodes.setter
     def labeled_nodes(self, labeled_nodes):
@@ -196,21 +196,23 @@ if args.expansion_rounds <= 1:
     evaluation.print_metrics()
 else:
     total_added = 0
-    to_evaluate = set(id_mapping[node] for node
-                      in original_labeled - set(evaluation.labeled_nodes))
+    identify_candidates = set(id_mapping[node] for node
+                              in original_labeled - set(evaluation.labeled_nodes))
     for i in range(args.expansion_rounds):
         print("On expansion round {}".format(i))
-        evaluation.run_evaluation(to_evaluate)
-        evaluation.print_metrics()
-        labeled_to_add = []
-        for result in evaluation.identify_results:
+        to_evaluate = list(identify_candidates)
+        round_added = 0
+        for node in to_evaluate:
+            evaluation.run_evaluation([to_evaluate])
+            result = evaluation.identify_results[0]
             if result.correct and result.ln_ratio > 10:
-                labeled_to_add.append(result.target_node._id)
-                to_evaluate.remove(result.target_node)
-        if len(labeled_to_add) == 0:
+                evaluation.labeled_nodes.append(result.target_node._id)
+                identify_candidates.remove(result.target_node)
+                round_added += 1
+        total_added += round_added
+        if len(round_added) == 0:
             print("No nodes added this round. Ceasing after {} iterations.".format(i + 1))
             break
-        print("Adding {} nodes this round.".format(len(labeled_to_add)))
-        total_added += len(labeled_to_add)
-        evaluation.labeled_nodes = evaluation.labeled_nodes + labeled_to_add
+        print("Added {} nodes this round.".format(round_added))
     print("{} total nodes added to the labeled set.")
+    evaluation.print_metrics()
