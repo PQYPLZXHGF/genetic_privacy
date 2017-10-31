@@ -68,7 +68,7 @@ class Evaluation:
         return self._classifier._labeled_nodes.copy()
 
     @labeled_nodes.setter
-    def set_labeled_nodes(self, labeled_nodes):
+    def labeled_nodes(self, labeled_nodes):
         self._classifier._labeled_nodes = labeled_nodes
 
     def print_metrics(self):
