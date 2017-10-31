@@ -205,7 +205,7 @@ else:
         to_evaluate = list(identify_candidates)
         round_added = 0
         for i, node in enumerate(to_evaluate):
-            evaluation.run_evaluation([to_evaluate])
+            evaluation.run_evaluation([node])
             result = evaluation.identify_results[-1]
             if result.correct and result.ln_ratio > 10:
                 evaluation.labeled_nodes.append(result.target_node._id)
