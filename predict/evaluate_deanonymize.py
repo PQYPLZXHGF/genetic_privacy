@@ -203,12 +203,12 @@ else:
         labeled_to_add = []
         for result in evaluation.identify_results:
             if result.correct and result.ln_ratio > 10:
-                labeled_to_add.append(result.target_node)
+                labeled_to_add.append(result.target_node._id)
+                to_evaluate.remove(result.target_node)
         if len(labeled_to_add) == 0:
             print("No nodes added this round. Ceasing after {} iterations.".format(i + 1))
             break
         print("Adding {} nodes this round.".format(len(labeled_to_add)))
         total_added += len(labeled_to_add)
         evaluation.labeled_nodes = evaluation.labeled_nodes + labeled_to_add
-        to_evaluate -= set(labeled_to_add)
     print("{} total nodes added to the labeled set.")
