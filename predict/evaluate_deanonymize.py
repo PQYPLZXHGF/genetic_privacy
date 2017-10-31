@@ -35,6 +35,9 @@ parser.add_argument("--expansion-rounds", type = int, default = 1)
 
 args = parser.parse_args()
 
+if args.expansion_rounds > 1 and args.subset_labeled is None:
+    parser.error("A subset of labeled nodes is necessary for expansion rounds.")
+
 if args.data_logfile:
     change_logfile_name(args.data_logfile)
     start_logging()
@@ -50,7 +53,6 @@ IdentifyResult = namedtuple("IdentifyResult", ["target_node",
                                                "run_number"])
 
 class Evaluation:
-    #TODO: Finish this class
     def __init__(self, population, classifier, labeled_nodes = None,
                  ibd_threshold = 0):
         self._population = population
@@ -192,6 +194,7 @@ if args.expansion_rounds <= 1:
     evaluation.run_evaluation(unlabeled)
     evaluation.print_metrics()
 else:
+    total_added = 0
     for i in range(args.expansion_rounds):
         print("On expansion round {}".format(i))
         evaluation.run_evaluation(original_labeled)
@@ -200,5 +203,10 @@ else:
         for result in evaluation.identify_results:
             if result.correct and result.ln_ratio > 10:
                 labeled_to_add.append(result.target_node)
+        if len(labeled_to_add) == 0:
+            print("No nodes added this round. Ceasing after {} iterations.".format(i + 1))
+            break
         print("Adding {} nodes this round.".format(len(labeled_to_add)))
+        total_added += len(labeled_to_add)
         evaluation.labeled_nodes = evaluation.labeled_nodes + labeled_to_add
+    print("{} total nodes added to the labeled set.")
