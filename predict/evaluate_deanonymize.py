@@ -62,6 +62,7 @@ class Evaluation:
         self._bayes = BayesDeanonymize(population, classifier)
         self._run_number = 0
         self._ibd_threshold = ibd_threshold
+        self.reset_metrics()
 
     @property
     def labeled_nodes(self):
@@ -115,13 +116,14 @@ class Evaluation:
                               node in identified,
                               self._run_number)
 
-    def run_evaluation(self, unlabeled):
+    def reset_metrics(self):
+        # Maps generation -> counter with keys "correct" and "incorrect"
+        self.generation_error = defaultdict(Counter)
         self.identify_results = []
         self.correct = 0
         self.incorrect = 0
-        # Maps generation -> counter with keys "correct" and "incorrect"
-        self.generation_error = defaultdict(Counter)
-        self.unlabeled = unlabeled
+
+    def run_evaluation(self, unlabeled):
         # generation_map = population.node_to_generation
         # write_log("labeled_nodes", [node._id for node in labeled_nodes])
         # write_log("target_nodes", [node._id for node in unlabeled])
@@ -202,13 +204,15 @@ else:
         print("On expansion round {}".format(i))
         to_evaluate = list(identify_candidates)
         round_added = 0
-        for node in to_evaluate:
+        for i, node in enumerate(to_evaluate):
             evaluation.run_evaluation([to_evaluate])
-            result = evaluation.identify_results[0]
+            result = evaluation.identify_results[-1]
             if result.correct and result.ln_ratio > 10:
                 evaluation.labeled_nodes.append(result.target_node._id)
                 identify_candidates.remove(result.target_node)
                 round_added += 1
+            if i % 20 == 0:
+                evaluation.print_metrics()
         total_added += round_added
         if len(round_added) == 0:
             print("No nodes added this round. Ceasing after {} iterations.".format(i + 1))
