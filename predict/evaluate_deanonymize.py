@@ -104,15 +104,16 @@ class Evaluation:
             self.generation_error[node_generation]["incorrect"] += 1
             print("incorrect")
             self.incorrect += 1
-        self.identify_results.append(IdentifyResult(node, identified,
-                                                    ln_ratio,
-                                                    node in identified,
-                                                    self._run_number))
+            
         write_log("evaluate", {"target node": node._id,
                                "log ratio": ln_ratio,
                                "identified": set(x._id for x in identified),
                                "run_number": self._run_number})
         stdout.flush()
+        return IdentifyResult(node, identified,
+                              ln_ratio,
+                              node in identified,
+                              self._run_number)
 
     def run_evaluation(self, unlabeled):
         self.identify_results = []
@@ -129,7 +130,7 @@ class Evaluation:
         write_log("start time", datetime.now())
         for i, node in enumerate(unlabeled):
             print("Iteration: {}, actual node ID: {}".format(i + 1, node._id))
-            self._evaluate_node(node)
+            self.identify_results.append(self._evaluate_node(node))
 
         write_log("end time", datetime.now())
         self._run_number += 1
@@ -195,7 +196,8 @@ if args.expansion_rounds <= 1:
     evaluation.print_metrics()
 else:
     total_added = 0
-    to_evaluate = set(id_mapping[node] for node in original_labeled)
+    to_evaluate = set(id_mapping[node] for node
+                      in original_labeled - set(evaluation.labeled_nodes))
     for i in range(args.expansion_rounds):
         print("On expansion round {}".format(i))
         evaluation.run_evaluation(to_evaluate)
