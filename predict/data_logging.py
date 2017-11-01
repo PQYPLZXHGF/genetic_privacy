@@ -38,6 +38,8 @@ def get_logfile_name():
     return log_filename
 
 def stop_logging():
+    global logging
     logging = False
 def start_logging():
+    global logging
     logging = True
