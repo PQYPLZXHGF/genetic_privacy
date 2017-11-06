@@ -37,7 +37,6 @@ args = parser.parse_args()
 
 if args.expansion_rounds > 1 and args.subset_labeled is None:
     parser.error("A subset of labeled nodes is necessary for expansion rounds.")
-
 if args.data_logfile:
     change_logfile_name(args.data_logfile)
     start_logging()
@@ -214,7 +213,7 @@ else:
             if i % 20 == 0:
                 evaluation.print_metrics()
         total_added += round_added
-        if len(round_added) == 0:
+        if round_added == 0:
             print("No nodes added this round. Ceasing after {} iterations.".format(i + 1))
             break
         print("Added {} nodes this round.".format(round_added))
