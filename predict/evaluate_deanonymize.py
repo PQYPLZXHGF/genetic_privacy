@@ -64,6 +64,11 @@ class Evaluation:
         self.reset_metrics()
 
     @property
+    def accuracy(self):
+        total = self.correct + self.incorrect
+        return self.correct / total
+
+    @property
     def labeled_nodes(self):
         return self._classifier._labeled_nodes
 
@@ -81,7 +86,7 @@ class Evaluation:
         write_log("incorrect", self.incorrect)
         write_log("total", len(unlabeled))
         total = self.correct + self.incorrect
-        percent_accurate = self.correct / total
+        percent_accurate = self.accuracy
         std_dev = sqrt(percent_accurate * (1 - percent_accurate) * total) / total
         print("{}±{:0.3} percent accurate.".format(percent_accurate, std_dev))
         for generation, counter in self.generation_error.items():
@@ -213,6 +218,8 @@ else:
             if i % 20 == 0:
                 evaluation.print_metrics()
         total_added += round_added
+        write_log("expansion_round", {"round": i, "added": round_added,
+                                      "accuracy": evaluation.accuracy})
         if round_added == 0:
             print("No nodes added this round. Ceasing after {} iterations.".format(i + 1))
             break
