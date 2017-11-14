@@ -77,15 +77,15 @@ class Evaluation:
         self._classifier._labeled_nodes = labeled_nodes
 
     def print_metrics(self):
+        total = self.correct + self.incorrect
         print("{} correct, {} incorrect, {} total.".format(self.correct,
                                                            self.incorrect,
-                                                           len(unlabeled)))
+                                                           total))
         stdout.flush()
 
         write_log("correct", self.correct)
         write_log("incorrect", self.incorrect)
-        write_log("total", len(unlabeled))
-        total = self.correct + self.incorrect
+        write_log("total", total)
         percent_accurate = self.accuracy
         std_dev = sqrt(percent_accurate * (1 - percent_accurate) * total) / total
         print("{}±{:0.3} percent accurate.".format(percent_accurate, std_dev))
