@@ -211,7 +211,9 @@ else:
         for i, node in enumerate(to_evaluate):
             evaluation.run_evaluation([node])
             result = evaluation.identify_results[-1]
+            print("Ratio: {}".format(result.ln_ratio))
             if result.correct and result.ln_ratio > 9:
+                print("Adding node.")
                 evaluation.labeled_nodes.append(result.target_node._id)
                 identify_candidates.remove(result.target_node)
                 round_added += 1
