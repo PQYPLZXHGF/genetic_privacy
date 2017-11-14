@@ -211,12 +211,13 @@ else:
         for i, node in enumerate(to_evaluate):
             evaluation.run_evaluation([node])
             result = evaluation.identify_results[-1]
-            if result.correct and result.ln_ratio > 10:
+            if result.correct and result.ln_ratio > 9:
                 evaluation.labeled_nodes.append(result.target_node._id)
                 identify_candidates.remove(result.target_node)
                 round_added += 1
             if i % 20 == 0:
                 evaluation.print_metrics()
+                print("Total nodes added: {}".format(total_added))
         total_added += round_added
         write_log("expansion_round", {"round": i, "added": round_added,
                                       "accuracy": evaluation.accuracy})
