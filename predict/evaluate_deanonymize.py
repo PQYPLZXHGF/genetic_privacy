@@ -135,8 +135,7 @@ class Evaluation:
               flush = True)
         write_log("start time", datetime.now())
         for i, node in enumerate(unlabeled):
-            print("Iteration: {}, actual node ID: {}".format(i + 1, node._id),
-                  flush = True)
+            print("Iteration: {}, actual node ID: {}".format(i + 1, node._id))
             self.identify_results.append(self._evaluate_node(node))
 
         write_log("end time", datetime.now())
