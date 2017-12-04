@@ -204,8 +204,8 @@ else:
     total_added = 0
     identify_candidates = set(id_mapping[node] for node
                               in original_labeled - set(evaluation.labeled_nodes))
-    for i in range(args.expansion_rounds):
-        print("On expansion round {}".format(i))
+    for round_i in range(args.expansion_rounds):
+        print("On expansion round {}".format(round_i))
         to_evaluate = list(identify_candidates)
         round_added = 0
         for i, node in enumerate(to_evaluate):
@@ -221,11 +221,11 @@ else:
                 evaluation.print_metrics()
                 print("Total nodes added: {}".format(total_added))
         total_added += round_added
-        write_log("expansion_round", {"round": i, "added": round_added,
+        write_log("expansion_round", {"round": round_i, "added": round_added,
                                       "accuracy": evaluation.accuracy})
         if round_added == 0:
-            print("No nodes added this round. Ceasing after {} iterations.".format(i + 1))
+            print("No nodes added this round. Ceasing after {} iterations.".format(round_i + 1))
             break
         print("Added {} nodes this round.".format(round_added))
-    print("{} total nodes added to the labeled set.")
+    print("{} total nodes added to the labeled set.".format(total_added))
     evaluation.print_metrics()
