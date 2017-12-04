@@ -77,15 +77,15 @@ class Evaluation:
         self._classifier._labeled_nodes = labeled_nodes
 
     def print_metrics(self):
+        total = self.correct + self.incorrect
         print("{} correct, {} incorrect, {} total.".format(self.correct,
                                                            self.incorrect,
-                                                           len(unlabeled)))
+                                                           total))
         stdout.flush()
 
         write_log("correct", self.correct)
         write_log("incorrect", self.incorrect)
-        write_log("total", len(unlabeled))
-        total = self.correct + self.incorrect
+        write_log("total", total)
         percent_accurate = self.accuracy
         std_dev = sqrt(percent_accurate * (1 - percent_accurate) * total) / total
         print("{}±{:0.3} percent accurate.".format(percent_accurate, std_dev))
@@ -211,12 +211,15 @@ else:
         for i, node in enumerate(to_evaluate):
             evaluation.run_evaluation([node])
             result = evaluation.identify_results[-1]
-            if result.correct and result.ln_ratio > 10:
+            print("Ratio: {}".format(result.ln_ratio))
+            if result.correct and result.ln_ratio > 9:
+                print("Adding node.")
                 evaluation.labeled_nodes.append(result.target_node._id)
                 identify_candidates.remove(result.target_node)
                 round_added += 1
             if i % 20 == 0:
                 evaluation.print_metrics()
+                print("Total nodes added: {}".format(total_added))
         total_added += round_added
         write_log("expansion_round", {"round": i, "added": round_added,
                                       "accuracy": evaluation.accuracy})
