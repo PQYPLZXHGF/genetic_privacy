@@ -216,11 +216,12 @@ else:
                 print("Adding node.")
                 evaluation.labeled_nodes.append(result.target_node._id)
                 identify_candidates.remove(result.target_node)
+                total_added += 1
                 round_added += 1
             if i % 20 == 0:
                 evaluation.print_metrics()
+                print("Nodes added this round: {}".format(round_added))
                 print("Total nodes added: {}".format(total_added))
-        total_added += round_added
         write_log("expansion_round", {"round": round_i, "added": round_added,
                                       "accuracy": evaluation.accuracy})
         if round_added == 0:
