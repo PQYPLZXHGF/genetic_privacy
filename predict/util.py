@@ -166,13 +166,25 @@ def get_sample_of_cousins(population, distance, percent_ancestors = 0.1,
                             int(len(temp_pairs) * percent_descendants)))
     return pairs
 
-def descendants_of(node):
+def all_related(node, suspected = False):
+    ancestors = all_ancestors(node, suspected)
+    descendant_sets = (descendants_of(ancestor, suspected)
+                       for ancestor in ancestors)
+    return set.union(*descendant_sets)
+
+def descendants_of(node, suspected = False):
     descendants = set()
-    to_visit = list(node.children)
+    if suspected:
+        to_visit = node.suspected_children
+    else:
+        to_visit = list(node.children)
     while len(to_visit) > 0:
         ancestor = to_visit.pop()
         descendants.add(ancestor)
-        to_visit.extend(ancestor.children)
+        if suspected:
+            to_visit.extend(ancestor.suspected_children)
+        else:
+            to_visit.extend(ancestor.children)
     return descendants
 
 def descendants_with_common_ancestor(ancestor, generation_members):
