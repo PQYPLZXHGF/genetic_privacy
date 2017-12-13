@@ -54,7 +54,7 @@ else:
 
 if args.to_json:
     num_generations = population.num_generations
-    clear_index = num_generations - args.gen_back
+    clear_index = max(num_generations - args.gen_back, 0)
     to_clear = population.generations[clear_index].members
     for node in to_clear:
         node.suspected_mother = None
