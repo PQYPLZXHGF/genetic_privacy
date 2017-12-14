@@ -32,6 +32,7 @@ parser.add_argument("--deterministic_random", "-d", action = "store_true",
 parser.add_argument("--deterministic_labeled", "-ds", action = "store_true",
                     help = "Seed the random number generator to ensure labeled node subset is deterministic.")
 parser.add_argument("--expansion-rounds", type = int, default = 1)
+parser.add_argument("--search-related", action = "store_true")
 
 args = parser.parse_args()
 
@@ -53,12 +54,12 @@ IdentifyResult = namedtuple("IdentifyResult", ["target_node",
 
 class Evaluation:
     def __init__(self, population, classifier, labeled_nodes = None,
-                 ibd_threshold = 0):
+                 ibd_threshold = 0, search_related = False):
         self._population = population
         self._classifier = classifier
         if labeled_nodes is not None:
             self.set_labeled_nodes(labeled_nodes)
-        self._bayes = BayesDeanonymize(population, classifier)
+        self._bayes = BayesDeanonymize(population, classifier, search_related)
         self._run_number = 0
         self._ibd_threshold = ibd_threshold
         self.reset_metrics()
@@ -156,7 +157,8 @@ with open(args.classifier, "rb") as pickle_file:
 #             if member.genome is not None)
 
 evaluation = Evaluation(population, classifier,
-                        ibd_threshold = args.ibd_threshold)
+                        ibd_threshold = args.ibd_threshold,
+                        search_related = args.search_related)
 original_labeled = set(evaluation.labeled_nodes)
 if args.subset_labeled:
     # we want the labeled nodes to be chosen randomly, but the same
