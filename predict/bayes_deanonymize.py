@@ -45,7 +45,7 @@ class BayesDeanonymize:
 
     def _to_search(self, shared_list):
         genome_nodes = (member for member in self._population.members
-                     if member.genome is not None)
+                        if member.genome is not None)
         if not self._only_related:
             return genome_nodes
         id_map = self._population.id_mapping
@@ -66,7 +66,7 @@ class BayesDeanonymize:
         length_classifier = self._length_classifier
         for labeled_node_id in length_classifier._labeled_nodes:
             labeled_node = id_map[labeled_node_id]
-            related = all_related(labeled_node, True)
+            related = all_related(labeled_node, True, 7)
             self._labeled_related[labeled_node] = related.intersection(nodes)
 
     def identify(self, genome, actual_node, ibd_threshold = 5000000):

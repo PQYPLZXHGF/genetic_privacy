@@ -166,13 +166,14 @@ def get_sample_of_cousins(population, distance, percent_ancestors = 0.1,
                             int(len(temp_pairs) * percent_descendants)))
     return pairs
 
-def ancestor_roots(node, suspected = False):
+def ancestor_roots(node, suspected = False, generations_back = float("inf")):
     """"
     Returns all ancestor nodes that have no known ancestors themselves.
     """
     current_generation = [node]
     ancestors = set()
-    while len(current_generation) > 0:
+    i = 0
+    while i < generations_back and len(current_generation) > 0:
         if suspected:
             mothers = (node.suspected_mother for node in current_generation
                        if node.suspected_mother is not None)
@@ -191,13 +192,15 @@ def ancestor_roots(node, suspected = False):
                              node.mother is None)
         ancestors.update(new_ancestors)
         current_generation = set(chain(mothers, fathers))
+        i += 1
     return ancestors
 
-def all_related(node, suspected = False):
+def all_related(node, suspected = False, generations_back = float("inf")):
     """
     Returns all nodes related to the given node.
     """
-    ancestors = ancestor_roots(node, suspected)
+    ancestors = ancestor_roots(node, suspected,
+                               generations_back = generations_back)
     if len(ancestors) == 0:
         return set()
     descendant_sets = (descendants_of(ancestor, suspected)
@@ -206,10 +209,7 @@ def all_related(node, suspected = False):
 
 def descendants_of(node, suspected = False):
     descendants = set()
-    if suspected:
-        to_visit = node.suspected_children
-    else:
-        to_visit = list(node.children)
+    to_visit = [node]
     while len(to_visit) > 0:
         ancestor = to_visit.pop()
         descendants.add(ancestor)
