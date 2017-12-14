@@ -193,6 +193,7 @@ def ancestor_roots(node, suspected = False, generations_back = float("inf")):
         ancestors.update(new_ancestors)
         current_generation = set(chain(mothers, fathers))
         i += 1
+    ancestors.update(current_generation)
     return ancestors
 
 def all_related(node, suspected = False, generations_back = float("inf")):
