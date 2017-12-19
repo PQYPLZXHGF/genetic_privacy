@@ -69,6 +69,9 @@ class Evaluation:
         total = self.correct + self.incorrect
         return self.correct / total
 
+    def add_labeled_node_id(self, node):
+        self._bayes.add_labeled_node_id(node)
+
     @property
     def labeled_nodes(self):
         return self._classifier._labeled_nodes
@@ -216,7 +219,7 @@ else:
             print("Ratio: {}".format(result.ln_ratio))
             if result.correct and result.ln_ratio > 9:
                 print("Adding node.")
-                evaluation.labeled_nodes.append(result.target_node._id)
+                evaluation.add_labeled_node_id(result.target_node._id)
                 identify_candidates.remove(result.target_node)
                 total_added += 1
                 round_added += 1

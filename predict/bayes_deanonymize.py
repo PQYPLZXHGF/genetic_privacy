@@ -58,16 +58,26 @@ class BayesDeanonymize:
                 potential_nodes.update(related)
         return potential_nodes
 
+    def _add_node_id_relatives(self, node_id, nodes):
+        id_map = self._population.id_mapping
+        labeled_node = id_map[node_id]
+        related = all_related(labeled_node, True, 7)
+        self._labeled_related[labeled_node] = related.intersection(nodes)
+
     def _compute_related(self):
         nodes = set(member for member in self._population.members
                     if member.genome is not None)
         self._labeled_related = dict()
-        id_map = self._population.id_mapping
         length_classifier = self._length_classifier
         for labeled_node_id in length_classifier._labeled_nodes:
-            labeled_node = id_map[labeled_node_id]
-            related = all_related(labeled_node, True, 7)
-            self._labeled_related[labeled_node] = related.intersection(nodes)
+            self._add_node_id_relatives(labeled_node_id, nodes)
+
+    def add_labeled_node_id(self, node_id):
+        self._length_classifier._labeled_nodes.append(node_id)
+        if self._only_related:
+            nodes = list(member for member in self._population.members
+                         if member.genome is not None)
+            self._add_node_id_relatives(node_id, nodes)
 
     def identify(self, genome, actual_node, ibd_threshold = 5000000):
         node_probabilities = dict() # Probability that a node is a match
