@@ -32,7 +32,8 @@ parser.add_argument("--deterministic_random", "-d", action = "store_true",
 parser.add_argument("--deterministic_labeled", "-ds", action = "store_true",
                     help = "Seed the random number generator to ensure labeled node subset is deterministic.")
 parser.add_argument("--expansion-rounds", type = int, default = 1)
-parser.add_argument("--search-related", action = "store_true")
+parser.add_argument("--search-related", type = int, default = False,
+                    help = "Search only nodes that are related to labeled nodes for which there is nonzero ibd.")
 
 args = parser.parse_args()
 
@@ -59,7 +60,11 @@ class Evaluation:
         self._classifier = classifier
         if labeled_nodes is not None:
             self.set_labeled_nodes(labeled_nodes)
-        self._bayes = BayesDeanonymize(population, classifier, search_related)
+        if search_related:
+            self._bayes = BayesDeanonymize(population, classifier,
+                                           True, search_related)
+        else:
+            self._bayes = BayesDeanonymize(population, classifier, False)
         self._run_number = 0
         self._ibd_threshold = ibd_threshold
         self.reset_metrics()

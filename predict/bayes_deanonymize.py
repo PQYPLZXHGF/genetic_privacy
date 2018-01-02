@@ -17,7 +17,8 @@ INF = float("inf")
 INF_REPLACE = 1.0
 
 class BayesDeanonymize:
-    def __init__(self, population, classifier = None, only_related = False):
+    def __init__(self, population, classifier = None, only_related = False,
+                 search_generations_back = 7):
         self._population = population
         if classifier is None:
             self._length_classifier = LengthClassifier(population, 1000)
@@ -25,6 +26,7 @@ class BayesDeanonymize:
             self._length_classifier = classifier
         self._only_related = only_related
         if only_related:
+            self._search_generations_back = search_generations_back
             self._compute_related()
         # self.__remove_erroneous_labeled()
 
@@ -61,7 +63,7 @@ class BayesDeanonymize:
     def _add_node_id_relatives(self, node_id, nodes):
         id_map = self._population.id_mapping
         labeled_node = id_map[node_id]
-        related = all_related(labeled_node, True, 7)
+        related = all_related(labeled_node, True, self._search_generations_back)
         self._labeled_related[labeled_node] = related.intersection(nodes)
 
     def _compute_related(self):
