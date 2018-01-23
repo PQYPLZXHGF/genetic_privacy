@@ -32,6 +32,8 @@ parser.add_argument("--deterministic_random", "-d", action = "store_true",
 parser.add_argument("--deterministic_labeled", "-ds", action = "store_true",
                     help = "Seed the random number generator to ensure labeled node subset is deterministic.")
 parser.add_argument("--expansion-rounds", type = int, default = 1)
+parser.add_argument("--search-related", type = int, default = False,
+                    help = "Search only nodes that are related to labeled nodes for which there is nonzero ibd.")
 
 args = parser.parse_args()
 
@@ -53,12 +55,16 @@ IdentifyResult = namedtuple("IdentifyResult", ["target_node",
 
 class Evaluation:
     def __init__(self, population, classifier, labeled_nodes = None,
-                 ibd_threshold = 0):
+                 ibd_threshold = 0, search_related = False):
         self._population = population
         self._classifier = classifier
         if labeled_nodes is not None:
             self.set_labeled_nodes(labeled_nodes)
-        self._bayes = BayesDeanonymize(population, classifier)
+        if search_related:
+            self._bayes = BayesDeanonymize(population, classifier,
+                                           True, search_related)
+        else:
+            self._bayes = BayesDeanonymize(population, classifier, False)
         self._run_number = 0
         self._ibd_threshold = ibd_threshold
         self.reset_metrics()
@@ -67,6 +73,9 @@ class Evaluation:
     def accuracy(self):
         total = self.correct + self.incorrect
         return self.correct / total
+
+    def add_labeled_node_id(self, node):
+        self._bayes.add_labeled_node_id(node)
 
     @property
     def labeled_nodes(self):
@@ -156,7 +165,8 @@ with open(args.classifier, "rb") as pickle_file:
 #             if member.genome is not None)
 
 evaluation = Evaluation(population, classifier,
-                        ibd_threshold = args.ibd_threshold)
+                        ibd_threshold = args.ibd_threshold,
+                        search_related = args.search_related)
 original_labeled = set(evaluation.labeled_nodes)
 if args.subset_labeled:
     # we want the labeled nodes to be chosen randomly, but the same
@@ -214,7 +224,7 @@ else:
             print("Ratio: {}".format(result.ln_ratio))
             if result.correct and result.ln_ratio > 9:
                 print("Adding node.")
-                evaluation.labeled_nodes.append(result.target_node._id)
+                evaluation.add_labeled_node_id(result.target_node._id)
                 identify_candidates.remove(result.target_node)
                 total_added += 1
                 round_added += 1

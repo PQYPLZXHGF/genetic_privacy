@@ -7,7 +7,7 @@ import numpy as np
 from classify_relationship import (LengthClassifier,
                                    shared_segment_length_genomes)
 from data_logging import write_log
-from util import first_missing_ancestor
+from util import first_missing_ancestor, all_related
 
 ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
                                                  "cryptic_start_i",
@@ -17,12 +17,17 @@ INF = float("inf")
 INF_REPLACE = 1.0
 
 class BayesDeanonymize:
-    def __init__(self, population, classifier = None):
+    def __init__(self, population, classifier = None, only_related = False,
+                 search_generations_back = 7):
         self._population = population
         if classifier is None:
             self._length_classifier = LengthClassifier(population, 1000)
         else:
             self._length_classifier = classifier
+        self._only_related = only_related
+        if only_related:
+            self._search_generations_back = search_generations_back
+            self._compute_related()
         # self.__remove_erroneous_labeled()
 
     def __remove_erroneous_labeled(self):
@@ -39,7 +44,42 @@ class BayesDeanonymize:
         print("Removeing {} labeled nodes."
               " New size is {}.".format(len(to_remove), len(new_labeled)))
         self._length_classifier._labeled_nodes = list(new_labeled)
-                
+
+    def _to_search(self, shared_list):
+        genome_nodes = (member for member in self._population.members
+                        if member.genome is not None)
+        if not self._only_related:
+            return genome_nodes
+        id_map = self._population.id_mapping
+        genome_nodes = set(genome_nodes)
+        potential_nodes = set()
+        for labeled_node_id, shared in shared_list:
+            if shared > 0:
+                labeled_node = id_map[labeled_node_id]
+                related = self._labeled_related[labeled_node]
+                potential_nodes.update(related)
+        return potential_nodes
+
+    def _add_node_id_relatives(self, node_id, nodes):
+        id_map = self._population.id_mapping
+        labeled_node = id_map[node_id]
+        related = all_related(labeled_node, True, self._search_generations_back)
+        self._labeled_related[labeled_node] = related.intersection(nodes)
+
+    def _compute_related(self):
+        nodes = set(member for member in self._population.members
+                    if member.genome is not None)
+        self._labeled_related = dict()
+        length_classifier = self._length_classifier
+        for labeled_node_id in length_classifier._labeled_nodes:
+            self._add_node_id_relatives(labeled_node_id, nodes)
+
+    def add_labeled_node_id(self, node_id):
+        self._length_classifier._labeled_nodes.append(node_id)
+        if self._only_related:
+            nodes = list(member for member in self._population.members
+                         if member.genome is not None)
+            self._add_node_id_relatives(node_id, nodes)
 
     def identify(self, genome, actual_node, ibd_threshold = 5000000):
         node_probabilities = dict() # Probability that a node is a match
@@ -64,8 +104,7 @@ class BayesDeanonymize:
         # Set membership testing is faster than dictionary key
         # membership testing, so we use a set.
         distribution_members = set(distributions.keys())
-        nodes = (member for member in self._population.members
-                 if member.genome is not None)
+        nodes = self._to_search(shared_list)
         for node in nodes:
             node_start_i = len(batch_node_id)
             node_id = node._id

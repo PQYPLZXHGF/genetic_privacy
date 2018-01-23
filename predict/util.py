@@ -166,13 +166,58 @@ def get_sample_of_cousins(population, distance, percent_ancestors = 0.1,
                             int(len(temp_pairs) * percent_descendants)))
     return pairs
 
-def descendants_of(node):
+def ancestor_roots(node, suspected = False, generations_back = float("inf")):
+    """"
+    Returns all ancestor nodes that have no known ancestors themselves.
+    """
+    current_generation = [node]
+    ancestors = set()
+    i = 0
+    while i < generations_back and len(current_generation) > 0:
+        if suspected:
+            mothers = (node.suspected_mother for node in current_generation
+                       if node.suspected_mother is not None)
+            fathers = (node.suspected_father for node in current_generation
+                       if node.suspected_father is not None)
+            new_ancestors = (node for node in current_generation
+                             if node.suspected_father is None and
+                             node.suspected_mother is None)
+        else:
+            mothers = (node.mother for node in current_generation
+                       if node.mother is not None)
+            fathers = (node.father for node in current_generation
+                       if node.father is not None)
+            new_ancestors = (node for node in current_generation
+                             if node.father is None and
+                             node.mother is None)
+        ancestors.update(new_ancestors)
+        current_generation = set(chain(mothers, fathers))
+        i += 1
+    ancestors.update(current_generation)
+    return ancestors
+
+def all_related(node, suspected = False, generations_back = float("inf")):
+    """
+    Returns all nodes related to the given node.
+    """
+    ancestors = ancestor_roots(node, suspected,
+                               generations_back = generations_back)
+    if len(ancestors) == 0:
+        return set()
+    descendant_sets = (descendants_of(ancestor, suspected)
+                       for ancestor in ancestors)
+    return set.union(*descendant_sets)
+
+def descendants_of(node, suspected = False):
     descendants = set()
-    to_visit = list(node.children)
+    to_visit = [node]
     while len(to_visit) > 0:
         ancestor = to_visit.pop()
         descendants.add(ancestor)
-        to_visit.extend(ancestor.children)
+        if suspected:
+            to_visit.extend(ancestor.suspected_children)
+        else:
+            to_visit.extend(ancestor.children)
     return descendants
 
 def descendants_with_common_ancestor(ancestor, generation_members):
