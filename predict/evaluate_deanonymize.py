@@ -34,6 +34,8 @@ parser.add_argument("--deterministic_labeled", "-ds", action = "store_true",
 parser.add_argument("--expansion-rounds", type = int, default = 1)
 parser.add_argument("--search-related", type = int, default = False,
                     help = "Search only nodes that are related to labeled nodes for which there is nonzero ibd.")
+parser.add_argument("--expansion-rounds-data",
+                    help = "Pickle file with data from expansion rounds.")
 
 args = parser.parse_args()
 
@@ -136,6 +138,26 @@ class Evaluation:
         self.correct = 0
         self.incorrect = 0
 
+    def run_expansion_round(self, identify_candidates):
+        print("Running expansion round.")
+        to_evaluate = list(identify_candidates)
+        round_added = 0
+        to_add = []
+        for i, node in enumerate(to_evaluate):
+            self.run_evaluation([node])
+            result = evaluation.identify_results[-1]
+            print("Ratio: {}".format(result.ln_ratio))
+            if result.ln_ratio > 9:
+                print("Adding node.")
+                to_add.append(result)
+            if i % 20 == 0:
+                self.print_metrics()
+                print("Nodes added this round: {}".format(to_add))
+        write_log("expansion_round", {"added": len(to_add),
+                                      "accuracy": self.accuracy})
+        print("Added {} nodes this round.".format(round_added))
+        return to_add
+
     def run_evaluation(self, unlabeled):
         # generation_map = population.node_to_generation
         # write_log("labeled_nodes", [node._id for node in labeled_nodes])
@@ -214,29 +236,4 @@ else:
     total_added = 0
     identify_candidates = set(id_mapping[node] for node
                               in original_labeled - set(evaluation.labeled_nodes))
-    for round_i in range(args.expansion_rounds):
-        print("On expansion round {}".format(round_i))
-        to_evaluate = list(identify_candidates)
-        round_added = 0
-        for i, node in enumerate(to_evaluate):
-            evaluation.run_evaluation([node])
-            result = evaluation.identify_results[-1]
-            print("Ratio: {}".format(result.ln_ratio))
-            if result.correct and result.ln_ratio > 9:
-                print("Adding node.")
-                evaluation.add_labeled_node_id(result.target_node._id)
-                identify_candidates.remove(result.target_node)
-                total_added += 1
-                round_added += 1
-            if i % 20 == 0:
-                evaluation.print_metrics()
-                print("Nodes added this round: {}".format(round_added))
-                print("Total nodes added: {}".format(total_added))
-        write_log("expansion_round", {"round": round_i, "added": round_added,
-                                      "accuracy": evaluation.accuracy})
-        if round_added == 0:
-            print("No nodes added this round. Ceasing after {} iterations.".format(round_i + 1))
-            break
-        print("Added {} nodes this round.".format(round_added))
-    print("{} total nodes added to the labeled set.".format(total_added))
-    evaluation.print_metrics()
+    to_add = evaluation.run_expansion_round(identify_candidates)
