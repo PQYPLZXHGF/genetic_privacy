@@ -7,6 +7,7 @@ from pickle import load
 from argparse import ArgumentParser
 from math import sqrt
 from sys import stdout
+from os.path imort exists
 
 import pdb
 
@@ -31,7 +32,7 @@ parser.add_argument("--deterministic_random", "-d", action = "store_true",
                     help = "Seed the random number generator such that the same labeled nodes will be chosen on runs with the same number of nodes.")
 parser.add_argument("--deterministic_labeled", "-ds", action = "store_true",
                     help = "Seed the random number generator to ensure labeled node subset is deterministic.")
-parser.add_argument("--expansion-rounds", type = int, default = 1)
+# parser.add_argument("--expansion-round", type = int, default = 1)
 parser.add_argument("--search-related", type = int, default = False,
                     help = "Search only nodes that are related to labeled nodes for which there is nonzero ibd.")
 parser.add_argument("--expansion-rounds-data",
@@ -39,8 +40,17 @@ parser.add_argument("--expansion-rounds-data",
 
 args = parser.parse_args()
 
-if args.expansion_rounds > 1 and args.subset_labeled is None:
-    parser.error("A subset of labeled nodes is necessary for expansion rounds.")
+if args.expansion_rounds_data:
+    expansion_file_exists = exists(args.expansion_rounds_data)
+    if not expansion_file_exists and args.subset_labeled is None:
+        parser.error("A subset of labeled nodes is necessary for expansion rounds.")
+    if expansion_file_exists:
+        with open(args.expansion_rounds_data, "rb") as expansion_file:
+            expansion_data = load(expansion_file)
+    else:
+        expansion_data = dict()
+
+
 if args.data_logfile:
     change_logfile_name(args.data_logfile)
     start_logging()
