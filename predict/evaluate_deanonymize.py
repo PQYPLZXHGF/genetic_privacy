@@ -12,6 +12,7 @@ from os.path imort exists
 import pdb
 
 from bayes_deanonymize import BayesDeanonymize
+from expansion import ExpansionData
 from population import PopulationUnpickler
 from data_logging import (write_log, change_logfile_name,
                           stop_logging, start_logging)
@@ -43,12 +44,12 @@ args = parser.parse_args()
 if args.expansion_rounds_data:
     expansion_file_exists = exists(args.expansion_rounds_data)
     if not expansion_file_exists and args.subset_labeled is None:
-        parser.error("A subset of labeled nodes is necessary for expansion rounds.")
+        parser.error("A subset of labeled nodes is necessary for expansion rounds when expansion rounds data does not already exist.")
     if expansion_file_exists:
         with open(args.expansion_rounds_data, "rb") as expansion_file:
             expansion_data = load(expansion_file)
     else:
-        expansion_data = dict()
+        expansion_data = None
 
 
 if args.data_logfile:
@@ -239,11 +240,13 @@ else:
 
 write_log("to identify", [node._id for node in unlabeled])
 
-if args.expansion_rounds <= 1:
+if not args.expansion_rounds_data:
     evaluation.run_evaluation(unlabeled)
     evaluation.print_metrics()
 else:
     total_added = 0
     identify_candidates = set(id_mapping[node] for node
                               in original_labeled - set(evaluation.labeled_nodes))
+    if expansion_data is None:
+        expansion_data = ExpansionData(evaluation.labeled_nodes)
     to_add = evaluation.run_expansion_round(identify_candidates)
