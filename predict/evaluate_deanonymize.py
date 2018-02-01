@@ -250,3 +250,4 @@ else:
     if expansion_data is None:
         expansion_data = ExpansionData(evaluation.labeled_nodes)
     to_add = evaluation.run_expansion_round(identify_candidates)
+    expansion_data.add_round(to_add)
