@@ -44,7 +44,7 @@ args = parser.parse_args()
 if args.expansion_rounds_data:
     expansion_file_exists = exists(args.expansion_rounds_data)
     if not expansion_file_exists and args.subset_labeled is None:
-        parser.error("A subset of labeled nodes is necessary for expansion rounds when expansion rounds data does not already exist.")
+        parser.error("A subset of labeled nodes is necessary for expansion rounds when expansion rounds data file does not already exist.")
     if expansion_file_exists:
         with open(args.expansion_rounds_data, "rb") as expansion_file:
             expansion_data = load(expansion_file)
@@ -163,7 +163,9 @@ class Evaluation:
                 to_add.append(result)
             if i % 20 == 0:
                 self.print_metrics()
-                print("Nodes added this round: {}".format(to_add))
+                print("Nodes added this round: {}".format(len(to_add)))
+                correct_count = sum(x.correct for x in to_add)
+                print("Correct nodes added: {}".format(correct_count))
         write_log("expansion_round", {"added": len(to_add),
                                       "accuracy": self.accuracy})
         print("Added {} nodes this round.".format(round_added))
