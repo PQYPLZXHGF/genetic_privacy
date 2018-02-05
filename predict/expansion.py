@@ -9,7 +9,10 @@ class ExpansionData:
         self._rounds.append(to_update)
 
     def apply_to_population(self, population):
+        """
+        Mutate population with the latest round added to this object.
+        """
         for result in chain.from_iterable(self._rounds):
             if result.correct:
                 continue
-            
+        

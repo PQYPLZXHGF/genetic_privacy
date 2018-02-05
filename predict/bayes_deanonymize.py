@@ -12,6 +12,10 @@ from util import first_missing_ancestor, all_related
 ProbabilityData = namedtuple("ProbabilityData", ["start_i", "stop_i",
                                                  "cryptic_start_i",
                                                  "cryptic_stop_i"])
+
+RawIdentified = namedtuple("RawIdentified", ["sibling_group",
+                                             "ln_ratio",
+                                             "identified_node"])
 MINIMUM_LABELED_NODES = 5
 INF = float("inf")
 INF_REPLACE = 1.0
@@ -175,8 +179,8 @@ class BayesDeanonymize:
         #             "cryptic_prob": cryptic_prob
         #             "sibling_group": [node._id for node in sibling_group]}
         # write_log("run_data", log_data)
-        return (sibling_group, log_ratio)
-        # return (sibling_group, 0)
+        return RawIdentified(sibling_group, log_ratio, top)
+        # return (sibling_group, log_ratio)
         # return set(chain.from_iterable(get_sibling_group(potential[0])
         #                                for potential in potential_nodes))
 

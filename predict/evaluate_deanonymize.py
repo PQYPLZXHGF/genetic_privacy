@@ -7,7 +7,7 @@ from pickle import load
 from argparse import ArgumentParser
 from math import sqrt
 from sys import stdout
-from os.path imort exists
+from os.path import exists
 
 import pdb
 
@@ -61,6 +61,7 @@ else:
 write_log("args", args)
 
 IdentifyResult = namedtuple("IdentifyResult", ["target_node",
+                                               "sibling_group",
                                                "identified_node",
                                                "ln_ratio",
                                                "correct",
@@ -119,11 +120,12 @@ class Evaluation:
             print(format_string.format(generation, gen_correct / total, total))
 
     def _evaluate_node(self, node):
-        identified, ln_ratio = self._bayes.identify(node.genome, node,
-                                                    self._ibd_threshold)
-        assert len(identified) > 0
+        raw_identified = self._bayes.identify(node.genome, node,
+                                              self._ibd_threshold)
+        sibling_group, ln_ratio, identified_node = raw_identified
+        assert len(sibling_group) > 0
         node_generation = self._population.node_to_generation[node]
-        if node in identified:
+        if node in sibling_group:
             self.generation_error[node_generation]["correct"] += 1
             self.correct += 1
             print("correct")
@@ -134,12 +136,14 @@ class Evaluation:
             
         write_log("evaluate", {"target node": node._id,
                                "log ratio": ln_ratio,
-                               "identified": set(x._id for x in identified),
+                               "identified": set(x._id for x in sibling_group),
                                "run_number": self._run_number})
         stdout.flush()
-        return IdentifyResult(node, identified,
+        return IdentifyResult(node,
+                              sibling_group,
+                              identified_node,
                               ln_ratio,
-                              node in identified,
+                              node in sibling_group,
                               self._run_number)
 
     def reset_metrics(self):
