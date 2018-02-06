@@ -1,18 +1,22 @@
-from itertools import chain
-
 class ExpansionData:
-    def __init__(self, start_labeled_nodes):
-        self.start_labeled_nodes = list(start_labeled_nodes)
-        self._rounds = []
+    def __init__(self, start_labeled):
+        self.start_labeled = start_labeled
+        self.added = []
 
-    def add_round(self, to_update):
-        self._rounds.append(to_update)
+    def add_round(self, to_add):
+        self.added.extend(to_add)
 
-    def apply_to_population(self, population):
-        """
-        Mutate population with the latest round added to this object.
-        """
-        for result in chain.from_iterable(self._rounds):
+    def adjust_genomes(self, population):
+        id_mapping = population.id_mapping
+        for result in self.added:
             if result.correct:
                 continue
-        
+            identified = id_mapping[result.identified_node]
+            target = id_mapping[result.target_node]
+            identified.genome = target.genome
+
+    @property
+    def labeled_nodes(self):
+        ret = list(self.start_labeled)
+        ret.extend(result.identified_node for result in self.added)
+        return ret

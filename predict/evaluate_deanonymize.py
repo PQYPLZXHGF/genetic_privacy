@@ -66,7 +66,6 @@ IdentifyResult = namedtuple("IdentifyResult", ["target_node",
                                                "ln_ratio",
                                                "correct",
                                                "run_number"])
-
 class Evaluation:
     def __init__(self, population, classifier, labeled_nodes = None,
                  ibd_threshold = 0, search_related = False):
@@ -93,7 +92,7 @@ class Evaluation:
 
     @property
     def labeled_nodes(self):
-        return self._classifier._labeled_nodes
+        return self._classifier._labeled_nodes.copy()
 
     @labeled_nodes.setter
     def labeled_nodes(self, labeled_nodes):
@@ -156,24 +155,30 @@ class Evaluation:
     def run_expansion_round(self, identify_candidates):
         print("Running expansion round.")
         to_evaluate = list(identify_candidates)
-        round_added = 0
-        to_add = []
+        added = []
+        correct_add_count = 0
         for i, node in enumerate(to_evaluate):
             self.run_evaluation([node])
-            result = evaluation.identify_results[-1]
+            result = self.identify_results[-1]
             print("Ratio: {}".format(result.ln_ratio))
             if result.ln_ratio > 9:
                 print("Adding node.")
-                to_add.append(result)
+                added.append(result)
+                self._bayes.add_labeled_node_id(result.identified_node)
+                if result.corret:
+                    correct_add_count += 1
+                else:
+                    result.identfied_node.genome = result.target_node.genome
             if i % 20 == 0:
                 self.print_metrics()
-                print("Nodes added this round: {}".format(len(to_add)))
-                correct_count = sum(x.correct for x in to_add)
-                print("Correct nodes added: {}".format(correct_count))
-        write_log("expansion_round", {"added": len(to_add),
+                print("Nodes added this round: {}".format(added))
+                print("Correct nodes added: {}".format(correct_add_count))
+        write_log("expansion_round", {"added": added,
+                                      "correct_added": correct_add_count,
                                       "accuracy": self.accuracy})
-        print("Added {} nodes this round.".format(round_added))
-        return to_add
+        self.print_metrics()
+        print("Added {} nodes this round.".format(len(added)))
+        return added
 
     def run_evaluation(self, unlabeled):
         # generation_map = population.node_to_generation
@@ -207,7 +212,10 @@ evaluation = Evaluation(population, classifier,
                         ibd_threshold = args.ibd_threshold,
                         search_related = args.search_related)
 original_labeled = set(evaluation.labeled_nodes)
-if args.subset_labeled:
+if args.expansion_rounds_data and expansion_data is not None:
+    evaluation.labeled_nodes = expansion_data.labeled_nodes
+    expansion_data.adjust_genomes(population)
+elif args.subset_labeled:
     # we want the labeled nodes to be chosen randomly, but the same
     # random nodes chosen every time if the same number of labeled
     # nodes is chosen.
@@ -222,6 +230,9 @@ if args.subset_labeled:
         shuffle(sorted_labeled)
     
     evaluation.labeled_nodes = sorted_labeled[:args.subset_labeled]
+
+if args.expansion_rounds_data and expansion_data is None:
+    expansion_data = ExpansionData(evaluation.labeled_nodes)
 
 write_log("labeled nodes", evaluation.labeled_nodes)
 
@@ -250,10 +261,13 @@ if not args.expansion_rounds_data:
     evaluation.run_evaluation(unlabeled)
     evaluation.print_metrics()
 else:
-    total_added = 0
     identify_candidates = set(id_mapping[node] for node
                               in original_labeled - set(evaluation.labeled_nodes))
-    if expansion_data is None:
-        expansion_data = ExpansionData(evaluation.labeled_nodes)
-    to_add = evaluation.run_expansion_round(identify_candidates)
-    expansion_data.add_round(to_add)
+    added = evaluation.run_expansion_round(identify_candidates)
+    for result in added:
+        result.target_node = result.target_node._id
+        result.identified_node = result.identified_node._id
+        result.sibling_group = set(node._id for node in result.sibling_group)
+    expansion_data.add_round(added)
+    with open(args.expansion_rounds_data, "wb") as expansion_file:
+        dump(expansion_data, expansion_file)
