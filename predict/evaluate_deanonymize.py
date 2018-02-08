@@ -3,7 +3,7 @@
 from collections import Counter, defaultdict, namedtuple
 from datetime import datetime
 from random import shuffle, getstate, setstate, seed
-from pickle import load
+from pickle import load, dump
 from argparse import ArgumentParser
 from math import sqrt
 from sys import stdout
@@ -74,6 +74,7 @@ class Evaluation:
         if labeled_nodes is not None:
             self.set_labeled_nodes(labeled_nodes)
         if search_related:
+            print("Calculating related nodes")
             self._bayes = BayesDeanonymize(population, classifier,
                                            True, search_related)
         else:
@@ -204,7 +205,6 @@ print("Loading classifier", flush = True)
 with open(args.classifier, "rb") as pickle_file:
     classifier = load(pickle_file)
 
-
 # nodes = set(member for member in population.generations[-1].members
 #             if member.genome is not None)
 
@@ -261,6 +261,7 @@ if not args.expansion_rounds_data:
     evaluation.run_evaluation(unlabeled)
     evaluation.print_metrics()
 else:
+    print("Running expansion round")
     identify_candidates = set(id_mapping[node] for node
                               in original_labeled - set(evaluation.labeled_nodes))
     added = evaluation.run_expansion_round(identify_candidates)
