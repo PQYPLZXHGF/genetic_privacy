@@ -166,7 +166,7 @@ class Evaluation:
                 print("Adding node.")
                 added.append(result)
                 self._bayes.add_labeled_node_id(result.identified_node._id)
-                if result.corret:
+                if result.correct:
                     correct_add_count += 1
                 else:
                     result.identfied_node.genome = result.target_node.genome
