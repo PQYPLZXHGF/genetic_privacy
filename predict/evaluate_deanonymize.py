@@ -172,9 +172,9 @@ class Evaluation:
                     result.identfied_node.genome = result.target_node.genome
             if i % 20 == 0:
                 self.print_metrics()
-                print("Nodes added this round: {}".format(added))
+                print("Nodes added this round: {}".format(len(added)))
                 print("Correct nodes added: {}".format(correct_add_count))
-        write_log("expansion_round", {"added": added,
+        write_log("expansion_round", {"added": len(added),
                                       "correct_added": correct_add_count,
                                       "accuracy": self.accuracy})
         self.print_metrics()
