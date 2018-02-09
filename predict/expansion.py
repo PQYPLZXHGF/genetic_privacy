@@ -2,8 +2,10 @@ class ExpansionData:
     def __init__(self, start_labeled):
         self.start_labeled = start_labeled
         self.added = []
+        self._rounds = 0
 
     def add_round(self, to_add):
+        self._rounds += 1
         self.added.extend(to_add)
 
     def adjust_genomes(self, population):
