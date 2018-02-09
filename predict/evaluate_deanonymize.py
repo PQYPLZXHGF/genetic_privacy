@@ -165,7 +165,7 @@ class Evaluation:
             if result.ln_ratio > 9:
                 print("Adding node.")
                 added.append(result)
-                self._bayes.add_labeled_node_id(result.identified_node)
+                self._bayes.add_labeled_node_id(result.identified_node._id)
                 if result.corret:
                     correct_add_count += 1
                 else:
