@@ -121,7 +121,8 @@ if not args.expansion_rounds_data:
     evaluation.run_evaluation(unlabeled)
     evaluation.print_metrics()
 else:
-    if expansion_data.remaining:
+    if expansion_data.remaining and len(expansion_data.remaining) > 0:
+        print("Recovering identify candidates.")
         identify_candidates = expansion_data.remaining
     else:
         identify_candidates = set(id_mapping[node] for node
