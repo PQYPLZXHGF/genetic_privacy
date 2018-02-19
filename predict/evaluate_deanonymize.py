@@ -121,8 +121,11 @@ if not args.expansion_rounds_data:
     evaluation.run_evaluation(unlabeled)
     evaluation.print_metrics()
 else:
-    identify_candidates = set(id_mapping[node] for node
-                              in original_labeled - set(evaluation.labeled_nodes))
+    if expansion_data.remaining:
+        identify_candidates = expansion_data.remaining
+    else:
+        identify_candidates = set(id_mapping[node] for node
+                                  in original_labeled - set(evaluation.labeled_nodes))
     added = evaluation.run_expansion_round(identify_candidates,
                                            expansion_data,
                                            args.expansion_rounds_data)

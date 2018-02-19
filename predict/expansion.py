@@ -33,6 +33,10 @@ class ExpansionData:
             identified.genome = target.genome
 
     @property
+    def remaining(self):
+        return self._remaining
+
+    @property
     def labeled_nodes(self):
         ret = list(self.start_labeled)
         ret.extend(result.identified_node for result in self.added)
