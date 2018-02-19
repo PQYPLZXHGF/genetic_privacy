@@ -1,12 +1,27 @@
+from evaluation import IdentifyResult
+
+def flat_copy_identify_result(identify_result):
+    target_node = identify_result.target_node
+    identified_node = identify_result.identified_node
+    sibling_group = set(node._id for node in identify_result.sibling_group)
+    return IdentifyResult(target_node, sibling_group, identified_node,
+                          identify_result.ln_ratio, identify_result.correct,
+                          identify_result.run_number)
+
 class ExpansionData:
     def __init__(self, start_labeled):
         self.start_labeled = start_labeled
-        self.added = []
+        self.added = set()
         self._rounds = 0
+        self._remaining = None
 
     def add_round(self, to_add):
         self._rounds += 1
-        self.added.extend(to_add)
+        self.extend_round(to_add)
+
+    def extend_round(self, to_add, remaining = None):
+        self.added.update(flat_copy_identify_result(res) for res in to_add)
+        self._remaining = remaining
 
     def adjust_genomes(self, population):
         id_mapping = population.id_mapping
