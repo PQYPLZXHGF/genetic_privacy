@@ -3,7 +3,8 @@ from evaluation import IdentifyResult
 def flat_copy_identify_result(identify_result):
     target_node = identify_result.target_node
     identified_node = identify_result.identified_node
-    sibling_group = set(node._id for node in identify_result.sibling_group)
+    sibling_group = frozenset(node._id for node
+                              in identify_result.sibling_group)
     return IdentifyResult(target_node, sibling_group, identified_node,
                           identify_result.ln_ratio, identify_result.correct,
                           identify_result.run_number)
