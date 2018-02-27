@@ -1,8 +1,10 @@
 from evaluation import IdentifyResult
 
 def flat_copy_identify_result(identify_result):
-    target_node = identify_result.target_node
-    identified_node = identify_result.identified_node
+    target_node = identify_result.target_node._id
+    assert isinstance(target_node, int)
+    identified_node = identify_result.identified_node._id
+    assert isinstance(identified_node, int)
     sibling_group = frozenset(node._id for node
                               in identify_result.sibling_group)
     return IdentifyResult(target_node, sibling_group, identified_node,
