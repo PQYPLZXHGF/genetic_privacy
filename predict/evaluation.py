@@ -49,7 +49,7 @@ class Evaluation:
 
     def restrict_search(self, nodes):
         assert len(nodes) > 0
-        self._bayes.restrict_search(self, nodes)
+        self._bayes.restrict_search(nodes)
 
     def print_metrics(self):
         total = self.correct + self.incorrect
