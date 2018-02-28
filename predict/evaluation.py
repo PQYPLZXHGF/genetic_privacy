@@ -47,6 +47,10 @@ class Evaluation:
     def labeled_nodes(self, labeled_nodes):
         self._classifier._labeled_nodes = labeled_nodes
 
+    def restrict_search(self, nodes):
+        assert len(nodes) > 0
+        self._bayes.restrict_search(self, nodes)
+
     def print_metrics(self):
         total = self.correct + self.incorrect
         print("{} correct, {} incorrect, {} total.".format(self.correct,

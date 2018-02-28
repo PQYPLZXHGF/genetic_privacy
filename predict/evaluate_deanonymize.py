@@ -29,7 +29,6 @@ parser.add_argument("--deterministic_random", "-d", action = "store_true",
                     help = "Seed the random number generator such that the same labeled nodes will be chosen on runs with the same number of nodes.")
 parser.add_argument("--deterministic_labeled", "-ds", action = "store_true",
                     help = "Seed the random number generator to ensure labeled node subset is deterministic.")
-# parser.add_argument("--expansion-round", type = int, default = 1)
 parser.add_argument("--search-related", type = int, default = False,
                     help = "Search only nodes that are related to labeled nodes for which there is nonzero ibd.")
 parser.add_argument("--expansion-rounds-data",
@@ -121,12 +120,21 @@ if not args.expansion_rounds_data:
     evaluation.run_evaluation(unlabeled)
     evaluation.print_metrics()
 else:
+    # potential is the set of nodes the adversary believes it has not
+    # identified, based on the fact that it has not added the nodes to
+    # its labeled set.
+    potential = set(id_mapping[node] for node
+                    in original_labeled - set(evaluation.labeled_nodes))
+    # These two identify_candidate possibilities may be different if
+    # we have misidentified a node. Eg identified node x as node y,
+    # which means y may in fact come up later.
     if expansion_data.remaining and len(expansion_data.remaining) > 0:
         print("Recovering identify candidates.")
-        identify_candidates = expansion_data.remaining
-    else:
         identify_candidates = set(id_mapping[node] for node
-                                  in original_labeled - set(evaluation.labeled_nodes))
+                                  in expansion_data.remaining)
+    else:
+        identify_candidates = potential
+    evaluation.restrict_search(potential)
     added = evaluation.run_expansion_round(identify_candidates,
                                            expansion_data,
                                            args.expansion_rounds_data)

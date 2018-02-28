@@ -32,6 +32,7 @@ class BayesDeanonymize:
         if only_related:
             self._search_generations_back = search_generations_back
             self._compute_related()
+        self._restrict_search_nodes = None
         # self.__remove_erroneous_labeled()
 
     def __remove_erroneous_labeled(self):
@@ -50,8 +51,10 @@ class BayesDeanonymize:
         self._length_classifier._labeled_nodes = list(new_labeled)
 
     def _to_search(self, shared_list):
+        labeled = set(self._length_classifier._labeled_nodes)
         genome_nodes = (member for member in self._population.members
-                        if member.genome is not None)
+                        if (member.genome is not None and
+                            member._id not in labeled))
         if not self._only_related:
             return genome_nodes
         id_map = self._population.id_mapping
@@ -62,7 +65,10 @@ class BayesDeanonymize:
                 labeled_node = id_map[labeled_node_id]
                 related = self._labeled_related[labeled_node]
                 potential_nodes.update(related)
-        return potential_nodes
+        if self._restrict_search_nodes is not None:
+            return potential_nodes.intersection(self._restrict_search_nodes)
+        else:
+            return potential_nodes
 
     def _add_node_id_relatives(self, node_id, nodes):
         id_map = self._population.id_mapping
@@ -85,6 +91,9 @@ class BayesDeanonymize:
                          if member.genome is not None)
             self._add_node_id_relatives(node_id, nodes)
 
+    def restrict_search(self, nodes):
+        self._restrict_search_nodes = set(nodes)
+
     def identify(self, genome, actual_node, ibd_threshold = 5000000):
         node_probabilities = dict() # Probability that a node is a match
         id_map = self._population.id_mapping
@@ -92,7 +101,8 @@ class BayesDeanonymize:
         shared_list = []
         for labeled_node_id in length_classifier._labeled_nodes:
             labeled_node = id_map[labeled_node_id]
-            s = shared_segment_length_genomes(genome, labeled_node.genome,
+            s = shared_segment_length_genomes(genome,
+                                              labeled_node.supected_genome,
                                               ibd_threshold)
             shared_list.append((labeled_node_id, s))
 

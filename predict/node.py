@@ -86,6 +86,7 @@ class Node:
                  mother_id = None, suspected_father_id = None,
                  suspected_mother_id = None, sex = None, twin_id = None):
         self.genome = None
+        self._suspected_genome = None
         self._node_generator = node_generator
         self._twin_id = twin_id
         self._mother_id = mother_id
@@ -130,6 +131,8 @@ class Node:
     
     def __setstate__(self, state):
         self.__dict__.update(state)
+        if "_suspected_genome" not in state:
+            self._suspected_genome = None #We do this because there are old pickle files that don't have this property
         # Parents are resolved by PopulationUnpickler after all Node
         # objects are created
 
@@ -188,6 +191,17 @@ class Node:
             suspected_father._suspected_children.append(self._id)
         else:
             self._suspected_father_id = None
+
+    @property
+    def suspected_genome(self):
+        if self._suspected_genome is None:
+            return self.genome
+        else:
+            return self._suspected_genome
+
+    @suspected_genome.setter
+    def suspected_genome(self, genome):
+        self._suspected_genome = genome
             
     @property
     def mapping(self):
