@@ -123,7 +123,7 @@ class Evaluation:
                 if result.correct:
                     correct_add_count += 1
                 else:
-                    result.identified_node.genome = result.target_node.genome
+                    result.identified_node.suspected_genome = result.target_node.genome
             if i % 20 == 0:
                 self.print_metrics()
                 print("Nodes added this round: {}".format(len(added)))

@@ -33,7 +33,7 @@ class ExpansionData:
                 continue
             identified = id_mapping[result.identified_node]
             target = id_mapping[result.target_node]
-            identified.genome = target.genome
+            identified.suspected_genome = target.genome
 
     @property
     def remaining(self):
