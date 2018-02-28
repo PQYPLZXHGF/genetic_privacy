@@ -102,7 +102,7 @@ class BayesDeanonymize:
         for labeled_node_id in length_classifier._labeled_nodes:
             labeled_node = id_map[labeled_node_id]
             s = shared_segment_length_genomes(genome,
-                                              labeled_node.supected_genome,
+                                              labeled_node.suspected_genome,
                                               ibd_threshold)
             shared_list.append((labeled_node_id, s))
 
