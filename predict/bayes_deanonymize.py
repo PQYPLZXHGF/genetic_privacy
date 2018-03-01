@@ -135,9 +135,12 @@ class BayesDeanonymize:
             node_data[node] = ProbabilityData(node_start_i, node_stop_i,
                                               cryptic_start_i, cryptic_stop_i)
 
-        calc_prob = length_classifier.get_batch_probability(batch_lengths,
-                                                            batch_node_id,
-                                                            batch_labeled_node_id)
+        if len(lengths) > 0:
+            calc_prob = length_classifier.get_batch_probability(batch_lengths,
+                                                                batch_node_id,
+                                                                batch_labeled_node_id)
+        else:
+            calc_prob = []
         cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
 
         # index_data = {node._id: tuple(indices)
