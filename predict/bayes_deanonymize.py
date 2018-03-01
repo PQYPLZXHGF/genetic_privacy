@@ -135,6 +135,7 @@ class BayesDeanonymize:
             node_data[node] = ProbabilityData(node_start_i, node_stop_i,
                                               cryptic_start_i, cryptic_stop_i)
 
+        assert len(node_data) > 0
         if len(batch_lengths) > 0:
             calc_prob = length_classifier.get_batch_probability(batch_lengths,
                                                                 batch_node_id,
@@ -166,6 +167,7 @@ class BayesDeanonymize:
             log_prob = (np.sum(np.log(node_calc)) +
                         np.sum(np.log(node_cryptic)))
             node_probabilities[node] = log_prob
+        assert len(node_probabilities) > 0
         # potential_node = max(node_probabilities.items(),
         #                      key = lambda x: x[1])[0]
         write_log("identify", {"node": actual_node._id,
