@@ -119,6 +119,8 @@ class BayesDeanonymize:
         # membership testing, so we use a set.
         distribution_members = set(distributions.keys())
         nodes = self._to_search(shared_list)
+        if len(nodes) == 0:
+            return RawIdentified(set(), float("-inf"), None)
         for node in nodes:
             node_start_i = len(batch_node_id)
             node_id = node._id
