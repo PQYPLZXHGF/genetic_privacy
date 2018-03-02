@@ -120,6 +120,7 @@ class BayesDeanonymize:
         distribution_members = set(distributions.keys())
         nodes = self._to_search(shared_list)
         if len(nodes) == 0:
+            # We have no idea which node it is
             return RawIdentified(set(), float("-inf"), None)
         for node in nodes:
             node_start_i = len(batch_node_id)
