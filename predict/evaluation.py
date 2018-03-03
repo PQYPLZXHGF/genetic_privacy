@@ -75,7 +75,6 @@ class Evaluation:
         raw_identified = self._bayes.identify(node.genome, node,
                                               self._ibd_threshold)
         sibling_group, ln_ratio, identified_node = raw_identified
-        assert len(sibling_group) > 0
         node_generation = self._population.node_to_generation[node]
         if node in sibling_group:
             self.generation_error[node_generation]["correct"] += 1
