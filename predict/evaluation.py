@@ -132,6 +132,8 @@ class Evaluation:
                 expansion_data.extend_round(added, remaining)
                 with open(expansion_filename, "wb") as expansion_file:
                     dump(expansion_data, expansion_file)
+                write_log("expansion_data_written", {"current_node": node._id,
+                                                     "complete": False})
         write_log("expansion_round", {"added": len(added),
                                       "correct_added": correct_add_count,
                                       "accuracy": self.accuracy})

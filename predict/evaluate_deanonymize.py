@@ -141,3 +141,5 @@ else:
     expansion_data.add_round(added)
     with open(args.expansion_rounds_data, "wb") as expansion_file:
         dump(expansion_data, expansion_file)
+    write_log("expansion_data_written", {"current_node": None,
+                                         "complete": True})
