@@ -30,6 +30,7 @@ class BayesDeanonymize:
             self._length_classifier = classifier
         self._only_related = only_related
         if only_related:
+            print("Only searching nodes related to labeled nodes within {} generations".format(search_generations_back))
             self._search_generations_back = search_generations_back
             self._compute_related()
         self._restrict_search_nodes = None
@@ -52,13 +53,12 @@ class BayesDeanonymize:
 
     def _to_search(self, shared_list):
         labeled = set(self._length_classifier._labeled_nodes)
-        genome_nodes = (member for member in self._population.members
-                        if (member.genome is not None and
-                            member._id not in labeled))
+        genome_nodes = set(member for member in self._population.members
+                           if (member.genome is not None and
+                               member._id not in labeled))
         if not self._only_related:
             return genome_nodes
         id_map = self._population.id_mapping
-        genome_nodes = set(genome_nodes)
         potential_nodes = set()
         for labeled_node_id, shared in shared_list:
             if shared > 0:
