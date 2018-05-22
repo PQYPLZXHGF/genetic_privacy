@@ -26,7 +26,8 @@ class Population:
         # Calculated based on
         # http://www.stat.nus.edu.sg/~stachenz/ST5217Notes4.pdf
         kinship = SymmetricDict()
-        for person_2, person_1 in combinations_with_replacement(self.members):
+        for person_2, person_1 in combinations_with_replacement(self.members,
+                                                                2):
             key = (person_1._id, person_2._id)
             if person_1 is person_2:
                 if person_1.mother is None:
