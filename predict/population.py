@@ -1,6 +1,6 @@
 from math import floor
 from random import shuffle, uniform, choice, random, sample
-from itertools import chain
+from itertools import chain, combinations_with_replacement
 from types import GeneratorType
 from pickle import Unpickler
 from collections import defaultdict
@@ -10,6 +10,7 @@ import json
 from random_queue import RandomQueue
 from generation import Generation
 from sex import Sex
+from symmetric_dict import SymmetricDict
 
 class Population:
     def __init__(self, initial_generation = None):
@@ -20,6 +21,29 @@ class Population:
         self._generations_with_genomes = None
         if initial_generation is not None:
             self._generations.append(initial_generation)
+
+    def calculate_kinship(self):
+        # Calculated based on
+        # http://www.stat.nus.edu.sg/~stachenz/ST5217Notes4.pdf
+        kinship = SymmetricDict()
+        for person_2, person_1 in combinations_with_replacement(self.members):
+            key = (person_1._id, person_2._id)
+            if person_1 is person_2:
+                if person_1.mother is None:
+                    kinship[key] = 0.5
+                    continue
+                parents = (person_1.mother, person_1.father)
+                coeff = 0.5 + (0.5) * kinship[parents]
+                kinship[key] = coeff
+            
+            if person_1.mother is None:
+                kinship[key] = 0
+                continue
+            
+            coeff_1 = kinship[(person_1.mother._id, person_2._id)]
+            coeff_2 = kinship[(person_1.father._id, person_2._id)]
+            kinship[key] = 0.5 * (coeff_1 + coeff_2)
+        return kinship
 
     @property
     def id_mapping(self):
