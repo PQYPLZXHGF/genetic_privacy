@@ -13,3 +13,8 @@ class SymmetricDict(dict):
 
     def __contains__(self, key):
         return dict.__contains__(self, key if key[0] < key[1] else (key[1],key[0]))
+
+    def get(self, key, default = None):
+        return dict.get(self,
+                        key if key[0] < key[1] else (key[1], key[0]),
+                        default)
