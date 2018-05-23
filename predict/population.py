@@ -38,12 +38,13 @@ class Population:
                 kinship[key] = coeff
             
             if person_1.mother is None:
-                kinship[key] = 0
                 continue
             
-            coeff_1 = kinship[(person_1.mother._id, person_2._id)]
-            coeff_2 = kinship[(person_1.father._id, person_2._id)]
-            kinship[key] = 0.5 * (coeff_1 + coeff_2)
+            coeff_1 = kinship.get((person_1.mother._id, person_2._id), 0)
+            coeff_2 = kinship.get((person_1.father._id, person_2._id), 0)
+            coeff = 0.5 * (coeff_1 + coeff_2)
+            if coeff > 0:
+                kinship[key] = coeff
         return kinship
 
     @property
