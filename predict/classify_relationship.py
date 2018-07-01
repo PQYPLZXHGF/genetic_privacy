@@ -34,10 +34,29 @@ class LengthClassifier:
         self._distributions = distributions
         self._labeled_nodes = labeled_nodes
         self._cryptic_distribution = cryptic_distribution
+        self._by_unlabeled = None
         if empirical_cryptic_lengths is not None:
             self._empirical_cryptic_distribution = ECDF(empirical_cryptic_lengths, "left")
         else:
             self._empirical_cryptic_distribution = None
+
+    @property
+    def group_by_unlabeled(self):
+        try:
+            by_unlabeled = self._by_unlabeled
+        except AttributeError:
+            by_unlabeled = None
+            
+        if by_unlabeled is not None:
+            return by_unlabeled
+
+        by_unlabeled = defaultdict(set)
+        for unlabeled_id, labeled_id in self._distributions.keys():
+            by_unlabeled[unlabeled_id].add(labeled_id)
+
+        self._by_unlabeled = by_unlabeled
+        return by_unlabeled
+        
             
     def get_probability(self, shared_length, query_node, labeled_node):
         """

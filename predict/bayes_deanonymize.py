@@ -6,6 +6,7 @@ import numpy as np
 
 from classify_relationship import (LengthClassifier,
                                    shared_segment_length_genomes)
+from identify_helper import cython_identify
 from data_logging import write_log
 from util import first_missing_ancestor, all_related
 
@@ -95,6 +96,8 @@ class BayesDeanonymize:
         self._restrict_search_nodes = set(nodes)
 
     def identify(self, genome, actual_node, ibd_threshold = 5000000):
+        return cython_identify(self, genome, actual_node,
+                               ibd_threshold = 5000000)
         node_probabilities = dict() # Probability that a node is a match
         id_map = self._population.id_mapping
         length_classifier = self._length_classifier
