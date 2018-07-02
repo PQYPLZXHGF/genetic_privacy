@@ -54,6 +54,7 @@ class LengthClassifier:
         for unlabeled_id, labeled_id in self._distributions.keys():
             by_unlabeled[unlabeled_id].add(labeled_id)
 
+        by_unlabeled = dict(by_unlabeled)
         self._by_unlabeled = by_unlabeled
         return by_unlabeled
         
