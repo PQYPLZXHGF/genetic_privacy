@@ -45,14 +45,14 @@ def cython_identify(bayes_deanonymize, genome, actual_node,
                                           ibd_threshold)
         shared_list.append((labeled_node_id, s))
 
-    shared_dict = dict(shared_list)
-    labeled_nodes = set(length_classifier._labeled_nodes)
+    cdef dict shared_dict = dict(shared_list)
+    cdef set labeled_nodes = set(length_classifier._labeled_nodes)
 
-    node_data = dict()
-    batch_node_id = []
-    batch_labeled_node_id = []
-    batch_lengths = []
-    batch_cryptic_lengths = []
+    cdef dict node_data = dict()
+    cdef list batch_node_id = []
+    cdef list batch_labeled_node_id = []
+    cdef list batch_lengths = []
+    cdef list batch_cryptic_lengths = []
     # This is done for performance reasons, as appending to this
     # list is the hottest part of the loop.
     append_cryptic = batch_cryptic_lengths.append
@@ -60,25 +60,28 @@ def cython_identify(bayes_deanonymize, genome, actual_node,
     # Set membership testing is faster than dictionary key
     # membership testing, so we use a set.
     # distribution_members = set(distributions.keys())
-    by_unlabeled = length_classifier.group_by_unlabeled
-    nodes = bayes_deanonymize._to_search(shared_list)
+    cdef dict by_unlabeled = length_classifier.group_by_unlabeled
+    cdef set nodes = bayes_deanonymize._to_search(shared_list)
     
     if len(nodes) == 0:
         # We have no idea which node it is
         return RawIdentified(set(), float("-inf"), None)
+    cdef set cryptic_nodes
+    cdef set non_cryptic_nodes
+    cdef set empty = set()
     for node in nodes:
         node_start_i = len(batch_node_id)
         node_id = node._id
         cryptic_start_i = len(batch_cryptic_lengths)
         
-        cryptic_nodes = labeled_nodes - by_unlabeled[node_id]
+        cryptic_nodes = labeled_nodes - by_unlabeled.get(node_id, empty)
         if len(cryptic_nodes) > 0:
             batch_cryptic_lengths.extend(shared_dict[labeled_node_id]
                                          for labeled_node_id in cryptic_nodes)
         
         non_cryptic_nodes = labeled_nodes - cryptic_nodes
         if len(non_cryptic_nodes) > 0:
-            batch_node_id.extend(node_id for _ in range(len(non_cryptic_nodes)))
+            batch_node_id.extend([node_id] * len(non_cryptic_nodes))
             batch_labeled_node_id.extend(non_cryptic_nodes)
             batch_lengths.extend(shared_dict[labeled_node_id]
                                  for labeled_node_id in non_cryptic_nodes)
@@ -102,7 +105,7 @@ def cython_identify(bayes_deanonymize, genome, actual_node,
                                                             batch_labeled_node_id)
     else:
         calc_prob = []
-    cdef np.ndarray[np.float64_t, ndim=1] cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
+    cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
 
     # index_data = {node._id: tuple(indices)
     #               for node, indices in node_data.items()}
@@ -116,7 +119,6 @@ def cython_identify(bayes_deanonymize, genome, actual_node,
     # with open(output_filename, "wb") as pickle_file:
     #     dump(to_dump, pickle_file)
     node_probabilities = dict()
-    cdef np.ndarray[np.float64_t, ndim=1] node_calc
     for node, prob_data in node_data.items():
         start_i, stop_i, cryptic_start_i, cryptic_stop_i = prob_data
         if node == actual_node:
