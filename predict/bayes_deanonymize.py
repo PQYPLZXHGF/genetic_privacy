@@ -6,7 +6,6 @@ import numpy as np
 
 from classify_relationship import (LengthClassifier,
                                    shared_segment_length_genomes)
-from identify_helper import cython_identify
 from data_logging import write_log
 from util import first_missing_ancestor, all_related
 
@@ -96,8 +95,6 @@ class BayesDeanonymize:
         self._restrict_search_nodes = set(nodes)
 
     def identify(self, genome, actual_node, ibd_threshold = 5000000):
-        return cython_identify(self, genome, actual_node,
-                               ibd_threshold = 5000000)
         node_probabilities = dict() # Probability that a node is a match
         id_map = self._population.id_mapping
         length_classifier = self._length_classifier
@@ -109,6 +106,9 @@ class BayesDeanonymize:
                                               ibd_threshold)
             shared_list.append((labeled_node_id, s))
 
+        shared_dict = dict(shared_list)
+        labeled_nodes = set(length_classifier._labeled_nodes)
+        
         node_data = dict()
         batch_node_id = []
         batch_labeled_node_id = []
@@ -120,22 +120,32 @@ class BayesDeanonymize:
         distributions = length_classifier._distributions
         # Set membership testing is faster than dictionary key
         # membership testing, so we use a set.
-        distribution_members = set(distributions.keys())
+        # distribution_members = set(distributions.keys())
+        by_unlabeled = length_classifier.group_by_unlabeled
         nodes = self._to_search(shared_list)
         if len(nodes) == 0:
             # We have no idea which node it is
             return RawIdentified(set(), float("-inf"), None)
+        
+        empty = set()
         for node in nodes:
             node_start_i = len(batch_node_id)
             node_id = node._id
             cryptic_start_i = len(batch_cryptic_lengths)
-            for labeled_node_id, shared in shared_list:
-                if (node_id, labeled_node_id) not in distribution_members:
-                    append_cryptic(shared)
-                else:                    
-                    batch_node_id.append(node_id)
-                    batch_labeled_node_id.append(labeled_node_id)
-                    batch_lengths.append(shared)
+
+            cryptic_nodes = labeled_nodes - by_unlabeled.get(node_id, empty)
+            if len(cryptic_nodes) > 0:
+                batch_cryptic_lengths.extend(shared_dict[labeled_node_id]
+                                             for labeled_node_id
+                                             in cryptic_nodes)
+        
+            non_cryptic_nodes = labeled_nodes - cryptic_nodes
+            if len(non_cryptic_nodes) > 0:
+                batch_node_id.extend([node_id] * len(non_cryptic_nodes))
+                batch_labeled_node_id.extend(non_cryptic_nodes)
+                batch_lengths.extend(shared_dict[labeled_node_id]
+                                     for labeled_node_id in non_cryptic_nodes)
+            
             cryptic_stop_i = len(batch_cryptic_lengths)
             node_stop_i = len(batch_node_id)
             node_data[node] = ProbabilityData(node_start_i, node_stop_i,
