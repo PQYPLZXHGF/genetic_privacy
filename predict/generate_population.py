@@ -3,6 +3,8 @@
 from argparse import ArgumentParser
 from random import choice
 from pickle import dump, HIGHEST_PROTOCOL
+from os.path import exists
+from sys import exit
 
 from population import HierarchicalIslandPopulation
 from population_genomes import generate_genomes
@@ -87,7 +89,12 @@ if not args.no_genomes:
     print("Generating genomes")
     generate_genomes(population, genome_generator, recombinators, 3)
 
+
 if args.output_file:
+    if exists(args.output_file):
+        print("Output file already exists.")
+        exit(1)
+
     with open(args.output_file, "wb") as pickle_file:
         # Trees cause deep recursion in the pickle module, so we need
         # to raise the recursion limit. This is the stack depth for
