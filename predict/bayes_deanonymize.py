@@ -98,6 +98,7 @@ class BayesDeanonymize:
         node_probabilities = dict() # Probability that a node is a match
         id_map = self._population.id_mapping
         length_classifier = self._length_classifier
+        # TODO: Eliminated shared_list and use shared_dict everywhere
         shared_list = []
         for labeled_node_id in length_classifier._labeled_nodes:
             labeled_node = id_map[labeled_node_id]
@@ -114,13 +115,6 @@ class BayesDeanonymize:
         batch_labeled_node_id = []
         batch_lengths = []
         batch_cryptic_lengths = []
-        # This is done for performance reasons, as appending to this
-        # list is the hottest part of the loop.
-        append_cryptic = batch_cryptic_lengths.append
-        distributions = length_classifier._distributions
-        # Set membership testing is faster than dictionary key
-        # membership testing, so we use a set.
-        # distribution_members = set(distributions.keys())
         by_unlabeled = length_classifier.group_by_unlabeled
         nodes = self._to_search(shared_list)
         if len(nodes) == 0:
@@ -139,7 +133,7 @@ class BayesDeanonymize:
                                              for labeled_node_id
                                              in cryptic_nodes)
         
-            non_cryptic_nodes = labeled_nodes - cryptic_nodes
+            non_cryptic_nodes = list(labeled_nodes - cryptic_nodes)
             if len(non_cryptic_nodes) > 0:
                 batch_node_id.extend([node_id] * len(non_cryptic_nodes))
                 batch_labeled_node_id.extend(non_cryptic_nodes)
