@@ -20,6 +20,7 @@ parser.add_argument("--data-logfile",
                     help = "Filename to write log data to.")
 parser.add_argument("--num_node", "-n", type = int, default = 10)
 parser.add_argument("--test_node", "-t", type = int, action = "append")
+parser.add_argument("--test_node_file")
 parser.add_argument("--subset_labeled", "-s", type = int, default = None,
                     help = "Chose a random subset of s nodes from the set of labeled nodes. If using expansion rounds, this is the size of the initial set of labeled nodes.")
 parser.add_argument("--ibd-threshold", type = int, default = 5000000,
@@ -35,6 +36,9 @@ parser.add_argument("--expansion-rounds-data",
                     help = "Pickle file with data from expansion rounds.")
 
 args = parser.parse_args()
+
+if args.test_node and args.test_node_file:
+    parser.error("Cannot specify both test nodes and a test node file.")
 
 if args.expansion_rounds_data:
     expansion_file_exists = exists(args.expansion_rounds_data)
@@ -102,6 +106,9 @@ labeled_nodes = set(id_mapping[node_id] for node_id
                     in evaluation.labeled_nodes)
 if args.test_node is not None and len(args.test_node) > 0:
     unlabeled = [id_mapping[node_id] for node_id in args.test_node]
+elif args.test_node_file is not None:
+    with open(args.test_node_file, "r") as test_node_file:
+      unlabeled = [int(node_id.strip()) for node_id in test_file.readlines()]
 else:
     all_unlabeled = list(nodes - labeled_nodes)
     all_unlabeled.sort(key = lambda node: node._id)
