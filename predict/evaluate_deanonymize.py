@@ -108,8 +108,9 @@ if args.test_node is not None and len(args.test_node) > 0:
     unlabeled = [id_mapping[node_id] for node_id in args.test_node]
 elif args.test_node_file is not None:
     with open(args.test_node_file, "r") as test_node_file:
-      unlabeled = [id_mapping[int(node_id.strip())] for node_id
-                   in test_node_file.readlines()]
+        node_ids = [int(node_id.strip()) for node_id
+                    in test_node_file.readlines()]
+    unlabeled = [id_mapping[node_id] for node_id in node_ids]
 else:
     all_unlabeled = list(nodes - labeled_nodes)
     all_unlabeled.sort(key = lambda node: node._id)
