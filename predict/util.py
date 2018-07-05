@@ -206,7 +206,7 @@ def all_related(node, suspected = False, generations_back = float("inf")):
         return set()
     descendant_sets = (descendants_of(ancestor, suspected)
                        for ancestor in ancestors)
-    return set.union(*descendant_sets)
+    return set(chain.from_iterable(descendant_sets))
 
 def descendants_of(node, suspected = False):
     descendants = set()
