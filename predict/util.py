@@ -143,8 +143,8 @@ def recent_common_ancestor(node_a, node_b, generation_map, suspected = False):
             recent_generation = ancestor_generation
             ancestor = common_ancestor
     younger_pair = max(generation_map[node_a], generation_map[node_b])
-    node_a_distance = abs(generation_map[node_a] - ancestor_generation)
-    node_b_distance = abs(generation_map[node_b] - ancestor_generation)
+    node_a_distance = abs(generation_map[node_a] - recent_generation)
+    node_b_distance = abs(generation_map[node_b] - recent_generation)
     total_distance = node_a_distance + node_b_distance
     return (ancestor, abs(younger_pair - recent_generation), total_distance)
 
