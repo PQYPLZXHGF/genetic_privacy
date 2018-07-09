@@ -142,8 +142,11 @@ def recent_common_ancestor(node_a, node_b, generation_map, suspected = False):
         if ancestor_generation > recent_generation:
             recent_generation = ancestor_generation
             ancestor = common_ancestor
-    younger_pair = max(generation_map[node_a], generation_map[node_b])    
-    return (ancestor, abs(younger_pair - recent_generation))
+    younger_pair = max(generation_map[node_a], generation_map[node_b])
+    node_a_distance = abs(generation_map[node_a] - ancestor_generation)
+    node_b_distance = abs(generation_map[node_b] - ancestor_generation)
+    total_distance = node_a_distance + node_b_distance
+    return (ancestor, abs(younger_pair - recent_generation), total_distance)
 
 def get_sample_of_cousins(population, distance, percent_ancestors = 0.1,
                           percent_descendants = 0.1):
