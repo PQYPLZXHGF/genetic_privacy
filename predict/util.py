@@ -134,7 +134,7 @@ def recent_common_ancestor(node_a, node_b, generation_map, suspected = False):
     b_ancestors = all_ancestors(node_b, suspected)
     common_ancestors = a_ancestors.intersection(b_ancestors)
     if len(common_ancestors) == 0:
-        return (None, None)
+        return (None, None, None)
     recent_generation = -1
     ancestor = None
     for common_ancestor in common_ancestors:
