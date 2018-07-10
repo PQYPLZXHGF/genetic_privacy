@@ -7,7 +7,7 @@ inf = float("inf")
 # TODO: Deduplicate with version in population_statistics. Very confusing.
 # Make sure to get suspected parameter correct in transition.
 def all_ancestors(node, suspected = False):
-    ancestors = set()
+    ancestors = set([node])
     current_generation = set([node])
     while len(current_generation) > 0:
         if suspected:
