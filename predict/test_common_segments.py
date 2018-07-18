@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 import numpy as np
 
 # import pyximport; pyximport.install()
-from common_segments import common_homolog_segments, _consolidate_sequence
+from common_segments import common_homolog_segments, _consolidate_sequence, length_with_cm_cutoff
 
 uint32 = np.uint32
 
@@ -122,6 +122,18 @@ class TestConsolidateSequence(unittest.TestCase):
         seq = list(zip(range(0, 10), range(1, 11)))
         con = _consolidate_sequence(seq)
         self.assertEqual(con, [(0, 10)])
+
+class TestCmCutoff(unittest.TestCase):
+    def test_simple(self):
+        """
+        data
+        5	0.0001200000 0.0010
+        10	0.0001599999 0.0016
+        15	0.0001800000 0.0024
+        20	0.0002000000 0.0033
+        """
+        recombination = MagicMock()
+        length = length_with_cm_cutoff([(13, 18)], recombination, 1)
 
 if __name__ == '__main__':
     unittest.main()

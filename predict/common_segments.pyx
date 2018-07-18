@@ -5,7 +5,41 @@ from array import array
 cimport numpy as np
 cimport cython
 
-### Non vectorized method for calculating common segment lengths.
+def length_with_cm_cutoff(ibd_segments, recombination_data, cutoff):
+    starts, stops = zip(*ibd_segments)
+    np_starts = np.array(starts, dtype = np.uint32)
+    np_stops = np.array(stops, dtype = np.uint32)
+    base_ends = recombination_data.bases
+    start_index = np.searchsorted(base_ends, np_starts, side = "left")
+    stop_index = np.searchsorted(base_ends, np_stops, side = "right")
+    cm_ends = recombination_data.cm
+    unadjusted_differences = cm_ends[stop_index] - cm_ends[start_index]
+
+    # TODO: Ensure the rates is in the correct units
+    rates = recombination_data.rates
+    # TODO: Handle edge cases at beginning and end of chrom
+    start_adjustment = (np_starts - base_ends[start_index]) * rates[np_starts + 1]
+    stop_adjustment = (np_stops - base_ends[stop_index]) * rates[np_stops + 1]
+    adusted_lengths = unadjusted_differences - start_adjustment - stop_adjustment
+    detectible = adusted_lengths > cutoff
+    np.sum(np_stops[detectible] - np_starts[detectible])
+
+cpdef common_segment_ibd(genome_a, genome_b):
+    """
+    Given two genomes returns a list of integers for each autosome,
+    corresponding to the length of segments that are shared between
+    the two autosomes.
+    """
+    cdef list ibd_segments = []
+    ibd_segments.extend(common_homolog_segments(genome_a.mother,
+                                            genome_b.mother))
+    ibd_segments.extend(common_homolog_segments(genome_a.father,
+                                           genome_b.mother))
+    ibd_segments.extend(common_homolog_segments(genome_a.mother,
+                                           genome_b.father))
+    ibd_segments.extend(common_homolog_segments(genome_a.father,
+                                           genome_b.father))
+    return ibd_segments
 
 def common_segment_lengths(genome_a, genome_b):
     """
@@ -13,16 +47,7 @@ def common_segment_lengths(genome_a, genome_b):
     corresponding to the length of segments that are shared between
     the two autosomes.
     """
-    cdef list lengths = []
-    lengths.extend(_lengths(common_homolog_segments(genome_a.mother,
-                                                    genome_b.mother)))
-    lengths.extend(_lengths(common_homolog_segments(genome_a.father,
-                                                    genome_b.mother)))
-    lengths.extend(_lengths(common_homolog_segments(genome_a.mother,
-                                                    genome_b.father)))
-    lengths.extend(_lengths(common_homolog_segments(genome_a.father,
-                                                    genome_b.father)))
-    return lengths
+    return _lengths(common_segment_ibd(genome_a, genome_b))
 
 # We don't need bounds checks, because the condition of the while loop
 # ensures array access is within bounds.
