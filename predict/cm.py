@@ -1,24 +1,74 @@
 import numpy as np
 import pdb
 
+from recomb_genome import hapmap_filenames, CHROMOSOME_ORDER, _read_recombination_file(filename)
+
+CentimorganData = namedtuple("CentimorganData", ["bases", "cm", "rates"])
+
+def centimorgan_data_from_directory(directory):
+    file_names = hapmap_filenames(directory)
+    bp = []
+    cm = []
+    rates = []
+    bp_accum = 0
+    cm_accum = 0
+    for chrom in CHROMOSOME_ORDER:
+        filename = file_names[chrom]
+        data = _read_recombination_file(filename)
+        for loci, rate, cumulative_cm in data:
+            bp.append(loci + bp_accum)
+            cm.append(cumulative_cm + cm_accum)
+            rates.append(rate)
+        bp_accum += data[-1][0]
+        cm_accum += data[-1][2]
+
+    np_bases = np.array(bp, dtype = np.uint32)
+    np_cm = np.array(cm)
+    np_rates = np.array(rates)
+    return CentimorganData(np_bases, np_cm, np_rates)
+        
+        
+def cumulative_cm(locations, recombination_data):
+    """
+    Calculates the cumulative centimorgans for the given genome
+    locations based on the given recombination data.
+    """
+    np_locations = np.array(locations, dtype = np.uint32, copy = False)
+    base_ends = recombination_data.bases
+    assert np.all(np_locations <= base_ends[-1])
+    end_index = np.searchsorted(base_ends, np_locations, side = "left")
+    
+    cm_ends = recombination_data.cm
+    cm_distance = cm_ends[end_index]
+    
+    bp_difference = base_ends[end_index] - locations
+    rates = recombination_data.rates
+    cm_difference = bp_difference * rates[end_index - 1]
+    cm_difference[end_index == 0] = 0
+
+    adjusted_cm_distance = cm_distance - cm_difference
+    assert np.all(0 <= adjusted_cm_distance)
+    assert np.all(adjusted_cm_distance <= cm_ends[-1])
+    return adjusted_cm_distance
+
 def cm_lengths(starts, stops, recombination_data):
+    """
+    Computes the centimorgan length for regions of the genome defined
+    by starts and stops, where stop[i] corresponds to start[i]
+    """
     np_starts = np.array(starts, dtype = np.uint32, copy = False)
     np_stops = np.array(stops, dtype = np.uint32, copy = False)
-    base_ends = recombination_data.bases
-    start_index = np.searchsorted(base_ends, np_starts, side = "right") - 1
-    stop_index = np.searchsorted(base_ends, np_stops, side = "left")
-    cm_ends = recombination_data.cm
-    unadjusted_differences = cm_ends[stop_index] - cm_ends[start_index]
-
-    # TODO: Ensure the rates is in the correct units
-    rates = recombination_data.rates
-    # TODO: Handle edge cases at beginning and end of chrom
-    start_adjustment = (np_starts - base_ends[start_index]) * rates[start_index + 1]
-    stop_adjustment = (base_ends[stop_index] - np_stops) * rates[stop_index]
-    adjusted_lengths = unadjusted_differences - start_adjustment - stop_adjustment
-    return adjusted_lengths
+    cm_starts = cumulative_cm(np_starts, recombination_data)
+    cm_stops = cumulative_cm(np_stops, recombination_data)
+    return cm_stops - cm_starts
 
 def length_with_cm_cutoff(ibd_segments, recombination_data, cutoff):
+    """
+    Given IBD segments in the form (a, b), a < b, with a and b being
+    basepair locations denoting regions of the genome, returns the
+    total basepair length for regions that are longer than cutoff
+    centimorgans.
+    """
     starts, stops = zip(*ibd_segments)
     np_starts = np.array(starts, dtype = np.uint32)
     np_stops = np.array(stops, dtype = np.uint32)
@@ -26,4 +76,4 @@ def length_with_cm_cutoff(ibd_segments, recombination_data, cutoff):
     lengths = cm_lengths(starts, stops, recombination_data)
     detectible = lengths > cutoff
 
-    np.sum(np_stops[detectible] - np_starts[detectible])
+    return np.sum(np_stops[detectible] - np_starts[detectible])
