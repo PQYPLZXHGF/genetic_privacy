@@ -6,7 +6,9 @@ from unittest.mock import MagicMock
 import numpy as np
 
 # import pyximport; pyximport.install()
-from common_segments import common_homolog_segments, _consolidate_sequence, length_with_cm_cutoff
+from common_segments import common_homolog_segments, _consolidate_sequence
+
+from cm import cm_lengths
 
 uint32 = np.uint32
 
@@ -123,8 +125,8 @@ class TestConsolidateSequence(unittest.TestCase):
         con = _consolidate_sequence(seq)
         self.assertEqual(con, [(0, 10)])
 
-class TestCmCutoff(unittest.TestCase):
-    def test_simple(self):
+class TestCmLengths(unittest.TestCase):
+    def test_single_segment(self):
         """
         data
         5	0.0001200000 0.0010
@@ -133,7 +135,48 @@ class TestCmCutoff(unittest.TestCase):
         20	0.0002000000 0.0033
         """
         recombination = MagicMock()
-        length = length_with_cm_cutoff([(13, 18)], recombination, 1)
+        recombination.bases = np.array([5, 10, 15, 20], dtype = np.uint32)
+        recombination.cm = np.array([0.0010, 0.0016, 0.0024, 0.0033])
+        recombination.rates = np.array([0.0001200000, 0.0001599999,
+                                        0.0001800000, 0.0002000000])
+        starts = [0]
+        stops = [5]
+        import pdb
+        pdb.set_trace()
+        lengths = cm_lengths(starts, stops, recombination)
+        expect = np.array([0.0010], dtype = np.float64)
+        np.testing.assert_almost_equal(lengths, expect)
+
+        starts = [15]
+        stops = [20]
+        lengths = cm_lengths(starts, stops, recombination)
+        expect = np.array([0.00112], dtype = np.float64)
+        np.testing.assert_almost_equal(lengths, expect)
+        
+        starts = [10]
+        stops = [15]
+        lengths = cm_lengths(starts, stops, recombination)
+        expect = np.array([0.0008], dtype = np.float64)
+        np.testing.assert_almost_equal(lengths, expect)
+
+        starts = [11]
+        stops = [14]
+        lengths = cm_lengths(starts, stops, recombination)
+        expect = np.array([0.0004399999999999997], dtype = np.float64)
+        np.testing.assert_almost_equal(lengths, expect)
+
+        starts = [11]
+        stops = [19]
+        lengths = cm_lengths(starts, stops, recombination)
+        expect = np.array([0.0013199999999999998], dtype = np.float64)
+        np.testing.assert_almost_equal(lengths, expect)
+
+        starts = [11]
+        stops = [18]
+        lengths = cm_lengths(starts, stops, recombination)
+        expect = np.array([0.00112], dtype = np.float64)
+        np.testing.assert_almost_equal(lengths, expect)
+        
 
 if __name__ == '__main__':
     unittest.main()

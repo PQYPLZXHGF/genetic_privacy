@@ -5,25 +5,6 @@ from array import array
 cimport numpy as np
 cimport cython
 
-def length_with_cm_cutoff(ibd_segments, recombination_data, cutoff):
-    starts, stops = zip(*ibd_segments)
-    np_starts = np.array(starts, dtype = np.uint32)
-    np_stops = np.array(stops, dtype = np.uint32)
-    base_ends = recombination_data.bases
-    start_index = np.searchsorted(base_ends, np_starts, side = "left")
-    stop_index = np.searchsorted(base_ends, np_stops, side = "right")
-    cm_ends = recombination_data.cm
-    unadjusted_differences = cm_ends[stop_index] - cm_ends[start_index]
-
-    # TODO: Ensure the rates is in the correct units
-    rates = recombination_data.rates
-    # TODO: Handle edge cases at beginning and end of chrom
-    start_adjustment = (np_starts - base_ends[start_index]) * rates[np_starts + 1]
-    stop_adjustment = (np_stops - base_ends[stop_index]) * rates[np_stops + 1]
-    adusted_lengths = unadjusted_differences - start_adjustment - stop_adjustment
-    detectible = adusted_lengths > cutoff
-    np.sum(np_stops[detectible] - np_starts[detectible])
-
 cpdef common_segment_ibd(genome_a, genome_b):
     """
     Given two genomes returns a list of integers for each autosome,
