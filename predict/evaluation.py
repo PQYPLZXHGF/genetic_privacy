@@ -6,7 +6,7 @@ from math import sqrt
 
 from data_logging import write_log
 from bayes_deanonymize import BayesDeanonymize
-from shared_segment_detetctor import SharedSegmentDetector
+from shared_segment_detector import SharedSegmentDetector
 
 
 IdentifyResult = namedtuple("IdentifyResult", ["target_node",
