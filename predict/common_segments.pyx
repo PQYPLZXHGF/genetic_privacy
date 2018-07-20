@@ -28,7 +28,7 @@ def common_segment_lengths(genome_a, genome_b):
     corresponding to the length of segments that are shared between
     the two autosomes.
     """
-    return _lengths(common_segment_ibd(genome_a, genome_b))
+    return lengths(common_segment_ibd(genome_a, genome_b))
 
 # We don't need bounds checks, because the condition of the while loop
 # ensures array access is within bounds.
@@ -92,7 +92,7 @@ cpdef list common_homolog_segments(homolog_a, homolog_b):
 
 
 
-cdef list _lengths(list segments):
+cpdef list lengths(list segments):
     """
     Takes a list of segments and returns a list of lengths.
     """

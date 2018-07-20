@@ -3,13 +3,13 @@
 from random import shuffle, getstate, setstate, seed
 from pickle import load, dump
 from argparse import ArgumentParser
-from os.path import exists
-
-import pdb
+from os.path import exists, realpath, split, join
 
 from evaluation import Evaluation
+from shared_segment_detector import SharedSegmentDetector
 from expansion import ExpansionData
 from population import PopulationUnpickler
+from cm import centimorgan_data_from_directory
 from data_logging import (write_log, change_logfile_name,
                           stop_logging, start_logging)
 
@@ -25,6 +25,9 @@ parser.add_argument("--subset_labeled", "-s", type = int, default = None,
                     help = "Chose a random subset of s nodes from the set of labeled nodes. If using expansion rounds, this is the size of the initial set of labeled nodes.")
 parser.add_argument("--ibd-threshold", type = int, default = 5000000,
                     help = "IBD segments smaller than this value will "
+                    "go undetected")
+parser.add_argument("--cm-ibd-threshold", type = int, default = 0,
+                    help = "IBD segments smaller than length in cM will "
                     "go undetected")
 parser.add_argument("--deterministic_random", "-d", action = "store_true",
                     help = "Seed the random number generator such that the same labeled nodes will be chosen on runs with the same number of nodes.")
@@ -68,11 +71,24 @@ print("Loading classifier", flush = True)
 with open(args.classifier, "rb") as pickle_file:
     classifier = load(pickle_file)
 
+if args.cm_ibd_threshold > 0:
+    cur_path = realpath(__file__)
+    parent = split(split(cur_path)[0])[0]
+    rates_dir = join(parent, "data", "recombination_rates")
+    print("Loading recombination data for centimorgan cutoff.", flush = True)
+    recomb_data = centimorgan_data_from_directory(rates_dir)
+    ibd_detector = SharedSegmentDetector(args.ibd_threshold,
+                                         args.cm_ibd_threshold,
+                                         recomb_data)
+else:
+    ibd_detector = SharedSegmentDetector(args.ibd_threshold)
+    
+
 # nodes = set(member for member in population.generations[-1].members
 #             if member.genome is not None)
 
 evaluation = Evaluation(population, classifier,
-                        ibd_threshold = args.ibd_threshold,
+                        ibd_detector = ibd_detector,
                         search_related = args.search_related)
 original_labeled = set(evaluation.labeled_nodes)
 if args.expansion_rounds_data and expansion_data is not None:

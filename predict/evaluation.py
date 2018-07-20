@@ -6,6 +6,7 @@ from math import sqrt
 
 from data_logging import write_log
 from bayes_deanonymize import BayesDeanonymize
+from shared_segment_detetctor import SharedSegmentDetector
 
 
 IdentifyResult = namedtuple("IdentifyResult", ["target_node",
@@ -16,19 +17,22 @@ IdentifyResult = namedtuple("IdentifyResult", ["target_node",
                                                "run_number"])
 class Evaluation:
     def __init__(self, population, classifier, labeled_nodes = None,
-                 ibd_threshold = 0, search_related = False):
+                 ibd_detector = None, search_related = False):
         self._population = population
         self._classifier = classifier
         if labeled_nodes is not None:
-            self.set_labeled_nodes(labeled_nodes)
+            self.labeled_nodes = labeled_nodes
         if search_related:
             print("Calculating related nodes")
             self._bayes = BayesDeanonymize(population, classifier,
                                            True, search_related)
         else:
             self._bayes = BayesDeanonymize(population, classifier, False)
+        if ibd_detector is None:
+            ibd_detector = SharedSegmentDetector()
+        assert isinstance(ibd_detector, SharedSegmentDetector)
+        self._ibd_detector = ibd_detector
         self._run_number = 0
-        self._ibd_threshold = ibd_threshold
         self.reset_metrics()
 
     @property
@@ -73,7 +77,7 @@ class Evaluation:
 
     def _evaluate_node(self, node):
         raw_identified = self._bayes.identify(node.genome, node,
-                                              self._ibd_threshold)
+                                              self._ibd_detector)
         sibling_group, ln_ratio, identified_node = raw_identified
         node_generation = self._population.node_to_generation[node]
         if node in sibling_group:

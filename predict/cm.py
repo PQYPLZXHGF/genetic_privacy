@@ -8,6 +8,11 @@ from recomb_genome import hapmap_filenames, CHROMOSOME_ORDER, _read_recombinatio
 CentimorganData = namedtuple("CentimorganData", ["bases", "cm", "rates"])
 
 def centimorgan_data_from_directory(directory):
+    """
+    Given a directory with hapmap data, returns CentimorganData for data.
+    TODO: Some of this functionality is redundant with functionality in
+    recomb_genome. A refactor at some point should clean this up.
+    """
     file_names = hapmap_filenames(directory)
     bp = []
     cm = []
@@ -63,19 +68,3 @@ def cm_lengths(starts, stops, recombination_data):
     cm_starts = cumulative_cm(np_starts, recombination_data)
     cm_stops = cumulative_cm(np_stops, recombination_data)
     return cm_stops - cm_starts
-
-def length_with_cm_cutoff(ibd_segments, recombination_data, cutoff):
-    """
-    Given IBD segments in the form (a, b), a < b, with a and b being
-    basepair locations denoting regions of the genome, returns the
-    total basepair length for regions that are longer than cutoff
-    centimorgans.
-    """
-    starts, stops = zip(*ibd_segments)
-    np_starts = np.array(starts, dtype = np.uint32)
-    np_stops = np.array(stops, dtype = np.uint32)
-    
-    lengths = cm_lengths(starts, stops, recombination_data)
-    detectible = lengths > cutoff
-
-    return np.sum(np_stops[detectible] - np_starts[detectible])
