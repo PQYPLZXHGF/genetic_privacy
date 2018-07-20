@@ -35,6 +35,6 @@ class SharedSegmentDetector:
             cm_l = cm_lengths(starts, stops, self.recomb_data)
             cm_cutoff = cm_l >= self.minimum_cm_length
         else:
-            cm_cutoff = np.full(True, len(lengths))
-        
+            cm_cutoff = np.full(len(lengths), True)
+
         return np.sum(lengths[above_base_cutoff & cm_cutoff])
