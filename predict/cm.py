@@ -54,7 +54,7 @@ def cumulative_cm(locations, recombination_data):
     cm_difference[end_index == 0] = 0
 
     adjusted_cm_distance = cm_distance - cm_difference
-    assert np.all(0 <= adjusted_cm_distance)
+    assert np.all(0 <= adjusted_cm_distance) , "Expected positive cM distances, got {}".format(adjusted_cm_distance[adjusted_cm_distance < 0])
     assert np.all(adjusted_cm_distance <= cm_ends[-1])
     return adjusted_cm_distance
 
