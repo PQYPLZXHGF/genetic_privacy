@@ -25,7 +25,9 @@ class SharedSegmentDetector:
             return 0
 
         starts, stops = zip(*segments)
-        lengths = stops - starts
+        np_starts = np.array(starts, dtype = np.uint32)
+        np_stops = np.array(stops, dtype = np.uint32)
+        lengths = np_stops - np_starts
         above_base_cutoff = lengths >= self.minimum_base_length
         if self.minimum_cm_length > 0:
             cm_l = cm_lengths(starts, stops, self.recomb_data)
