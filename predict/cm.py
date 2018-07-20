@@ -1,7 +1,9 @@
+from collections import namedtuple
+
 import numpy as np
 import pdb
 
-from recomb_genome import hapmap_filenames, CHROMOSOME_ORDER, _read_recombination_file(filename)
+from recomb_genome import hapmap_filenames, CHROMOSOME_ORDER, _read_recombination_file
 
 CentimorganData = namedtuple("CentimorganData", ["bases", "cm", "rates"])
 
