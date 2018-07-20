@@ -25,7 +25,7 @@ def centimorgan_data_from_directory(directory):
         for loci, rate, cumulative_cm in data:
             bp.append(loci + bp_accum)
             cm.append(cumulative_cm + cm_accum)
-            rates.append(rate)
+            rates.append(rate / 1000000)
         bp_accum += data[-1][0]
         cm_accum += data[-1][2]
 
