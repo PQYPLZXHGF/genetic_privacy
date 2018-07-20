@@ -26,7 +26,7 @@ parser.add_argument("--subset_labeled", "-s", type = int, default = None,
 parser.add_argument("--ibd-threshold", type = int, default = 5000000,
                     help = "IBD segments smaller than this value will "
                     "go undetected")
-parser.add_argument("--cm-ibd-threshold", type = int, default = 0,
+parser.add_argument("--cm-ibd-threshold", type = float, default = 0.0,
                     help = "IBD segments smaller than length in cM will "
                     "go undetected")
 parser.add_argument("--deterministic_random", "-d", action = "store_true",
