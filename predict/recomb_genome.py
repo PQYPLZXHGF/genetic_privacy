@@ -53,6 +53,19 @@ class RecombGenomeGenerator():
     def reset(self):
         self._genome_id = 0
 
+def hapmap_filenames(directory):
+    """
+    Given a directory with hapmap data, returns a dictionary mapping
+    each chromosome number to its hapmap file.
+    """
+    chromosomes = dict()
+    for filename in listdir(directory):
+        match = re.search("genetic_map_chr([0-9]+)_b36.txt", filename)
+        if not match:
+            continue
+        chromosomes[int(match.group(1))] = join(directory, filename)
+    return chromosomes
+
 def recombinators_from_directory(directory):
     """
     Given a directory of files downloaded from, returns a Recombinator
@@ -61,12 +74,7 @@ def recombinators_from_directory(directory):
     http://hapmap.ncbi.nlm.nih.gov/downloads/recombination/
     Sex based centimorgan lengths are from decode doi:10.1038/ng917.
     """
-    chromosomes = dict()
-    for filename in listdir(directory):
-        match = re.search("genetic_map_chr([0-9]+)_b36.txt", filename)
-        if not match:
-            continue
-        chromosomes[int(match.group(1))] = join(directory, filename)
+    chromosomes = hapmap_filenames(directory)
     decode_file = join(directory, DECODE_FILENAME)
     if isfile(decode_file):
         sex_data = read_sex_lengths(decode_file)

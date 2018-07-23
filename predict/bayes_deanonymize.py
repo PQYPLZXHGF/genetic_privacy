@@ -4,8 +4,7 @@ from heapq import nlargest
 # import pyximport; pyximport.install()
 import numpy as np
 
-from classify_relationship import (LengthClassifier,
-                                   shared_segment_length_genomes)
+from classify_relationship import LengthClassifier
 from data_logging import write_log
 from util import first_missing_ancestor, all_related
 
@@ -94,7 +93,7 @@ class BayesDeanonymize:
     def restrict_search(self, nodes):
         self._restrict_search_nodes = set(nodes)
 
-    def identify(self, genome, actual_node, ibd_threshold = 5000000):
+    def identify(self, genome, actual_node, segment_detector):
         node_probabilities = dict() # Probability that a node is a match
         id_map = self._population.id_mapping
         length_classifier = self._length_classifier
@@ -102,9 +101,8 @@ class BayesDeanonymize:
         shared_list = []
         for labeled_node_id in length_classifier._labeled_nodes:
             labeled_node = id_map[labeled_node_id]
-            s = shared_segment_length_genomes(genome,
-                                              labeled_node.suspected_genome,
-                                              ibd_threshold)
+            s = segment_detector.shared_segment_length(genome,
+                                                       labeled_node.suspected_genome)
             shared_list.append((labeled_node_id, s))
 
         shared_dict = dict(shared_list)
