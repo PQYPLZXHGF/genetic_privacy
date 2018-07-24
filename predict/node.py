@@ -2,10 +2,7 @@ from random import choice
 
 from sex import Sex, SEXES
 
-STR_NO_ERROR = "<Node id = {}, mother = {}, father = {}>"
-STR_MOTHER_ERROR = "<Node id = {}, mother = {}, father = {}, suspected mother id = {}>"
-STR_FATHER_ERROR = "<Node id = {}, mother = {}, father = {}, suspected father id = {}>"
-STR_ALL_ERROR = "<Node id = {}, mother = {}, father = {}, suspected mother id = {}, suspected father id = {}>"
+STR_BASE = "<Node id = {}, mother = {}, father = {}"
 
 class NodeGenerator:
     """
@@ -142,21 +139,16 @@ class Node:
         # objects are created
 
     def __str__(self):
-        if (self._suspected_mother_id == self._mother_id and
-            self._father_id == self._suspected_father_id):
-            return STR_NO_ERROR.format(self._id, self._mother_id,
-                                       self._father_id)
-        elif self._suspected_mother_id == self._mother_id:
-            return STR_FATHER_ERROR.format(self._id, self._mother_id,
-                                           self._father_id,
-                                           self._suspected_father_id)
-        elif self._suspected_father_id == self._father_id:
-            return STR_MOTHER_ERROR.format(self._id, self._mother_id,
-                                           self._father_id,
-                                           self._suspected_mother_id)
-        return STR_ALL_ERROR.format(self._id, self._mother_id, self._father_id,
-                                    self._suspected_mother_id,
-                                    self._suspected_father_id)
+        to_str = [STR_BASE.format(self._id, self._mother_id, self._father_id)]
+        if self._twin_id is not None:
+            to_str.append(", twin id = {}".format(self._twin_id))
+        if self._suspected_mother_id != self._mother_id:
+            to_str.append(", suspected mother id = {}".format(self._suspected_mother_id))
+        if self._suspected_father_id != self._father_id:
+            to_str.append(", suspected father id = {}".format(self._suspected_father_id))
+        to_str.append(">")
+        return "".join(to_str)
+
 
     def _resolve_parents(self):
         """
