@@ -2,6 +2,11 @@ from random import choice
 
 from sex import Sex, SEXES
 
+STR_NO_ERROR = "<Node id = {}, mother = {}, father = {}>"
+STR_MOTHER_ERROR = "<Node id = {}, mother = {}, father = {}, suspected mother id = {}>"
+STR_FATHER_ERROR = "<Node id = {}, mother = {}, father = {}, suspected father id = {}>"
+STR_ALL_ERROR = "<Node id = {}, mother = {}, father = {}, suspected mother id = {}, suspected father id = {}>"
+
 class NodeGenerator:
     """
     We use a node generator so that nodes point to each other by id
@@ -135,6 +140,23 @@ class Node:
             self._suspected_genome = None #We do this because there are old pickle files that don't have this property
         # Parents are resolved by PopulationUnpickler after all Node
         # objects are created
+
+    def __str__(self):
+        if (self._suspected_mother_id == self._mother_id and
+            self._father_id == self._suspected_father_id):
+            return STR_NO_ERROR.format(self._id, self._mother_id,
+                                       self._father_id)
+        elif self._suspected_mother_id == self._mother_id:
+            return STR_FATHER_ERROR.format(self._id, self._mother_id,
+                                           self._father_id,
+                                           self._suspected_father_id)
+        elif self._suspected_father_id == self._father_id:
+            return STR_MOTHER_ERROR.format(self._id, self._mother_id,
+                                           self._father_id,
+                                           self._suspected_mother_id)
+        return STR_ALL_ERROR.format(self._id, self._mother_id, self._father_id,
+                                    self._suspected_mother_id,
+                                    self._suspected_father_id)
 
     def _resolve_parents(self):
         """
