@@ -108,43 +108,6 @@ class Evaluation:
         self.correct = 0
         self.incorrect = 0
 
-    def run_expansion_round(self, identify_candidates,
-                            expansion_data = None,
-                            expansion_filename = None):
-        print("Running expansion round.")
-        to_evaluate = list(identify_candidates)
-        added = []
-        correct_add_count = 0
-        for i, node in enumerate(to_evaluate):
-            self.run_evaluation([node])
-            result = self.identify_results[-1]
-            print("Ratio: {}".format(result.ln_ratio))
-            if result.ln_ratio > 9:
-                print("Adding node.")
-                added.append(result)
-                self._bayes.add_labeled_node_id(result.identified_node._id)
-                if result.correct:
-                    correct_add_count += 1
-                else:
-                    result.identified_node.suspected_genome = result.target_node.genome
-            if i % 20 == 0:
-                self.print_metrics()
-                print("Nodes added this round: {}".format(len(added)))
-                print("Correct nodes added: {}".format(correct_add_count))
-            if expansion_data and expansion_filename and i % 500 == 0:
-                remaining = set(node._id for node in to_evaluate[i:])
-                expansion_data.extend_round(added, remaining)
-                with open(expansion_filename, "wb") as expansion_file:
-                    dump(expansion_data, expansion_file)
-                write_log("expansion_data_written", {"current_node": node._id,
-                                                     "complete": False})
-        write_log("expansion_round", {"added": len(added),
-                                      "correct_added": correct_add_count,
-                                      "accuracy": self.accuracy})
-        self.print_metrics()
-        print("Added {} nodes this round.".format(len(added)))
-        return added
-
     def run_evaluation(self, unlabeled):
         # generation_map = population.node_to_generation
         # write_log("labeled_nodes", [node._id for node in labeled_nodes])
@@ -159,3 +122,82 @@ class Evaluation:
         write_log("end time", datetime.now())
         self._run_number += 1
         return self.identify_results
+
+    def _calculate_ibd_segments_for_expansion(self, to_evaluate):
+        """
+        Calculate IBD segments for nodes to search in expansion round,
+        so that we can prioritize prospective nodes with the most IBD
+        shared with labeled nodes.
+        """
+        shared_dict = dict()
+        detector = self._segment_detector
+        id_map = self._population.id_mapping
+        labeled_nodes = [id_map[node_id] for node_id in self.labeled_nodes]
+        for node in to_evaluate:
+            shared = [detector.shared_segment_length(node.genome,
+                                                     labeled.genome)
+                      for labeled in labeled_nodes]
+            shared_dict[node] = shared
+        self._expanson_shared = shared_dict
+
+    def _expansion_add_labeled(self, new_labeled_node, to_evaluate):
+        detector = self._segment_detector
+        for node in to_evaluate:
+            shared = detector.shared_segment_length(node.genome,
+                                                    new_labeled_node.genome)
+            self._expanson_shared[node].append(shared)
+    
+    def _get_expansion_node(self, candidates):
+        shared = self._expanson_shared
+        shared_segment_count = []
+        for node, ibd_lengths in shared.items():
+            nonzer_counts = sum(length > 0 for length in ibd_lengths)
+            shared_segment_count.append((node, nonzer_counts))
+        return max(shared_segment_count, key = lambda x: x[1])[0]
+
+    def run_expansion_round(self, identify_candidates,
+                            expansion_data = None,
+                            expansion_filename = None):
+        print("Running expansion round.")
+        to_evaluate = set(identify_candidates)
+        self._calculate_ibd_segments_for_expansion(to_evaluate)
+        added = []
+        correct_add_count = 0
+        i = 0
+        exclude = set()
+        while len(to_evaluate) > 0:
+            node = self._get_expansion_node(to_evaluate - exclude)
+            exclude.add(node)
+            self.run_evaluation([node])
+            result = self.identify_results[-1]
+            print("Ratio: {}".format(result.ln_ratio))
+            if result.ln_ratio > 9:
+                print("Adding node.")
+                added.append(result)
+                identified = result.identified_node
+                self._bayes.add_labeled_node_id(identified._id)
+                if result.correct:
+                    correct_add_count += 1
+                else:
+                    identified.suspected_genome = result.target_node.genome
+                exclude = set()
+                to_evaluate.remove(identified)
+                del self._expanson_shared[identified]
+            if i % 20 == 0:
+                self.print_metrics()
+                print("Nodes added this round: {}".format(len(added)))
+                print("Correct nodes added: {}".format(correct_add_count))
+            if expansion_data and expansion_filename and i % 500 == 0:
+                remaining = set(node._id for node in to_evaluate[i:])
+                expansion_data.extend_round(added, remaining)
+                with open(expansion_filename, "wb") as expansion_file:
+                    dump(expansion_data, expansion_file)
+                write_log("expansion_data_written", {"current_node": node._id,
+                                                     "complete": False})
+            i += 1
+        write_log("expansion_round", {"added": len(added),
+                                      "correct_added": correct_add_count,
+                                      "accuracy": self.accuracy})
+        self.print_metrics()
+        print("Added {} nodes this round.".format(len(added)))
+        return added
