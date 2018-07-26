@@ -73,6 +73,24 @@ def first_missing_ancestor(node, suspected = True):
         queue.appendleft((current.father, distance + 1))
     return inf
 
+def closest_error(node):
+    visited = set()
+    to_explore = deque([(0, node)])
+    while len(to_explore) > 0:
+        distance, node = deque.popleft()
+        children = set(node.children)
+        if (node.mother != node.suspected_mother
+            or node.father != node.suspected_father
+            or children != set(node.suspected_children)):
+            return (distance, node)
+        visited.add(node)
+        if node.mother not in visited:
+            to_explore.append(node.mother)
+        if node.father not in visited:
+            to_explore.append(node.father)
+        to_explore.extend(children - visited)
+    return (None, None)
+
 def error_on_path(node_a, node_b, suspected = False):
     """
     Determine if there is an error on the path from node_a to node_b,
