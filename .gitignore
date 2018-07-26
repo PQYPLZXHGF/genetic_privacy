@@ -6,5 +6,6 @@
 *.prof
 *.so
 *.c
+*.py~
 build/
 genetic_map_chr*
