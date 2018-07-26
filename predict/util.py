@@ -91,6 +91,43 @@ def closest_error(node):
         to_explore.extend((distance + 1, n) for n in children - visited)
     return (None, None)
 
+def closest_error_descendants_ancestors(node):
+    """
+    Return the closest error edge between the node and one of its
+    ancestors or descendants.
+    """
+    ancestors = deque([(0, node)])
+    ancestor_error = None
+    while len(ancestors) > 0:
+        distance, node = ancestors.popleft()
+        if (node.mother != node.suspected_mother
+            or node.father != node.suspected_father):
+            ancestor_error = (distance, node)
+            break
+        ancestors.append((distance + 1, node.mother))
+        ancestors.append((distance + 1, node.father))
+
+    descendants = deque([(0, node)])
+    descendant_error = None
+    while len(descendants) > 0:
+        distance, node = descendants.popleft()
+        children = set(node.children)
+        if children != set(node.suspected_children):
+            descendant_error = (distance, node)
+            break
+        descendants.extend((distance + 1, n) for n in children)
+    if ancestor_error is None and descendant_error is None:
+        return (None, None)
+    if ancestor_error is None:
+        return descendant_error
+    if descendant_error is None:
+        return ancestor_error
+
+    if ancestor_error[0] < descendant_error[0]:
+        return ancestor_error
+    else:
+        return descendant_error
+
 def error_on_path(node_a, node_b, suspected = False):
     """
     Determine if there is an error on the path from node_a to node_b,
