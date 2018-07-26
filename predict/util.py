@@ -91,31 +91,35 @@ def closest_error(node):
         to_explore.extend((distance + 1, n) for n in children - visited)
     return (None, None)
 
+def closest_error_descendants(node):
+    descendants = deque([(0, node)])
+    while len(descendants) > 0:
+        distance, node = descendants.popleft()
+        children = set(node.children)
+        if children != set(node.suspected_children):
+            return (distance, node)
+        descendants.extend((distance + 1, n) for n in children)
+    return (None, None)
+
+def closest_error_ancestors(node):
+    ancestors = deque([(0, node)])
+    while len(ancestors) > 0:
+        distance, node = ancestors.popleft()
+        if (node.mother != node.suspected_mother
+            or node.father != node.suspected_father):
+            return (distance, node)
+        ancestors.append((distance + 1, node.mother))
+        ancestors.append((distance + 1, node.father))
+    return (None, None)
+
 def closest_error_descendants_ancestors(node):
     """
     Return the closest error edge between the node and one of its
     ancestors or descendants.
     """
-    ancestors = deque([(0, node)])
-    ancestor_error = None
-    while len(ancestors) > 0:
-        distance, node = ancestors.popleft()
-        if (node.mother != node.suspected_mother
-            or node.father != node.suspected_father):
-            ancestor_error = (distance, node)
-            break
-        ancestors.append((distance + 1, node.mother))
-        ancestors.append((distance + 1, node.father))
+    ancestor_error = closest_error_ancestors(node)
+    descendant_error = closest_error_descendants(node)
 
-    descendants = deque([(0, node)])
-    descendant_error = None
-    while len(descendants) > 0:
-        distance, node = descendants.popleft()
-        children = set(node.children)
-        if children != set(node.suspected_children):
-            descendant_error = (distance, node)
-            break
-        descendants.extend((distance + 1, n) for n in children)
     if ancestor_error is None and descendant_error is None:
         return (None, None)
     if ancestor_error is None:
