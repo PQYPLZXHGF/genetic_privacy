@@ -85,10 +85,10 @@ def closest_error(node):
             return (distance, node)
         visited.add(node)
         if node.mother not in visited:
-            to_explore.append(node.mother)
+            to_explore.append((distance + 1, node.mother))
         if node.father not in visited:
-            to_explore.append(node.father)
-        to_explore.extend(children - visited)
+            to_explore.append((distance + 1, node.father))
+        to_explore.extend((distance + 1, n) for n in children - visited)
     return (None, None)
 
 def error_on_path(node_a, node_b, suspected = False):
