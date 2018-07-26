@@ -77,7 +77,7 @@ def closest_error(node):
     visited = set()
     to_explore = deque([(0, node)])
     while len(to_explore) > 0:
-        distance, node = deque.popleft()
+        distance, node = to_explore.popleft()
         children = set(node.children)
         if (node.mother != node.suspected_mother
             or node.father != node.suspected_father
