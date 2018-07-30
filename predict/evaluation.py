@@ -151,8 +151,11 @@ class Evaluation:
         shared = self._expanson_shared
         shared_segment_count = []
         for node, ibd_lengths in shared.items():
-            nonzer_counts = sum(length > 0 for length in ibd_lengths)
-            shared_segment_count.append((node, nonzer_counts))
+            if node in candidates:
+                nonzero_counts = sum(length > 0 for length in ibd_lengths)
+                shared_segment_count.append((node, nonzero_counts))
+        if len(shared_segment_count) == 0:
+            return None
         return max(shared_segment_count, key = lambda x: x[1])[0]
 
     def run_expansion_round(self, identify_candidates,
@@ -166,7 +169,10 @@ class Evaluation:
         i = 0
         exclude = set()
         while len(to_evaluate) > 0:
+            # TODO: Turn this into an iterator?
             node = self._get_expansion_node(to_evaluate - exclude)
+            if node is None:
+                break
             exclude.add(node)
             self.run_evaluation([node])
             result = self.identify_results[-1]
