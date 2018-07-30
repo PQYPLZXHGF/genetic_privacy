@@ -150,6 +150,7 @@ class Evaluation:
     def _get_expansion_node(self, candidates):
         shared = self._expanson_shared
         shared_segment_count = []
+        # TODO: Iterate over candidates instead
         for node, ibd_lengths in shared.items():
             if node in candidates:
                 nonzero_counts = sum(length > 0 for length in ibd_lengths)
