@@ -130,7 +130,7 @@ class Evaluation:
         shared with labeled nodes.
         """
         shared_dict = dict()
-        detector = self._segment_detector
+        detector = self._ibd_detector
         id_map = self._population.id_mapping
         labeled_nodes = [id_map[node_id] for node_id in self.labeled_nodes]
         for node in to_evaluate:
