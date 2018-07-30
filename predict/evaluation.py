@@ -188,7 +188,7 @@ class Evaluation:
                 print("Nodes added this round: {}".format(len(added)))
                 print("Correct nodes added: {}".format(correct_add_count))
             if expansion_data and expansion_filename and i % 500 == 0:
-                remaining = set(node._id for node in to_evaluate[i:])
+                remaining = set(node._id for node in to_evaluate)
                 expansion_data.extend_round(added, remaining)
                 with open(expansion_filename, "wb") as expansion_file:
                     dump(expansion_data, expansion_file)
