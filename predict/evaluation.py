@@ -141,7 +141,7 @@ class Evaluation:
         self._expanson_shared = shared_dict
 
     def _expansion_add_labeled(self, new_labeled_node, to_evaluate):
-        detector = self._segment_detector
+        detector = self._ibd_detector
         for node in to_evaluate:
             shared = detector.shared_segment_length(node.genome,
                                                     new_labeled_node.genome)
@@ -188,6 +188,7 @@ class Evaluation:
                     identified.suspected_genome = result.target_node.genome
                 exclude = set()
                 to_evaluate.remove(identified)
+                self._expansion_add_labeled(identified, to_evaluate)
                 del self._expanson_shared[identified]
             if i % 20 == 0:
                 self.print_metrics()
