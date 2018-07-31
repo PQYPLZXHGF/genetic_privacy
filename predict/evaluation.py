@@ -188,9 +188,9 @@ class Evaluation:
                 else:
                     identified.suspected_genome = result.target_node.genome
                 exclude = set()
-                to_evaluate.discard(identified)
+                to_evaluate.remove(node)
                 self._expansion_add_labeled(identified, to_evaluate)
-                del self._expanson_shared[identified]
+                del self._expanson_shared[node]
             if i % 20 == 0:
                 self.print_metrics()
                 print("Nodes added this round: {}".format(len(added)))
