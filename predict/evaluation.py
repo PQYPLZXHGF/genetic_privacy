@@ -188,7 +188,7 @@ class Evaluation:
                 else:
                     identified.suspected_genome = result.target_node.genome
                 exclude = set()
-                to_evaluate.remove(identified)
+                to_evaluate.discard(identified)
                 self._expansion_add_labeled(identified, to_evaluate)
                 del self._expanson_shared[identified]
             if i % 20 == 0:
