@@ -144,7 +144,7 @@ class Evaluation:
         detector = self._ibd_detector
         for node in to_evaluate:
             shared = detector.shared_segment_length(node.genome,
-                                                    new_labeled_node.genome)
+                                                    new_labeled_node.suspected_genome)
             self._expanson_shared[node].append(shared)
     
     def _get_expansion_node(self, candidates):
