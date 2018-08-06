@@ -182,7 +182,7 @@ class Evaluation:
             self.run_evaluation([node])
             result = self.identify_results[-1]
             print("Ratio: {}".format(result.ln_ratio))
-            if result.ln_ratio > 9:
+            if result.ln_ratio > 20:
                 print("Adding node.")
                 added.append(result)
                 identified = result.identified_node
