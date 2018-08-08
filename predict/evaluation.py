@@ -108,18 +108,18 @@ class Evaluation:
         self.correct = 0
         self.incorrect = 0
 
-    def run_expansion_round(self, identify_candidates,
-                            expansion_data = None,
-                            expansion_filename = None):
+    def run_expansion_round(self, identify_candidates, confidence_ratio,
+                            expansion_data = None, expansion_filename = None):
         print("Running expansion round.")
         to_evaluate = list(identify_candidates)
         added = []
         correct_add_count = 0
+        write_log("expansion_confidence_ratio", confidence_ratio)
         for i, node in enumerate(to_evaluate):
             self.run_evaluation([node])
             result = self.identify_results[-1]
             print("Ratio: {}".format(result.ln_ratio))
-            if result.ln_ratio > 9:
+            if result.ln_ratio > confidence_ratio:
                 print("Adding node.")
                 added.append(result)
                 self._bayes.add_labeled_node_id(result.identified_node._id)

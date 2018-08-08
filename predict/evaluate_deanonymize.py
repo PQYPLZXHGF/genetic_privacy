@@ -37,6 +37,8 @@ parser.add_argument("--search-related", type = int, default = False,
                     help = "Search only nodes that are related to labeled nodes for which there is nonzero ibd.")
 parser.add_argument("--expansion-rounds-data",
                     help = "Pickle file with data from expansion rounds.")
+parser.add_argument("--expansion-ratio", "-r", type = float, default = 9.0,
+                    help = "Confidence value required to add a node for snowball identification.")
 
 args = parser.parse_args()
 
@@ -161,6 +163,7 @@ else:
         identify_candidates = potential
     evaluation.restrict_search(potential)
     added = evaluation.run_expansion_round(identify_candidates,
+                                           args.expansion_ratio,
                                            expansion_data,
                                            args.expansion_rounds_data)
     expansion_data.add_round(added)
