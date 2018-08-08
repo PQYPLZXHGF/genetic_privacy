@@ -7,5 +7,6 @@
 *.so
 *.c
 *.py~
+*.pyx~
 build/
 genetic_map_chr*
