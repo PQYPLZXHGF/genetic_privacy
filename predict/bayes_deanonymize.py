@@ -152,17 +152,18 @@ class BayesDeanonymize:
             calc_prob = []
         cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
 
-        # index_data = {node._id: tuple(indices)
-        #               for node, indices in node_data.items()}
-        # siblings = {node._id for node in get_sibling_group(actual_node)}
-        # to_dump = {"actual_node_id": actual_node._id,
-        #            "calc_prob": calc_prob,
-        #            "cryptic_lengths": batch_cryptic_lengths,
-        #            "siblings": siblings,
-        #            "index_data": index_data}
-        # output_filename = "/media/paul/Fast Storage/optimize_data/{}.pickle".format(actual_node._id)
-        # with open(output_filename, "wb") as pickle_file:
-        #     dump(to_dump, pickle_file)
+        index_data = {node._id: tuple(indices)
+                      for node, indices in node_data.items()}
+        siblings = {node._id for node in get_sibling_group(actual_node)}
+        to_dump = {"actual_node_id": actual_node._id,
+                   "calc_prob": calc_prob,
+                   "cryptic_lengths": batch_cryptic_lengths,
+                   "siblings": siblings,
+                   "index_data": index_data}
+        output_filename = "fit_smoothing.pickle"
+        with open(output_filename, "ab") as pickle_file:
+            from pickle import dump
+            dump(to_dump, pickle_file)
         node_probabilities = dict()
         for node, prob_data in node_data.items():
             start_i, stop_i, cryptic_start_i, cryptic_stop_i = prob_data
