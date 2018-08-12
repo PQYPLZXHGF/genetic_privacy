@@ -160,7 +160,7 @@ class BayesDeanonymize:
                    "cryptic_lengths": batch_cryptic_lengths,
                    "siblings": siblings,
                    "index_data": index_data}
-        output_filename = "fit_smoothing.pickle"
+        output_filename = "/n/fs/gene-privacy/fit_smoothing/fit_smoothing.pickle"
         with open(output_filename, "ab") as pickle_file:
             from pickle import dump
             dump(to_dump, pickle_file)
