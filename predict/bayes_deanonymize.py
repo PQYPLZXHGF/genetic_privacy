@@ -185,7 +185,7 @@ class BayesDeanonymize:
         potential_nodes = nlargest(8, node_probabilities.items(),
                                    key = lambda x: x[1])
         top, top_log_prob = potential_nodes[0]
-        sibling_group = get_sibling_group(top)
+        sibling_group = get_suspected_sibling_group(top)
         for node, log_prob in potential_nodes[1:]:
             if node in sibling_group:
                 continue
@@ -214,3 +214,8 @@ def get_sibling_group(node):
     if node.mother is None or node.father is None:
         return set([node])
     return set(node.mother.children).intersection(node.father.children)
+
+def get_suspected_sibling_group(node):
+    if node.suspected_mother is None or node.suspected_father is None:
+        return set([node])
+    return set(node.suspected_mother.children).intersection(node.suspected_father.children)
