@@ -80,6 +80,7 @@ class Evaluation:
                                               self._ibd_detector)
         sibling_group, ln_ratio, identified_node = raw_identified
         node_generation = self._population.node_to_generation[node]
+        print("Confidence score: {}".format(ln_ratio))
         if node in sibling_group:
             self.generation_error[node_generation]["correct"] += 1
             self.correct += 1
