@@ -86,9 +86,9 @@ class LengthClassifier:
     def get_batch_smoothing(self, lengths):
         lengths = np.asarray(lengths, dtype = np.uint64)
         probs = np.empty_like(lengths, dtype = np.float64)
-        probs[lengths >= 30000000] = 0.00117543 # 0.00109784412 # 0.00145073 # 0.005
-        probs[lengths < 30000000] = 0.01963307 # 0.0188414224 # 0.01967879 # 0.03
-        probs[lengths == 0] = 0.98162761 # 1
+        probs[lengths >= 30745936] = 6.512150114622144e-09
+        probs[lengths < 30745936] = 0.00023945212402152766
+        probs[lengths == 0] = 0.9279656607999703
         return probs
 
     def get_batch_cryptic_ecdf(self, lengths):
