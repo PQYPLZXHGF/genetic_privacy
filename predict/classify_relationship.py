@@ -27,7 +27,7 @@ HurdleGammaParams = namedtuple("HurdleGammaParams", ["shape", "scale", "zero_pro
 # TODO: A better way of loading params.
 with open("smoothing_params") as params_file:
     params_lines = params_file.readlines()
-smoothing_params = [float(x) for x in params_lines.strip().split()]
+smoothing_params = [float(x) for x in params_lines[0].strip().split()]
 assert len(smoothing_params) == 4
 cutoff, above_cutoff, below_cutoff, minus_eps = smoothing_params
 cutoff = int(cutoff)
