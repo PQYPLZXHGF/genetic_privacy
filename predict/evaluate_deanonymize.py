@@ -9,6 +9,9 @@ from evaluation import Evaluation
 from shared_segment_detector import SharedSegmentDetector
 from expansion import ExpansionData
 from population import PopulationUnpickler
+from population_genomes import generate_genomes
+from sex import Sex
+from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
 from cm import centimorgan_data_from_directory
 from data_logging import (write_log, change_logfile_name,
                           stop_logging, start_logging)
@@ -39,6 +42,8 @@ parser.add_argument("--expansion-rounds-data",
                     help = "Pickle file with data from expansion rounds.")
 parser.add_argument("--expansion-ratio", "-r", type = float, default = 9.0,
                     help = "Confidence value required to add a node for snowball identification.")
+parser.add_argument("--recombination_dir",
+                    help = "Directory containing Hapmap and decode data. If this is specified, new genomes will be generated.")
 
 args = parser.parse_args()
 
@@ -68,6 +73,15 @@ write_log("args", args)
 print("Loading population.", flush = True)
 with open(args.population, "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
+
+if args.recombination_dir:
+    print("Generating new genomes for population.")
+    print("Loading recombination rates")
+    recombinators = recombinators_from_directory(args.recombination_dir)
+    chrom_sizes = recombinators[Sex.Male]._num_bases
+    genome_generator = RecombGenomeGenerator(chrom_sizes)
+    print("Generating genomes")
+    generate_genomes(population, genome_generator, recombinators, 3)
 
 print("Loading classifier", flush = True)
 with open(args.classifier, "rb") as pickle_file:
