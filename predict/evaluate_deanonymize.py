@@ -80,6 +80,7 @@ if args.recombination_dir:
     recombinators = recombinators_from_directory(args.recombination_dir)
     chrom_sizes = recombinators[Sex.Male]._num_bases
     genome_generator = RecombGenomeGenerator(chrom_sizes)
+    population.clean_genomes()
     print("Generating genomes")
     generate_genomes(population, genome_generator, recombinators, 3)
 
