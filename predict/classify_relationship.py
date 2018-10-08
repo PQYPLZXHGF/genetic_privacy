@@ -24,6 +24,15 @@ ZERO_REPLACE = 0.03
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
 HurdleGammaParams = namedtuple("HurdleGammaParams", ["shape", "scale", "zero_prob"])
 
+# TODO: A better way of loading params.
+with open("smoothing_params") as params_file:
+    params_lines = params_file.readlines()
+smoothing_params = [float(x) for x in params_lines[0].strip().split()]
+assert len(smoothing_params) == 4
+cutoff, above_cutoff, below_cutoff, minus_eps = smoothing_params
+cutoff = int(cutoff)
+
+
 class LengthClassifier:
     """
     Classifies based total length of shared segments
@@ -86,9 +95,9 @@ class LengthClassifier:
     def get_batch_smoothing(self, lengths):
         lengths = np.asarray(lengths, dtype = np.uint64)
         probs = np.empty_like(lengths, dtype = np.float64)
-        probs[lengths >= 30000000] = 0.00117543 # 0.00109784412 # 0.00145073 # 0.005
-        probs[lengths < 30000000] = 0.01963307 # 0.0188414224 # 0.01967879 # 0.03
-        probs[lengths == 0] = 0.98162761 # 1
+        probs[lengths >= cutoff] = above_cutoff
+        probs[lengths < cutoff] = below_cutoff
+        probs[lengths == 0] = minus_eps
         return probs
 
     def get_batch_cryptic_ecdf(self, lengths):
