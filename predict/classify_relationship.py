@@ -196,6 +196,21 @@ class LengthClassifier:
         # ret[ret > 1.0] = 1.0
         return ret
 
+    def get_batch_smoothing_gamma(self, lengths, gamma_params):
+        shape, scale, zero_prob = gamma_params
+        lengths = np.asarray(lengths, np.uint32)
+        zero_i = (lengths == 0)
+        nonzero_i = np.invert(zero_i)
+        ret = np.empty_like(lengths, dtype = np.float64)
+        gamma_probs = gamma.cdf(lengths[nonzero_i], a = shape, scale = scale)
+        greater_i = gamma_probs > 0.5
+        gamma_probs[greater_i] = 1 - gamma_probs[greater_i]
+        gamma_probs = gamma_probs * 2 * (1 - zero_prob)
+        ret[nonzero_i] = gamma_probs
+        ret[zero_i] = zero_prob
+        ret[ret <= 0.0] = ZERO_REPLACE
+        return ret
+
     def __contains__(self, item):
         return item in self._distributions
 

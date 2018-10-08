@@ -150,7 +150,8 @@ class BayesDeanonymize:
                                                                 batch_labeled_node_id)
         else:
             calc_prob = []
-        cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
+        #cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
+        cryptic_prob = length_classifier.get_batch_smoothing_gamma(batch_cryptic_lengths, (1.652203628750985, 10725503.750359623, 0.9899797044895238))
 
         # index_data = {node._id: tuple(indices)
         #               for node, indices in node_data.items()}
