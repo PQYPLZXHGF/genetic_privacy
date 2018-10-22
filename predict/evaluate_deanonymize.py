@@ -37,6 +37,8 @@ parser.add_argument("--search-related", type = int, default = False,
                     help = "Search only nodes that are related to labeled nodes for which there is nonzero ibd.")
 parser.add_argument("--expansion-rounds-data",
                     help = "Pickle file with data from expansion rounds.")
+parser.add_argument("--smoothing-parameters",
+                    help = "File with smoothing parameters for cryptic IBD. Format is a space separated list of cutoff, above_cutoff, below_cutoff, minus_eps.")
 parser.add_argument("--expansion-ratio", "-r", type = float, default = 9.0,
                     help = "Confidence value required to add a node for snowball identification.")
 
@@ -86,12 +88,20 @@ else:
     ibd_detector = SharedSegmentDetector(args.ibd_threshold)
     
 
-# nodes = set(member for member in population.generations[-1].members
-#             if member.genome is not None)
+if args.smoothing_parameters:
+    with open(args.smoothing_parameters, "r") as params_file:
+        params_lines = params_file.readlines()
+    smoothing_params = [float(x) for x in params_lines[0].strip().split()]
+    assert len(smoothing_params) == 4
+    # Cutoff is the first param, which is an int
+    smoothing_params[0] = int(smoothing_params[0])
+else:
+    smoothing_params = None
 
 evaluation = Evaluation(population, classifier,
                         ibd_detector = ibd_detector,
-                        search_related = args.search_related)
+                        search_related = args.search_related,
+                        smoothing_parameters = smoothing_params)
 original_labeled = set(evaluation.labeled_nodes)
 if args.expansion_rounds_data and expansion_data is not None:
     evaluation.labeled_nodes = expansion_data.labeled_nodes

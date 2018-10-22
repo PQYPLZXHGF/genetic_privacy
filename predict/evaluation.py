@@ -17,7 +17,8 @@ IdentifyResult = namedtuple("IdentifyResult", ["target_node",
                                                "run_number"])
 class Evaluation:
     def __init__(self, population, classifier, labeled_nodes = None,
-                 ibd_detector = None, search_related = False):
+                 ibd_detector = None, search_related = False,
+                 smoothing_parameters = None):
         self._population = population
         self._classifier = classifier
         if labeled_nodes is not None:
@@ -30,6 +31,8 @@ class Evaluation:
             self._bayes = BayesDeanonymize(population, classifier, False)
         if ibd_detector is None:
             ibd_detector = SharedSegmentDetector()
+        if smoothing_parameters:
+            classifier.smoothing_parameters = smoothing_parameters
         assert isinstance(ibd_detector, SharedSegmentDetector)
         self._ibd_detector = ibd_detector
         self._run_number = 0

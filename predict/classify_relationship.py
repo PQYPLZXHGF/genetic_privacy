@@ -30,15 +30,29 @@ class LengthClassifier:
     """
     def __init__(self, distributions, labeled_nodes,
                  cryptic_distribution = None,
-                 empirical_cryptic_lengths = None):
+                 empirical_cryptic_lengths = None,
+                 step_smoothing = None):
         self._distributions = distributions
         self._labeled_nodes = labeled_nodes
         self._cryptic_distribution = cryptic_distribution
         self._by_unlabeled = None
+        if step_smoothing is None:
+            # Default parameters for 7 generations
+            self._step_smoothing = (30000000, 0.00117543, 0.01963307, 0.98162761)
+        else:
+            self._step_smoothing = step_smoothing
         if empirical_cryptic_lengths is not None:
             self._empirical_cryptic_distribution = ECDF(empirical_cryptic_lengths, "left")
         else:
             self._empirical_cryptic_distribution = None
+
+    @property
+    def smoothing_parameters(self):
+        return self._step_smoothing
+
+    @smoothing_parameters.setter
+    def smoothing_parameters(self, params):
+        self._step_smoothing = params
 
     @property
     def group_by_unlabeled(self):
@@ -84,35 +98,13 @@ class LengthClassifier:
         return ret
 
     def get_batch_smoothing(self, lengths):
+        cutoff, above_cutoff, below_cutoff, minus_eps = self._step_smoothing
         lengths = np.asarray(lengths, dtype = np.uint64)
         probs = np.empty_like(lengths, dtype = np.float64)
-        probs[lengths >= 30000000] = 0.00117543 # 0.00109784412 # 0.00145073 # 0.005
-        probs[lengths < 30000000] = 0.01963307 # 0.0188414224 # 0.01967879 # 0.03
-        probs[lengths == 0] = 0.98162761 # 1
+        probs[lengths >= cutoff] = above_cutoff
+        probs[lengths < cutoff] = below_cutoff
+        probs[lengths == 0] = minus_eps
         return probs
-
-    def get_batch_cryptic_ecdf(self, lengths):
-        """
-        Get probabilities for lengths based on ECDF of lengths of
-        unrelated pairs.
-        """
-        len_zero_prob = self._cryptic_distribution.zero_prob
-        lengths = np.asarray(lengths, dtype = np.uint32) 
-        zero_len_i = (lengths == 0)
-        nonzero_len_i = np.invert(zero_len_i)
-        
-        # ret = (1 - self._empirical_cryptic_distribution(lengths)) * (1 - len_zero_prob)
-        # ret = 1 - self._empirical_cryptic_distribution(lengths)
-        ret = 1 - self._empirical_cryptic_distribution_nozero(lengths) * (1 - len_zero_prob)
-        zero_i = (ret == 0)
-        min_val = 1 - self._empirical_cryptic_distribution.y[-2]
-        # min_val = 0.00000005
-        # ret[ret < min_val] = min_val
-        ret[zero_i] = min_val
-
-        # ret[zero_len_i] = self._cryptic_distribution.zero_prob
-        ret[zero_len_i] = len_zero_prob
-        return ret
 
     def get_batch_cryptic(self, lengths):
         """
