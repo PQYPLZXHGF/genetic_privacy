@@ -104,6 +104,7 @@ else:
     
 
 if args.smoothing_parameters:
+    print("Loading smoothing parameters from file.")
     with open(args.smoothing_parameters, "r") as params_file:
         params_lines = params_file.readlines()
     smoothing_params = [float(x) for x in params_lines[0].strip().split()]
