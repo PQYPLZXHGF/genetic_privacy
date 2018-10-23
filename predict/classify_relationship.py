@@ -98,7 +98,11 @@ class LengthClassifier:
         return ret
 
     def get_batch_smoothing(self, lengths):
-        cutoff, above_cutoff, below_cutoff, minus_eps = self._step_smoothing
+        # Use getattr for old versions of length_classifier
+        smoothing_params = get_attr(self, "_step_smoothing",
+                                    (30000000, 0.00117543, 0.01963307,
+                                     0.98162761))
+        cutoff, above_cutoff, below_cutoff, minus_eps = smoothing_params
         lengths = np.asarray(lengths, dtype = np.uint64)
         probs = np.empty_like(lengths, dtype = np.float64)
         probs[lengths >= cutoff] = above_cutoff
