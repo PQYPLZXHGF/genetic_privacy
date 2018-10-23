@@ -107,12 +107,22 @@ class BayesDeanonymize:
 
         shared_dict = dict(shared_list)
         labeled_nodes = set(length_classifier._labeled_nodes)
+
+        labeled_nodes_cryptic, all_lengths = list(*shared_dict.items())
+        # We convert to python floats, as summing is faster.
+        all_cryptic_possibilities = [float(x) for x
+                                     in np.log(length_classifier.get_batch_smoothing(all_lengths))]
+        # Maps labeled nodes to the log cryptic value of the IBD detected
+        cryptic_lookup = dict(zip(labeled_nodes_cryptic,
+                                  all_cryptic_possibilities))
         
         node_data = dict()
         batch_node_id = []
         batch_labeled_node_id = []
         batch_lengths = []
-        batch_cryptic_lengths = []
+        # Keep for logging purposes
+        # batch_cryptic_lengths = []
+        node_cryptic_log_probs = dict()
         by_unlabeled = length_classifier.group_by_unlabeled
         nodes = self._to_search(shared_list)
         if len(nodes) == 0:
@@ -123,13 +133,19 @@ class BayesDeanonymize:
         for node in nodes:
             node_start_i = len(batch_node_id)
             node_id = node._id
-            cryptic_start_i = len(batch_cryptic_lengths)
+            #cryptic_start_i = len(batch_cryptic_lengths)
+            cryptic_probability = 0
+            node_cryptic_log_probs[node] = 0
 
             cryptic_nodes = labeled_nodes - by_unlabeled.get(node_id, empty)
             if len(cryptic_nodes) > 0:
-                batch_cryptic_lengths.extend(shared_dict[labeled_node_id]
-                                             for labeled_node_id
-                                             in cryptic_nodes)
+                # batch_cryptic_lengths.extend(shared_dict[labeled_node_id]
+                #                              for labeled_node_id
+                #                              in cryptic_nodes)
+                cryptic_probability = sum(cryptic_lookup[labeled_node_id]
+                                          for labeled_node_id
+                                          in cryptic_nodes)
+                node_cryptic_log_probs[node] = cryptic_probability
         
             non_cryptic_nodes = list(labeled_nodes - cryptic_nodes)
             if len(non_cryptic_nodes) > 0:
@@ -138,10 +154,11 @@ class BayesDeanonymize:
                 batch_lengths.extend(shared_dict[labeled_node_id]
                                      for labeled_node_id in non_cryptic_nodes)
             
-            cryptic_stop_i = len(batch_cryptic_lengths)
+            #cryptic_stop_i = len(batch_cryptic_lengths)
             node_stop_i = len(batch_node_id)
             node_data[node] = ProbabilityData(node_start_i, node_stop_i,
-                                              cryptic_start_i, cryptic_stop_i)
+                                              -1, -1)
+                                              #cryptic_start_i, cryptic_stop_i)
 
         assert len(node_data) > 0
         if len(batch_lengths) > 0:
@@ -150,7 +167,7 @@ class BayesDeanonymize:
                                                                 batch_labeled_node_id)
         else:
             calc_prob = []
-        cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
+        #cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
 
         # index_data = {node._id: tuple(indices)
         #               for node, indices in node_data.items()}
@@ -171,9 +188,10 @@ class BayesDeanonymize:
                 # import pdb
                 # pdb.set_trace()
             node_calc = calc_prob[start_i:stop_i]
-            node_cryptic = cryptic_prob[cryptic_start_i:cryptic_stop_i]
+            #node_cryptic = cryptic_prob[cryptic_start_i:cryptic_stop_i]
             log_prob = (np.sum(np.log(node_calc)) +
-                        np.sum(np.log(node_cryptic)))
+                        #np.sum(np.log(node_cryptic)))
+                        node_cryptic_log_probs[node])
             node_probabilities[node] = log_prob
         assert len(node_probabilities) > 0
         # potential_node = max(node_probabilities.items(),
