@@ -108,7 +108,7 @@ class BayesDeanonymize:
         shared_dict = dict(shared_list)
         labeled_nodes = set(length_classifier._labeled_nodes)
 
-        labeled_nodes_cryptic, all_lengths = list(*shared_dict.items())
+        labeled_nodes_cryptic, all_lengths = list(zip(*shared_dict.items()))
         # We convert to python floats, as summing is faster.
         all_cryptic_possibilities = [float(x) for x
                                      in np.log(length_classifier.get_batch_smoothing(all_lengths))]
