@@ -286,6 +286,21 @@ def apportion(original, *rates):
     return tuple(subsets)
         
 
+def fix_twin_parents(population):
+    """
+    There was a bug in the inital implementation of twins such that
+    their suspected parents would not have the both twins in the list
+    of suspected children. This didn't impact performance, as the
+    children property is mostly for easy of analysis and debugging.
+
+    This method sets all members suspected children list to what is
+    indicated by each nodes suspected mother/father property.
+    """
+    for member in population:
+        member._suspected_children = []
+        member.set_suspected_mother(member.suspected_mother)
+        member.set_suspected_father(member.suspected_mother)
+
 class PopulationUnpickler(Unpickler):
     
     def load(self):
