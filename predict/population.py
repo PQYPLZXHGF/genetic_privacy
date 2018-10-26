@@ -296,7 +296,7 @@ def fix_twin_parents(population):
     This method sets all members suspected children list to what is
     indicated by each nodes suspected mother/father property.
     """
-    for member in population:
+    for member in population.members:
         member._suspected_children = []
         member.set_suspected_mother(member.suspected_mother)
         member.set_suspected_father(member.suspected_mother)
