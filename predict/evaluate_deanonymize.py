@@ -8,7 +8,7 @@ from os.path import exists, realpath, split, join
 from evaluation import Evaluation
 from shared_segment_detector import SharedSegmentDetector
 from expansion import ExpansionData
-from population import PopulationUnpickler
+from population import PopulationUnpickler, fix_twin_parents
 from population_genomes import generate_genomes
 from sex import Sex
 from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
@@ -75,6 +75,7 @@ write_log("args", args)
 print("Loading population.", flush = True)
 with open(args.population, "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
+fix_twin_parents(population)
 
 if args.recombination_dir:
     print("Generating new genomes for population.")
