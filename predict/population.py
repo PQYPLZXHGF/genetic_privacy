@@ -299,7 +299,7 @@ def fix_twin_parents(population):
     for member in population.members:
         member._suspected_children = []
         member.set_suspected_mother(member.suspected_mother)
-        member.set_suspected_father(member.suspected_mother)
+        member.set_suspected_father(member.suspected_father)
 
 class PopulationUnpickler(Unpickler):
     
