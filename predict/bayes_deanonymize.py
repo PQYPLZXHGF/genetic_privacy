@@ -236,4 +236,4 @@ def get_sibling_group(node):
 def get_suspected_sibling_group(node):
     if node.suspected_mother is None or node.suspected_father is None:
         return set([node])
-    return set(node.suspected_mother.children).intersection(node.suspected_father.children)
+    return set(node.suspected_mother.suspected_children).intersection(node.suspected_father.suspected_children)
