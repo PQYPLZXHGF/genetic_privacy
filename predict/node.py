@@ -112,15 +112,11 @@ class Node:
         if self.mother is not None:
             assert self.mother.sex == Sex.Female
             self.mother._children.append(self._id)
-        if self.suspected_mother is not None:
-            assert self.suspected_mother.sex == Sex.Female
-            self.mother._suspected_children.append(self._id)
         if self.father is not None:
             assert self.father.sex == Sex.Male
             self.father._children.append(self._id)
-        if self.suspected_father is not None:
-            assert self.suspected_father.sex == Sex.Male
-            self.father._suspected_children.append(self._id)            
+        self.set_suspected_mother(self.suspected_mother)
+        self.set_suspected_father(self.suspected_father)
 
     def __getstate__(self):
         state = self.__dict__.copy()
@@ -191,6 +187,7 @@ class Node:
             self.suspected_mother._suspected_children.remove(self._id)
         self.suspected_mother = suspected_mother
         if suspected_mother is not None:
+            assert suspected_mother.sex == Sex.Female
             self._suspected_mother_id = suspected_mother._id
             suspected_mother._suspected_children.append(self._id)
         else:
@@ -201,6 +198,7 @@ class Node:
             self.suspected_father._suspected_children.remove(self._id)
         self.suspected_father = suspected_father
         if suspected_father is not None:
+            assert suspected_father.sex == Sex.Male
             self._suspected_father_id = suspected_father._id
             suspected_father._suspected_children.append(self._id)
         else:
