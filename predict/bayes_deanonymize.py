@@ -220,7 +220,7 @@ class BayesDeanonymize:
         #             "cryptic_prob": cryptic_prob
         #             "sibling_group": [node._id for node in sibling_group]}
         # write_log("run_data", log_data)
-        return RawIdentified(sibling_group, log_ratio, top)
+        return RawIdentified(get_sibling_group(top), log_ratio, top)
         # return (sibling_group, log_ratio)
         # return set(chain.from_iterable(get_sibling_group(potential[0])
         #                                for potential in potential_nodes))
