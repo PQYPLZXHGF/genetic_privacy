@@ -46,7 +46,7 @@ parser.add_argument("--expansion-ratio", "-r", type = float, default = 9.0,
                     help = "Confidence value required to add a node for snowball identification.")
 parser.add_argument("--recombination_dir",
                     help = "Directory containing Hapmap and decode data. If this is specified, new genomes will be generated.")
-parser.add_argument("--log-cryptic",
+parser.add_argument("--log-cryptic", action = "store_true", default = False,
                     help = "Log cryptic lengths in order to fit new cryptic parameters.")
 
 args = parser.parse_args()
