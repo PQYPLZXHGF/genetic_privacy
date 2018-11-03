@@ -21,7 +21,7 @@ INF_REPLACE = 1.0
 
 class BayesDeanonymize:
     def __init__(self, population, classifier = None, only_related = False,
-                 search_generations_back = 7):
+                 search_generations_back = 7, cryptic_logging = False):
         self._population = population
         if classifier is None:
             self._length_classifier = LengthClassifier(population, 1000)
@@ -33,6 +33,7 @@ class BayesDeanonymize:
             self._search_generations_back = search_generations_back
             self._compute_related()
         self._restrict_search_nodes = None
+        self.cryptic_logging = cryptic_logging
         # self.__remove_erroneous_labeled()
 
     def __remove_erroneous_labeled(self):
@@ -115,6 +116,11 @@ class BayesDeanonymize:
         # Maps labeled nodes to the log cryptic value of the IBD detected
         cryptic_lookup = dict(zip(labeled_nodes_cryptic,
                                   all_cryptic_possibilities))
+
+        if self.cryptic_logging:
+            unique_lengths = np.sort(np.unique(np.asarray(all_lengths)))
+            cryptic_length_logging = dict()
+            non_cryptic_probabilties = dict()
         
         node_data = dict()
         batch_node_id = []
@@ -146,6 +152,12 @@ class BayesDeanonymize:
                                           for labeled_node_id
                                           in cryptic_nodes)
                 node_cryptic_log_probs[node] = cryptic_probability
+                if self.cryptic_logging:
+                    to_log = _get_logging_cryptic_lengths(shared_dict,
+                                                          cryptic_nodes,
+                                                          unique_lengths)
+                    cryptic_length_logging[node._id] = to_log
+
         
             non_cryptic_nodes = list(labeled_nodes - cryptic_nodes)
             if len(non_cryptic_nodes) > 0:
@@ -183,14 +195,10 @@ class BayesDeanonymize:
         node_probabilities = dict()
         for node, prob_data in node_data.items():
             start_i, stop_i, cryptic_start_i, cryptic_stop_i = prob_data
-            if node == actual_node:
-                pass
-                # import pdb
-                # pdb.set_trace()
             node_calc = calc_prob[start_i:stop_i]
-            #node_cryptic = cryptic_prob[cryptic_start_i:cryptic_stop_i]
+            if self.cryptic_logging:
+                non_cryptic_probabilties[node._id] = node_calc
             log_prob = (np.sum(np.log(node_calc)) +
-                        #np.sum(np.log(node_cryptic)))
                         node_cryptic_log_probs[node])
             node_probabilities[node] = log_prob
         assert len(node_probabilities) > 0
@@ -200,6 +208,11 @@ class BayesDeanonymize:
                                "probs": {node._id: prob
                                          for node, prob
                                          in node_probabilities.items()}})
+        if self.cryptic_logging:
+            to_log = {"unique lengths": unique_lengths,
+                      "cryptic probability": cryptic_length_logging,
+                      "non cryptic": non_cryptic_probabilties}
+            write_log("cryptic_logging", to_log)
         potential_nodes = nlargest(8, node_probabilities.items(),
                                    key = lambda x: x[1])
         top, top_log_prob = potential_nodes[0]
@@ -224,6 +237,18 @@ class BayesDeanonymize:
         # return (sibling_group, log_ratio)
         # return set(chain.from_iterable(get_sibling_group(potential[0])
         #                                for potential in potential_nodes))
+def _get_logging_cryptic_lengths(shared_dict, cryptic_nodes, unique_lengths):
+    lengths_iter = (shared_dict[labeled_node_id]
+                    for labeled_node_id
+                    in cryptic_nodes)
+    temp_cryptic_lengths = np.fromiter(lengths_iter,
+                                       dtype = np.uint64)
+    lengths, counts = np.unique(temp_cryptic_lengths,
+                                return_counts = True)
+    store_counts = np.zeros_like(unique_lengths)
+    i = np.searchsorted(unique_lengths, lengths)
+    store_counts[i] = counts
+    return store_counts
 
 def get_sibling_group(node):
     """

@@ -46,6 +46,8 @@ parser.add_argument("--expansion-ratio", "-r", type = float, default = 9.0,
                     help = "Confidence value required to add a node for snowball identification.")
 parser.add_argument("--recombination_dir",
                     help = "Directory containing Hapmap and decode data. If this is specified, new genomes will be generated.")
+parser.add_argument("--log-cryptic",
+                    help = "Log cryptic lengths in order to fit new cryptic parameters.")
 
 args = parser.parse_args()
 
@@ -118,7 +120,8 @@ else:
 evaluation = Evaluation(population, classifier,
                         ibd_detector = ibd_detector,
                         search_related = args.search_related,
-                        smoothing_parameters = smoothing_params)
+                        smoothing_parameters = smoothing_params,
+                        cryptic_logging = args.log_cryptic)
 original_labeled = set(evaluation.labeled_nodes)
 if args.expansion_rounds_data and expansion_data is not None:
     evaluation.labeled_nodes = expansion_data.labeled_nodes

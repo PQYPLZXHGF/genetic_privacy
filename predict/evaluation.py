@@ -18,7 +18,7 @@ IdentifyResult = namedtuple("IdentifyResult", ["target_node",
 class Evaluation:
     def __init__(self, population, classifier, labeled_nodes = None,
                  ibd_detector = None, search_related = False,
-                 smoothing_parameters = None):
+                 smoothing_parameters = None, cryptic_logging = False):
         self._population = population
         self._classifier = classifier
         if labeled_nodes is not None:
@@ -26,9 +26,11 @@ class Evaluation:
         if search_related:
             print("Calculating related nodes")
             self._bayes = BayesDeanonymize(population, classifier,
-                                           True, search_related)
+                                           True, search_related,
+                                           cryptic_logging = cryptic_logging)
         else:
-            self._bayes = BayesDeanonymize(population, classifier, False)
+            self._bayes = BayesDeanonymize(population, classifier, False,
+                                           cryptic_logging = cryptic_logging)
         if ibd_detector is None:
             ibd_detector = SharedSegmentDetector()
         if smoothing_parameters:
