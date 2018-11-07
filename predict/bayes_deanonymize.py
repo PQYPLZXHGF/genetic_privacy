@@ -174,9 +174,9 @@ class BayesDeanonymize:
 
         assert len(node_data) > 0
         if len(batch_lengths) > 0:
-            calc_prob = length_classifier.get_batch_probability(batch_lengths,
-                                                                batch_node_id,
-                                                                batch_labeled_node_id)
+            calc_prob = length_classifier.get_batch_pdf(batch_lengths,
+                                                        batch_node_id,
+                                                        batch_labeled_node_id)
         else:
             calc_prob = []
         #cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)

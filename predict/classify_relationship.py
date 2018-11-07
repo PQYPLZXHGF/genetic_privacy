@@ -161,6 +161,32 @@ class LengthClassifier:
         inverse_i[sort_i] = np.arange(len(sort_i))
         
         return ret[inverse_i]
+
+    def get_batch_pdf(self, lengths, query_nodes, labeled_nodes):
+        assert len(lengths) == len(query_nodes) == len(labeled_nodes)
+        assert len(lengths) > 0
+        lengths = np.array(lengths, dtype = np.uint32)
+        zero_i = (lengths == 0)
+        nonzero_i = np.invert(zero_i)
+        distributions = self._distributions
+        params = (distributions[query_node, labeled_node]
+                  for query_node, labeled_node
+                  in zip(query_nodes, labeled_nodes))
+        shape_scale_zero = list(zip(*params))
+        shapes = np.array(shape_scale_zero[0], dtype = np.float64)
+        scales = np.array(shape_scale_zero[1], dtype = np.float64)
+        zero_prob = np.array(shape_scale_zero[2], dtype = np.float64)
+        del shape_scale_zero
+        ret = np.empty_like(lengths, dtype = np.float64)
+        ret[zero_i] = zero_prob[zero_i]
+        gamma_probs = gamma.pdf(lengths[nonzero_i],
+                                a = shapes[nonzero_i],
+                                scale = scales[nonzero_i])
+        gamma_probs = gamma_probs * (1 - zero_prob[nonzero_i])
+        ret[nonzero_i] = gamma_probs
+        ret[ret <= 0.0] = ZERO_REPLACE
+        # ret[ret > 1.0] = 1.0
+        return ret
         
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
         assert len(lengths) == len(query_nodes) == len(labeled_nodes)
