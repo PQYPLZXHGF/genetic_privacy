@@ -246,7 +246,7 @@ def _get_logging_cryptic_lengths(shared_dict, cryptic_nodes, unique_lengths):
                                        dtype = np.uint64)
     lengths, counts = np.unique(temp_cryptic_lengths,
                                 return_counts = True)
-    store_counts = np.zeros_like(unique_lengths)
+    store_counts = np.zeros(len(unique_lengths), dtype = np.uint32)
     i = np.searchsorted(unique_lengths, lengths)
     store_counts[i] = counts
     return store_counts
