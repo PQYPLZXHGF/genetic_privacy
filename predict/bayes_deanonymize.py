@@ -118,7 +118,8 @@ class BayesDeanonymize:
                                   all_cryptic_possibilities))
 
         if self.cryptic_logging:
-            unique_lengths = np.sort(np.unique(np.asarray(all_lengths)))
+            unique_lengths = np.sort(np.unique(np.asarray(all_lengths,
+                                                          dtype = np.uin64)))
             cryptic_length_logging = dict()
             non_cryptic_probabilties = dict()
         
