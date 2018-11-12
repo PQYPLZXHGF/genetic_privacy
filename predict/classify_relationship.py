@@ -18,8 +18,8 @@ from population_genomes import generate_genomes
 from population_statistics import ancestors_of, all_ancestors_of
 from gamma import fit_hurdle_gamma
 
-# ZERO_REPLACE = 1e-20
-ZERO_REPLACE = 0.03
+ZERO_REPLACE = 1e-16
+#ZERO_REPLACE = 0.03
 
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
 HurdleGammaParams = namedtuple("HurdleGammaParams", ["shape", "scale", "zero_prob"])
