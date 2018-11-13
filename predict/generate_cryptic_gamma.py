@@ -3,6 +3,7 @@ from itertools import combinations
 from os.path import realpath, split, join
 from pickle import load
 
+import numpy as np
 from progressbar import progressbar
 
 from shared_segment_detector import SharedSegmentDetector
@@ -55,4 +56,5 @@ for node_a_id, node_b_id in progressbar(cryptic_pairs):
     length = ibd_detector.shared_segment_length(genome_a, genome_b)
     lengths.append(length)
 
-print(fit_hurdle_gamma(lengths))
+np_lengths = np.array(lengths, dtype = np.uint64)
+print(fit_hurdle_gamma(np_lengths))
