@@ -184,9 +184,10 @@ class LengthClassifier:
                                 scale = scales[nonzero_i])
         gamma_probs = gamma_probs * (1 - zero_prob[nonzero_i])
         ret[nonzero_i] = gamma_probs
-        ret[ret <= 0.0] = ZERO_REPLACE
+        leq_zero = (ret <= 0.0)
+        ret[leq_zero] = ZERO_REPLACE
         # ret[ret > 1.0] = 1.0
-        return ret
+        return (ret, leq_zero)
         
     def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
         assert len(lengths) == len(query_nodes) == len(labeled_nodes)

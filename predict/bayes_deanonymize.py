@@ -175,9 +175,10 @@ class BayesDeanonymize:
 
         assert len(node_data) > 0
         if len(batch_lengths) > 0:
-            calc_prob = length_classifier.get_batch_pdf(batch_lengths,
-                                                        batch_node_id,
-                                                        batch_labeled_node_id)
+            pdf_vals = length_classifier.get_batch_pdf(batch_lengths,
+                                                       batch_node_id,
+                                                       batch_labeled_node_id)
+            calc_prob, zero_replace = pdf_vals
         else:
             calc_prob = []
         #cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
@@ -198,7 +199,9 @@ class BayesDeanonymize:
             start_i, stop_i, cryptic_start_i, cryptic_stop_i = prob_data
             node_calc = calc_prob[start_i:stop_i]
             if self.cryptic_logging:
+                zero_vec = zero_replace[start_i:stop_i]
                 non_cryptic_probabilties[node._id] = node_calc
+                non_cryptic_probabilties[node._id][zero_vec] = None #stores as NaN
             log_prob = (np.sum(np.log(node_calc)) +
                         node_cryptic_log_probs[node])
             node_probabilities[node] = log_prob
