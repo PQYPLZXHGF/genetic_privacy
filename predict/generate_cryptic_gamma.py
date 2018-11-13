@@ -44,6 +44,7 @@ related_pairs = set(classifier._distributions.keys())
 cryptic_pairs = set(x for x in combinations(labeled_nodes, 2)
                     if x not in related_pairs)
 
+print("Calculating IBD for pairs.")
 lengths = []
 id_map = population.id_mapping
 for node_a_id, node_b_id in progressbar(cryptic_pairs):
