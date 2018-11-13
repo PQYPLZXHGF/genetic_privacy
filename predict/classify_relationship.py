@@ -112,7 +112,8 @@ class LengthClassifier:
         return probs
 
     def get_batch_smoothing_gamma(self, lengths):
-        shape, scale, zero_prob = (1.7730455647331564, 9455753.779437264, 0.9906721828167074)
+        # shape, scale, zero_prob = (1.7730455647331564, 9455753.779437264, 0.9906721828167074)
+        shape, scale, zero_prob = (1.2088571040214136, 11686532.312642237, 0.9876864782229996)
         lengths = np.asarray(lengths, np.uint32)
         zero_i = (lengths == 0)
         nonzero_i = np.invert(zero_i)
