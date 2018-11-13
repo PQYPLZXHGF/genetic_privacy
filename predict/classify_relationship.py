@@ -18,7 +18,8 @@ from population_genomes import generate_genomes
 from population_statistics import ancestors_of, all_ancestors_of
 from gamma import fit_hurdle_gamma
 
-ZERO_REPLACE = 1e-16
+#ZERO_REPLACE = 1e-16
+ZERO_REPLACE = 1e-12
 #ZERO_REPLACE = 0.03
 
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
@@ -109,6 +110,19 @@ class LengthClassifier:
         probs[lengths < cutoff] = below_cutoff
         probs[lengths == 0] = minus_eps
         return probs
+
+    def get_batch_smoothing_gamma(self, lengths):
+        shape, scale, zero_prob = (1.7730455647331564, 9455753.779437264, 0.9906721828167074)
+        lengths = np.asarray(lengths, np.uint32)
+        zero_i = (lengths == 0)
+        nonzero_i = np.invert(zero_i)
+        ret = np.empty_like(lengths, dtype = np.float64)
+        gamma_probs = gamma.pdf(lengths[nonzero_i], a = shape, scale = scale)
+        gamma_probs = gamma_probs * (1 - zero_prob)
+        ret[nonzero_i] = gamma_probs
+        ret[zero_i] = zero_prob
+        ret[ret <= 0.0] = ZERO_REPLACE
+        return ret
 
     def get_batch_cryptic(self, lengths):
         """

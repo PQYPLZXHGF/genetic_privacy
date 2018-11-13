@@ -111,8 +111,10 @@ class BayesDeanonymize:
 
         labeled_nodes_cryptic, all_lengths = list(zip(*shared_dict.items()))
         # We convert to python floats, as summing is faster.
+        # all_cryptic_possibilities = [float(x) for x
+        #                              in np.log(length_classifier.get_batch_smoothing(all_lengths))]
         all_cryptic_possibilities = [float(x) for x
-                                     in np.log(length_classifier.get_batch_smoothing(all_lengths))]
+                                     in np.log(length_classifier.get_batch_smoothing_gamma(all_lengths))]
         # Maps labeled nodes to the log cryptic value of the IBD detected
         cryptic_lookup = dict(zip(labeled_nodes_cryptic,
                                   all_cryptic_possibilities))
