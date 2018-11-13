@@ -3,6 +3,8 @@ from itertools import combinations
 from os.path import realpath, split, join
 from pickle import load
 
+from progressbar import progressbar
+
 from shared_segment_detector import SharedSegmentDetector
 from gamma import fit_hurdle_gamma
 from population import PopulationUnpickler, fix_twin_parents
@@ -44,7 +46,7 @@ cryptic_pairs = set(x for x in combinations(labeled_nodes, 2)
 
 lengths = []
 id_map = population.id_mapping
-for node_a_id, node_b_id in cryptic_pairs:
+for node_a_id, node_b_id in progressbar(cryptic_pairs):
     node_a = id_map[node_a_id]
     node_b = id_map[node_b_id]
     genome_a = node_a.genome
