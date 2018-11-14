@@ -219,11 +219,15 @@ class BayesDeanonymize:
                       "cryptic probability": cryptic_length_logging,
                       "non cryptic": non_cryptic_probabilties}
             write_log("cryptic_logging", to_log)
-        potential_nodes = nlargest(8, node_probabilities.items(),
+        potential_nodes = nlargest(15, node_probabilities.items(),
                                    key = lambda x: x[1])
-        top, top_log_prob = potential_nodes[0]
+        query_sex = actual_node.sex
+        for i, (top, top_log_prob) in enumerate(potential_nodes):
+            current_sibling_group = get_suspected_sibling_group(top)
+            if any(x.sex == query_sex for x in current_sibling_group):
+                      break
         sibling_group = get_suspected_sibling_group(top)
-        for node, log_prob in potential_nodes[1:]:
+        for node, log_prob in potential_nodes[i + 1:]:
             if node in sibling_group:
                 continue
             next_node = node
