@@ -10,6 +10,7 @@ import pdb
 
 from scipy.stats import gamma
 import numpy as np
+from progressbar import progressbar
 # import pyximport; pyximport.install()
 
 from common_segments import common_segment_lengths
@@ -38,7 +39,7 @@ class LengthClassifier:
         self._distributions = distributions
         self._labeled_nodes = labeled_nodes
         self._by_unlabeled = None
-        if empirical_cryptic_lengths is not None:
+        if cryptic_distribution is not None:
             self._cryptic_distribution = cryptic_distribution
         else:
             self._cryptic_distribution = DEFAULT_SMOOTHING
@@ -279,7 +280,7 @@ def distributions_from_directory(directory, id_mapping):
     calculate_shared_to_directory.
     """
     distributions = dict()
-    for labeled_filename in listdir(directory):
+    for labeled_filename in progressbar(listdir(directory)):
         lengths = defaultdict(list)
         labeled = int(labeled_filename)
         with open(join(directory, labeled_filename), "r") as labeled_file:
