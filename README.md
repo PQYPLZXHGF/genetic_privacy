@@ -8,6 +8,7 @@ Requirement
 * scipy/numpy
 * Cython
 * Statsmodels
+* progressbar2
 
 
 
