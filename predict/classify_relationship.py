@@ -1,14 +1,14 @@
 from collections import namedtuple, defaultdict
 from itertools import chain, product, combinations
 from os import listdir, makedirs
-from os.path import join, exists
+from os.path import join, exists, abspath, dirname
 from random import sample, random
 from shutil import rmtree
 from warnings import warn
+from random import shuffle, getstate, setstate, seed
 import pdb
 
 from scipy.stats import gamma
-from statsmodels.distributions.empirical_distribution import ECDF
 import numpy as np
 # import pyximport; pyximport.install()
 
@@ -17,6 +17,8 @@ from data_logging import write_log
 from population_genomes import generate_genomes
 from population_statistics import ancestors_of, all_ancestors_of
 from gamma import fit_hurdle_gamma
+from cm import centimorgan_data_from_directory
+from shared_segment_detector import SharedSegmentDetector
 
 #ZERO_REPLACE = 1e-16
 ZERO_REPLACE = 1e-12
@@ -25,27 +27,21 @@ ZERO_REPLACE = 1e-12
 GammaParams = namedtuple("GammaParams", ["shape", "scale"])
 HurdleGammaParams = namedtuple("HurdleGammaParams", ["shape", "scale", "zero_prob"])
 
+DEFAULT_SMOOTHING = HurdleGammaParams(1.2088571040214136, 11686532.312642237, 0.9876864782229996)
+
 class LengthClassifier:
     """
     Classifies based total length of shared segments
     """
     def __init__(self, distributions, labeled_nodes,
-                 cryptic_distribution = None,
-                 empirical_cryptic_lengths = None,
-                 step_smoothing = None):
+                 cryptic_distribution = None):
         self._distributions = distributions
         self._labeled_nodes = labeled_nodes
-        self._cryptic_distribution = cryptic_distribution
         self._by_unlabeled = None
-        if step_smoothing is None:
-            # Default parameters for 7 generations
-            self._step_smoothing = (30000000, 0.00117543, 0.01963307, 0.98162761)
-        else:
-            self._step_smoothing = step_smoothing
         if empirical_cryptic_lengths is not None:
-            self._empirical_cryptic_distribution = ECDF(empirical_cryptic_lengths, "left")
+            self._cryptic_distribution = cryptic_distribution
         else:
-            self._empirical_cryptic_distribution = None
+            self._cryptic_distribution = DEFAULT_SMOOTHING
 
     @property
     def smoothing_parameters(self):
@@ -73,47 +69,10 @@ class LengthClassifier:
         self._by_unlabeled = by_unlabeled
         return by_unlabeled
         
-            
-    def get_probability(self, shared_length, query_node, labeled_node):
-        """
-        Returns the probability that query_node and labeled_node have total
-        shared segment length shared_length
-        """
-        if (query_node, labeled_node) not in self._distributions:
-            if shared_length == 0:
-                return self._cryptic_distribution.zero_prob
-            ret = 1 - self._empirical_cryptic_distribution(shared_length)
-            if ret == 0:
-                return 1 - self._empirical_cryptic_distribution.y[-2]
-            return ret
-        shape, scale, zero_prob = self._distributions[query_node, labeled_node]
-        if shared_length == 0:
-            return zero_prob
-        ret = gamma.cdf(shared_length, a = shape,
-                        scale = scale)
-        if ret > 0.5:
-            ret = 1 - ret
-        ret = ret * 2 * (1 - zero_prob)
-        if ret <= 0.0:
-            return ZERO_REPLACE
-        return ret
-
-    def get_batch_smoothing(self, lengths):
-        # Use getattr for old versions of length_classifier
-        smoothing_params = getattr(self, "_step_smoothing",
-                                   (30000000, 0.00117543, 0.01963307,
-                                    0.98162761))
-        cutoff, above_cutoff, below_cutoff, minus_eps = smoothing_params
-        lengths = np.asarray(lengths, dtype = np.uint64)
-        probs = np.empty_like(lengths, dtype = np.float64)
-        probs[lengths >= cutoff] = above_cutoff
-        probs[lengths < cutoff] = below_cutoff
-        probs[lengths == 0] = minus_eps
-        return probs
 
     def get_batch_smoothing_gamma(self, lengths):
-        # shape, scale, zero_prob = (1.7730455647331564, 9455753.779437264, 0.9906721828167074)
-        shape, scale, zero_prob = (1.2088571040214136, 11686532.312642237, 0.9876864782229996)
+        shape, scale, zero_prob = getattr(self, "_cryptic_distribution",
+                                          DEFAULT_SMOOTHING)
         lengths = np.asarray(lengths, np.uint32)
         zero_i = (lengths == 0)
         nonzero_i = np.invert(zero_i)
@@ -124,58 +83,6 @@ class LengthClassifier:
         ret[zero_i] = zero_prob
         ret[ret <= 0.0] = ZERO_REPLACE
         return ret
-
-    def get_batch_cryptic(self, lengths):
-        """
-        Get probabilities for lengths based on a hurdle gamma fit of
-        unrelated pairs.
-        """
-        assert self._cryptic_distribution is not None
-        shape, scale, zero_prob = self._cryptic_distribution
-        lengths = np.array(lengths, dtype = np.uint32)
-        zero_i = (lengths == 0)
-        nonzero_i = np.invert(zero_i)
-        ret = np.empty_like(lengths, dtype = np.float64)
-        ret[zero_i] = zero_prob
-        
-        gamma_probs = gamma.cdf(lengths[nonzero_i], a = shape, scale = scale)
-        greater_i = gamma_probs > 0.5
-        gamma_probs[greater_i] = 1 - gamma_probs[greater_i]
-        gamma_probs = gamma_probs * 2 * (1 - zero_prob)
-        ret[nonzero_i] = gamma_probs
-        ret[ret <= 0.0] = ZERO_REPLACE
-        return ret
-
-    def get_batch_ecdf(self, lengths, labeled_nodes):
-        lengths = np.asarray(lengths, dtype = np.uint32)
-        labeled_nodes = np.asarray(labeled_nodes, dtype = np.uint32)
-        sort_i = np.argsort(labeled_nodes)
-        labeled_nodes = labeled_nodes[sort_i]
-        lengths = lengths[sort_i]
-        unique_labeled = np.unique(labeled_nodes)
-        right_i = np.searchsorted(labeled_nodes, unique_labeled, side = "right")
-        partitioned_lengths = np.split(lengths, right_i)
-        ecdf_map = self._cryptic_ecdf
-        probabilities = []
-        for node_i, labeled_node in enumerate(unique_labeled.tolist()):
-            sub_lengths = partitioned_lengths[node_i]
-            temp_probs = np.empty_like(sub_lengths, dtype = np.float64)
-            zero_i = (sub_lengths == 0)
-            nonzero_i = np.invert(zero_i)
-            frac_zero, ecdf = ecdf_map[labeled_node]
-            temp_probs[nonzero_i] = (1 - frac_zero) * (1 - ecdf(sub_lengths[nonzero_i]))
-            temp_probs[zero_i] = frac_zero
-            # temp_probs = 1 - ecdf_map[labeled_node](lengths)
-            probabilities.append(temp_probs)
-        ret = np.concatenate(probabilities)
-
-        # inverse initial argsort so that probabilities are returned
-        # in the order given
-        # see https://arogozhnikov.github.io/2015/09/29/NumpyTipsAndTricks1.html#Even-faster-inverse-permutation
-        inverse_i = np.empty(len(sort_i), dtype = np.uint32)
-        inverse_i[sort_i] = np.arange(len(sort_i))
-        
-        return ret[inverse_i]
 
     def get_batch_pdf(self, lengths, query_nodes, labeled_nodes):
         assert len(lengths) == len(query_nodes) == len(labeled_nodes)
@@ -203,36 +110,6 @@ class LengthClassifier:
         ret[leq_zero] = ZERO_REPLACE
         # ret[ret > 1.0] = 1.0
         return (ret, leq_zero)
-        
-    def get_batch_probability(self, lengths, query_nodes, labeled_nodes):
-        assert len(lengths) == len(query_nodes) == len(labeled_nodes)
-        assert len(lengths) > 0
-        lengths = np.array(lengths, dtype = np.uint32)
-        zero_i = (lengths == 0)
-        nonzero_i = np.invert(zero_i)
-        distributions = self._distributions
-        params = (distributions[query_node, labeled_node]
-                  for query_node, labeled_node
-                  in zip(query_nodes, labeled_nodes))
-        shape_scale_zero = list(zip(*params))
-        shapes = np.array(shape_scale_zero[0], dtype = np.float64)
-        scales = np.array(shape_scale_zero[1], dtype = np.float64)
-        zero_prob = np.array(shape_scale_zero[2], dtype = np.float64)
-        del shape_scale_zero
-        ret = np.empty_like(lengths, dtype = np.float64)
-        # ret[zero_i] = 1 - zero_prob[zero_i]
-        ret[zero_i] = zero_prob[zero_i]
-        # ret[zero_i] = 1.0
-        gamma_probs = gamma.cdf(lengths[nonzero_i],
-                                a = shapes[nonzero_i],
-                                scale = scales[nonzero_i])
-        greater_i = gamma_probs > 0.5
-        gamma_probs[greater_i] = 1 - gamma_probs[greater_i]
-        gamma_probs = gamma_probs * 2 * (1 - zero_prob[nonzero_i])
-        ret[nonzero_i] = gamma_probs
-        ret[ret <= 0.0] = ZERO_REPLACE
-        # ret[ret > 1.0] = 1.0
-        return ret
 
     def __contains__(self, item):
         return item in self._distributions
@@ -285,83 +162,52 @@ def generate_classifier(population, labeled_nodes, genome_generator,
                             min_segment_length = min_segment_length,
                             generations_back_shared = generations_back_shared,
                             non_paternity = non_paternity)
-    # print("Generating cryptic relative parameters")
-    # population.clean_genomes()
-    # generate_genomes(population, genome_generator, recombinators, 3,
-    #                  true_genealogy = True)
-    # cryptic_lens = cryptic_lengths(population, labeled_nodes,
-    #                                generations_back_shared,
-    #                                min_segment_length)
-    # cryptic_ecdf = labeled_cryptic_ecdf(population, labeled_nodes,
-    #                                     generations_back_shared,
-    #                                     min_segment_length)
-    # classifier._cryptic_ecdf = cryptic_ecfd
-    # We still fit a hurdle gamma to get the zero probability, and to
-    # keep the option of switching back in the future easier.
-    # cryptic_params = HurdleGammaParams(*fit_hurdle_gamma(cryptic_lens))
+
+
+    
     print("Generating classifiers.")
     classifier = classifier_from_directory(directory, population.id_mapping)
-    # classifier._cryptic_distribution = cryptic_params
-    # print("Generating ecdf")
-    # classifier._empirical_cryptic_distribution = ECDF(cryptic_lens, "left")
-    # nonzero_cryptic_lens = cryptic_lens[np.nonzero(cryptic_lens)]
-    # classifier._empirical_cryptic_distribution_nozero = ECDF(nonzero_cryptic_lens,
-    #                                                          "left")
+
+    print("Calculating cryptic parameters")
+    cryptic_params = cryptic_parameters(population.id_mapping,
+                                        classifier._labeled_nodes,
+                                        set(classifier._distributions.keys()))
+    classifier._cryptic_distribution = cryptic_params
 
     return classifier
 
-def labeled_cryptic_ecdf(population, labeled_nodes, generations_back_shared,
-                            min_segment_length = 0):
-    unlabeled = [node for node in population.members
-                 if node.genome is not None]
-    unlabeled = set(sample(unlabeled, len(unlabeled) // 2))
-    related = related_pairs(unlabeled, labeled_nodes, population,
-                            generations_back_shared)
-    related_map = defaultdict(set)
-    for node_a, node_b in related:
-        related_map[node_a].add(node_b)
-        related_map[node_b].add(node_a)
-        
-    cryptic_ecdf = dict()    
-    for labeled_node in labeled_nodes:
-        labeled_related = related_map[labeled_node]
-        unrelated_pairs = ((unlabeled_node, labeled_node)
-                           for unlabeled_node in unlabeled
-                           if unlabeled_node not in labeled_related)
-        lengths_iter = (shared_segment_length_genomes(node_a.genome,
-                                                      node_b.genome,
-                                                      min_segment_length)
-                        for node_a, node_b in unrelated_pairs)
-        lengths = np.fromiter(lengths_iter, dtype = np.uint32)
-        nonzero_i = (lengths != 0)
-        frac_zero = (len(lengths) - np.sum(nonzero_i)) / len(lengths)
-        ecdf = ECDF(lengths[nonzero_i], "left")
-        cryptic_ecdf[labeled_node._id] = (frac_zero, ecdf)
-    return cryptic_ecdf
-                
+def cryptic_parameters(id_map, labeled_nodes, related_pairs):
+
+    # TODO: Add argument for this
+    recomb_dir = abspath(join(dirname(__file__),
+                              "../data/recombination_rates/"))
+    cm_data = centimorgan_data_from_directory(recomb_dir)
+    ibd_detector = SharedSegmentDetector(0, 5, cm_data)
+
+    # We try to only include the labeled nodes the analyst would have
+    # access to This only works if we use the deterministic random
+    # argument when we evaluate the classifier.
+    labeled_copy = sorted(labeled_nodes)
+    rand_state = getstate()
+    seed(42)
+    shuffle(labeled_copy)
+    setstate(rand_state)
     
-
-def cryptic_lengths(population, labeled_nodes, generations_back_shared,
-                    min_segment_length = 0):
-    nodes = sample(population.generations[-1].members, 1000)
-    # related_labeled = related_pairs(labeled_nodes, labeled_nodes, population,
-    #                                 generations_back_shared)
-    related_labeled = related_pairs(nodes, nodes, population,
-                                    generations_back_shared)
-    related_map = defaultdict(set)
-    for node_a, node_b in related_labeled:
-        related_map[node_a].add(node_b)
-        related_map[node_b].add(node_a)
-
-    # labeled_pairs = combinations(labeled_nodes, 2)
-    labeled_pairs = combinations(nodes, 2)
-    unrelated_pairs = ((a, b) for a, b in labeled_pairs
-                       if a not in related_map[b])
-    shared_iter = (shared_segment_length_genomes(node_a.genome,
-                                                 node_b.genome,
-                                                 min_segment_length)
-                   for node_a, node_b in unrelated_pairs)
-    return np.fromiter(shared_iter, dtype = np.uint32)
+    labeled_node_pairs = set(combinations(labeled_copy[:1000], 2))
+    related_pairs = set(related_pairs)
+    cryptic_pairs = set(x for x in labeled_node_pairs if x not in related_pairs)
+    lengths = []
+    for node_a_id, node_b_id in cryptic_pairs:
+        node_a = id_map[node_a_id]
+        node_b = id_map[node_b_id]
+        genome_a = node_a.genome
+        genome_b = node_b.genome
+        length = ibd_detector.shared_segment_length(genome_a, genome_b)
+        lengths.append(length)
+    np_lengths = np.array(lengths, dtype = np.uint64)
+    params = fit_hurdle_gamma(np_lengths)
+    assert all(x is not None for x in params)
+    return params
 
 def shared_to_directory(population, labeled_nodes, genome_generator,
                         recombinators, directory, min_segment_length = 0,

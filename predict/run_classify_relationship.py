@@ -5,11 +5,13 @@ from random import sample
 from itertools import chain
 from pickle import dump
 from os import listdir
+from os.path import dirname, join, abspath
 
 from population import PopulationUnpickler
 from sex import Sex
 from classify_relationship import generate_classifier, related_pairs
 from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
+from cm import centimorgan_data_from_directory
 from to_json import to_json
 
 parser = ArgumentParser(description = "Generate a classifier which can (hopefully) identify individuals in a population.")
@@ -71,8 +73,10 @@ if args.to_json:
         json_file.write(json)
     exit()
 
+# TODO: Add a command line option for this
+recomb_dir = abspath(join(dirname(__file__), "../data/recombination_rates/"))
 print("Loading recombination data.")
-recombinators = recombinators_from_directory("../data/recombination_rates/")
+recombinators = recombinators_from_directory(recomb_dir)
 chrom_sizes = recombinators[Sex.Male]._num_bases
 genome_generator = RecombGenomeGenerator(chrom_sizes)
 
