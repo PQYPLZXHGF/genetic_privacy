@@ -46,11 +46,11 @@ class LengthClassifier:
 
     @property
     def smoothing_parameters(self):
-        return self._step_smoothing
+        return self._cryptic_distribution
 
     @smoothing_parameters.setter
     def smoothing_parameters(self, params):
-        self._step_smoothing = params
+        self._cryptic_distribution = params
 
     @property
     def group_by_unlabeled(self):
