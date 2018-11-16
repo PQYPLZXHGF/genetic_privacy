@@ -51,11 +51,12 @@ class BayesDeanonymize:
               " New size is {}.".format(len(to_remove), len(new_labeled)))
         self._length_classifier._labeled_nodes = list(new_labeled)
 
-    def _to_search(self, shared_list):
+    def _to_search(self, shared_list, sex):
         labeled = set(self._length_classifier._labeled_nodes)
         genome_nodes = set(member for member in self._population.members
                            if (member.genome is not None and
-                               member._id not in labeled))
+                               member._id not in labeled and
+                               member.sex == sex))
         if not self._only_related:
             return genome_nodes
         id_map = self._population.id_mapping
@@ -133,7 +134,7 @@ class BayesDeanonymize:
         # batch_cryptic_lengths = []
         node_cryptic_log_probs = dict()
         by_unlabeled = length_classifier.group_by_unlabeled
-        nodes = self._to_search(shared_list)
+        nodes = self._to_search(shared_list, actual_node.sex)
         if len(nodes) == 0:
             # We have no idea which node it is
             return RawIdentified(set(), float("-inf"), None)
@@ -219,15 +220,11 @@ class BayesDeanonymize:
                       "cryptic probability": cryptic_length_logging,
                       "non cryptic": non_cryptic_probabilties}
             write_log("cryptic_logging", to_log)
-        potential_nodes = nlargest(15, node_probabilities.items(),
+        potential_nodes = nlargest(8, node_probabilities.items(),
                                    key = lambda x: x[1])
-        query_sex = actual_node.sex
-        for i, (top, top_log_prob) in enumerate(potential_nodes):
-            current_sibling_group = get_suspected_sibling_group(top)
-            if any(x.sex == query_sex for x in current_sibling_group):
-                      break
+        top, top_log_prob = potential_nodes[0]
         sibling_group = get_suspected_sibling_group(top)
-        for node, log_prob in potential_nodes[i + 1:]:
+        for node, log_prob in potential_nodes[1:]:
             if node in sibling_group:
                 continue
             next_node = node
