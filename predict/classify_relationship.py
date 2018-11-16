@@ -46,7 +46,12 @@ class LengthClassifier:
 
     @property
     def smoothing_parameters(self):
-        return self._cryptic_distribution
+        smoothing = getattr(self, "_cryptic_distribution",
+                            DEFAULT_SMOOTHING)
+        if smoothing:
+            return smoothing
+        else:
+            return DEFAULT_SMOOTHING
 
     @smoothing_parameters.setter
     def smoothing_parameters(self, params):
@@ -72,8 +77,7 @@ class LengthClassifier:
         
 
     def get_batch_smoothing_gamma(self, lengths):
-        shape, scale, zero_prob = getattr(self, "_cryptic_distribution",
-                                          DEFAULT_SMOOTHING)
+        shape, scale, zero_prob = self.smoothing_parameters
         lengths = np.asarray(lengths, np.uint32)
         zero_i = (lengths == 0)
         nonzero_i = np.invert(zero_i)
