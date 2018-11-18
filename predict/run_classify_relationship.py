@@ -7,7 +7,7 @@ from pickle import dump
 from os import listdir
 from os.path import dirname, join, abspath
 
-from population import PopulationUnpickler
+from population import PopulationUnpickler, fix_twin_parents
 from sex import Sex
 from classify_relationship import generate_classifier, related_pairs
 from recomb_genome import recombinators_from_directory, RecombGenomeGenerator
@@ -39,6 +39,7 @@ args = parser.parse_args()
 print("Loading population")
 with open(args.population_file, "rb") as pickle_file:
     population = PopulationUnpickler(pickle_file).load()
+fix_twin_parents(population)
 
 if not args.recover:
     potentially_labeled = list(chain.from_iterable([generation.members
