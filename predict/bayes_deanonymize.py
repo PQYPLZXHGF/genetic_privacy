@@ -120,11 +120,11 @@ class BayesDeanonymize:
         cryptic_lookup = dict(zip(labeled_nodes_cryptic,
                                   all_cryptic_possibilities))
 
-        if self.cryptic_logging:
-            unique_lengths = np.sort(np.unique(np.asarray(all_lengths,
-                                                          dtype = np.uint64)))
-            cryptic_length_logging = dict()
-            non_cryptic_probabilties = dict()
+        # if self.cryptic_logging:
+        #     unique_lengths = np.sort(np.unique(np.asarray(all_lengths,
+        #                                                   dtype = np.uint64)))
+        #     cryptic_length_logging = dict()
+        #     non_cryptic_probabilties = dict()
         
         node_data = dict()
         batch_node_id = []
@@ -156,11 +156,11 @@ class BayesDeanonymize:
                                           for labeled_node_id
                                           in cryptic_nodes)
                 node_cryptic_log_probs[node] = cryptic_probability
-                if self.cryptic_logging:
-                    to_log = _get_logging_cryptic_lengths(shared_dict,
-                                                          cryptic_nodes,
-                                                          unique_lengths)
-                    cryptic_length_logging[node._id] = to_log
+                # if self.cryptic_logging:
+                #     to_log = _get_logging_cryptic_lengths(shared_dict,
+                #                                           cryptic_nodes,
+                #                                           unique_lengths)
+                #     cryptic_length_logging[node._id] = to_log
 
         
             non_cryptic_nodes = list(labeled_nodes - cryptic_nodes)
@@ -184,27 +184,15 @@ class BayesDeanonymize:
             calc_prob, zero_replace = pdf_vals
         else:
             calc_prob = []
-        #cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
 
-        # index_data = {node._id: tuple(indices)
-        #               for node, indices in node_data.items()}
-        # siblings = {node._id for node in get_sibling_group(actual_node)}
-        # to_dump = {"actual_node_id": actual_node._id,
-        #            "calc_prob": calc_prob,
-        #            "cryptic_lengths": batch_cryptic_lengths,
-        #            "siblings": siblings,
-        #            "index_data": index_data}
-        # output_filename = "/media/paul/Fast Storage/optimize_data/{}.pickle".format(actual_node._id)
-        # with open(output_filename, "wb") as pickle_file:
-        #     dump(to_dump, pickle_file)
         node_probabilities = dict()
         for node, prob_data in node_data.items():
             start_i, stop_i, cryptic_start_i, cryptic_stop_i = prob_data
             node_calc = calc_prob[start_i:stop_i]
-            if self.cryptic_logging:
-                zero_vec = zero_replace[start_i:stop_i]
-                non_cryptic_probabilties[node._id] = node_calc
-                non_cryptic_probabilties[node._id][zero_vec] = None #stores as NaN
+            # if self.cryptic_logging:
+            #     zero_vec = zero_replace[start_i:stop_i]
+            #     non_cryptic_probabilties[node._id] = node_calc
+            #     non_cryptic_probabilties[node._id][zero_vec] = None #stores as NaN
             log_prob = (np.sum(np.log(node_calc)) +
                         node_cryptic_log_probs[node])
             node_probabilities[node] = log_prob
@@ -215,11 +203,11 @@ class BayesDeanonymize:
                                "probs": {node._id: prob
                                          for node, prob
                                          in node_probabilities.items()}})
-        if self.cryptic_logging:
-            to_log = {"unique lengths": unique_lengths,
-                      "cryptic probability": cryptic_length_logging,
-                      "non cryptic": non_cryptic_probabilties}
-            write_log("cryptic_logging", to_log)
+        # if self.cryptic_logging:
+        #     to_log = {"unique lengths": unique_lengths,
+        #               "cryptic probability": cryptic_length_logging,
+        #               "non cryptic": non_cryptic_probabilties}
+        #     write_log("cryptic_logging", to_log)
         potential_nodes = nlargest(8, node_probabilities.items(),
                                    key = lambda x: x[1])
         top, top_log_prob = potential_nodes[0]
