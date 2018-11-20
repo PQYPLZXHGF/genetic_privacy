@@ -124,6 +124,7 @@ evaluation = Evaluation(population, classifier,
                         cryptic_logging = args.log_cryptic)
 original_labeled = set(evaluation.labeled_nodes)
 if args.expansion_rounds_data and expansion_data is not None:
+    print("Loading {} nodes from expansion data".format(len(expansion_data.labeled_nodes)))
     evaluation.labeled_nodes = expansion_data.labeled_nodes
     expansion_data.adjust_genomes(population)
 elif args.subset_labeled:
