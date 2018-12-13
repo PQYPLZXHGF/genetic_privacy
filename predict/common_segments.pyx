@@ -179,7 +179,8 @@ cpdef common_homolog_segments_by_founder(homolog_a, homolog_b):
     # consolidate contiguous segments eg if we have shared segments
     # (0, 5) and (5, 10), then we should merge them into (0, 10).
     for key, shared in shared_segments.items():
-        shared_segments[key] = _consolidate_sequence(shared)
+        if len(shared) > 1:
+            shared_segments[key] = _consolidate_sequence(shared)
     return shared_segments
 
 
