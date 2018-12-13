@@ -13,10 +13,11 @@ import numpy as np
 #                Extension("common_segments", ["common_segments.pyx"],
 #                          include_dirs = [np.get_include()])]
 
+print(build_ext)
 setup(
     name = 'Genetic Privacy',
     cmdclass = {'build_ext': build_ext},
-    # include_dirs = [np.get_include()],
+    include_dirs = [np.get_include()],
     # ext_modules = ext_modules
     ext_modules = cythonize("*.pyx", include_path = [np.get_include()])
 )
