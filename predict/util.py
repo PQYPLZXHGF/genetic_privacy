@@ -187,10 +187,11 @@ def recent_common_ancestor(node_a, node_b, generation_map, suspected = False):
     assert node_b is not None
     if node_a == node_b:
         return (node_a, 0, 0)
-    if node_a.mother is not None and node_a.mother == node_b.mother:
-        return (node_a.mother, 1, 2)
-    if node_a.father is not None and node_a.father == node_b.father:
-        return (node_a.father, 1, 2)
+    if not suspected: #TODO: Do something less verbose here
+        if node_a.mother is not None and node_a.mother == node_b.mother:
+            return (node_a.mother, 1, 2)
+        if node_a.father is not None and node_a.father == node_b.father:
+            return (node_a.father, 1, 2)
     a_ancestors = all_ancestors(node_a, suspected)
     b_ancestors = all_ancestors(node_b, suspected)
     common_ancestors = a_ancestors.intersection(b_ancestors)
