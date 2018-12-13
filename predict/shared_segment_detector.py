@@ -57,8 +57,6 @@ class SharedSegmentDetectorFounder:
 
     def shared_segment_length(self, genome_a, genome_b):
         segments_by_founder = common_segment_ibd_by_founders(genome_a, genome_b)
-        if len(segments) == 0:
-            return 0
 
         above_cutoffs = dict()
         for founder, segments in segments_by_founder.items():
