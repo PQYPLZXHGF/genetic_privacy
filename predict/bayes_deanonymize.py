@@ -21,7 +21,7 @@ INF_REPLACE = 1.0
 
 class BayesDeanonymize:
     def __init__(self, population, classifier = None, only_related = False,
-                 search_generations_back = 7):
+                 search_generations_back = 7, cryptic_logging = False):
         self._population = population
         if classifier is None:
             self._length_classifier = LengthClassifier(population, 1000)
@@ -33,6 +33,7 @@ class BayesDeanonymize:
             self._search_generations_back = search_generations_back
             self._compute_related()
         self._restrict_search_nodes = None
+        self.cryptic_logging = cryptic_logging
         # self.__remove_erroneous_labeled()
 
     def __remove_erroneous_labeled(self):
@@ -50,11 +51,12 @@ class BayesDeanonymize:
               " New size is {}.".format(len(to_remove), len(new_labeled)))
         self._length_classifier._labeled_nodes = list(new_labeled)
 
-    def _to_search(self, shared_list):
+    def _to_search(self, shared_list, sex):
         labeled = set(self._length_classifier._labeled_nodes)
         genome_nodes = set(member for member in self._population.members
                            if (member.genome is not None and
-                               member._id not in labeled))
+                               member._id not in labeled and
+                               member.sex == sex))
         if not self._only_related:
             return genome_nodes
         id_map = self._population.id_mapping
@@ -110,11 +112,19 @@ class BayesDeanonymize:
 
         labeled_nodes_cryptic, all_lengths = list(zip(*shared_dict.items()))
         # We convert to python floats, as summing is faster.
+        # all_cryptic_possibilities = [float(x) for x
+        #                              in np.log(length_classifier.get_batch_smoothing(all_lengths))]
         all_cryptic_possibilities = [float(x) for x
-                                     in np.log(length_classifier.get_batch_smoothing(all_lengths))]
+                                     in np.log(length_classifier.get_batch_smoothing_gamma(all_lengths))]
         # Maps labeled nodes to the log cryptic value of the IBD detected
         cryptic_lookup = dict(zip(labeled_nodes_cryptic,
                                   all_cryptic_possibilities))
+
+        # if self.cryptic_logging:
+        #     unique_lengths = np.sort(np.unique(np.asarray(all_lengths,
+        #                                                   dtype = np.uint64)))
+        #     cryptic_length_logging = dict()
+        #     non_cryptic_probabilties = dict()
         
         node_data = dict()
         batch_node_id = []
@@ -124,7 +134,7 @@ class BayesDeanonymize:
         # batch_cryptic_lengths = []
         node_cryptic_log_probs = dict()
         by_unlabeled = length_classifier.group_by_unlabeled
-        nodes = self._to_search(shared_list)
+        nodes = self._to_search(shared_list, actual_node.sex)
         if len(nodes) == 0:
             # We have no idea which node it is
             return RawIdentified(set(), float("-inf"), None)
@@ -146,6 +156,12 @@ class BayesDeanonymize:
                                           for labeled_node_id
                                           in cryptic_nodes)
                 node_cryptic_log_probs[node] = cryptic_probability
+                # if self.cryptic_logging:
+                #     to_log = _get_logging_cryptic_lengths(shared_dict,
+                #                                           cryptic_nodes,
+                #                                           unique_lengths)
+                #     cryptic_length_logging[node._id] = to_log
+
         
             non_cryptic_nodes = list(labeled_nodes - cryptic_nodes)
             if len(non_cryptic_nodes) > 0:
@@ -162,35 +178,22 @@ class BayesDeanonymize:
 
         assert len(node_data) > 0
         if len(batch_lengths) > 0:
-            calc_prob = length_classifier.get_batch_probability(batch_lengths,
-                                                                batch_node_id,
-                                                                batch_labeled_node_id)
+            pdf_vals = length_classifier.get_batch_pdf(batch_lengths,
+                                                       batch_node_id,
+                                                       batch_labeled_node_id)
+            calc_prob, zero_replace = pdf_vals
         else:
             calc_prob = []
-        #cryptic_prob = length_classifier.get_batch_smoothing(batch_cryptic_lengths)
 
-        # index_data = {node._id: tuple(indices)
-        #               for node, indices in node_data.items()}
-        # siblings = {node._id for node in get_sibling_group(actual_node)}
-        # to_dump = {"actual_node_id": actual_node._id,
-        #            "calc_prob": calc_prob,
-        #            "cryptic_lengths": batch_cryptic_lengths,
-        #            "siblings": siblings,
-        #            "index_data": index_data}
-        # output_filename = "/media/paul/Fast Storage/optimize_data/{}.pickle".format(actual_node._id)
-        # with open(output_filename, "wb") as pickle_file:
-        #     dump(to_dump, pickle_file)
         node_probabilities = dict()
         for node, prob_data in node_data.items():
             start_i, stop_i, cryptic_start_i, cryptic_stop_i = prob_data
-            if node == actual_node:
-                pass
-                # import pdb
-                # pdb.set_trace()
             node_calc = calc_prob[start_i:stop_i]
-            #node_cryptic = cryptic_prob[cryptic_start_i:cryptic_stop_i]
+            # if self.cryptic_logging:
+            #     zero_vec = zero_replace[start_i:stop_i]
+            #     non_cryptic_probabilties[node._id] = node_calc
+            #     non_cryptic_probabilties[node._id][zero_vec] = None #stores as NaN
             log_prob = (np.sum(np.log(node_calc)) +
-                        #np.sum(np.log(node_cryptic)))
                         node_cryptic_log_probs[node])
             node_probabilities[node] = log_prob
         assert len(node_probabilities) > 0
@@ -200,6 +203,11 @@ class BayesDeanonymize:
                                "probs": {node._id: prob
                                          for node, prob
                                          in node_probabilities.items()}})
+        # if self.cryptic_logging:
+        #     to_log = {"unique lengths": unique_lengths,
+        #               "cryptic probability": cryptic_length_logging,
+        #               "non cryptic": non_cryptic_probabilties}
+        #     write_log("cryptic_logging", to_log)
         potential_nodes = nlargest(8, node_probabilities.items(),
                                    key = lambda x: x[1])
         top, top_log_prob = potential_nodes[0]
@@ -224,6 +232,18 @@ class BayesDeanonymize:
         # return (sibling_group, log_ratio)
         # return set(chain.from_iterable(get_sibling_group(potential[0])
         #                                for potential in potential_nodes))
+def _get_logging_cryptic_lengths(shared_dict, cryptic_nodes, unique_lengths):
+    lengths_iter = (shared_dict[labeled_node_id]
+                    for labeled_node_id
+                    in cryptic_nodes)
+    temp_cryptic_lengths = np.fromiter(lengths_iter,
+                                       dtype = np.uint64)
+    lengths, counts = np.unique(temp_cryptic_lengths,
+                                return_counts = True)
+    store_counts = np.zeros(len(unique_lengths), dtype = np.uint32)
+    i = np.searchsorted(unique_lengths, lengths)
+    store_counts[i] = counts
+    return store_counts
 
 def get_sibling_group(node):
     """
