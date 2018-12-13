@@ -1,6 +1,6 @@
-"""# cython: profile=True
+## cython: profile=True
 # cython: language_level=3
-"""
+
 import numpy as np
 from array import array
 from collections import defaultdict
