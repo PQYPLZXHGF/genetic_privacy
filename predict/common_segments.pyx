@@ -126,7 +126,7 @@ cpdef list common_homolog_segments(homolog_a, homolog_b):
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-cpdef list common_homolog_segments_by_founder(homolog_a, homolog_b):
+cpdef common_homolog_segments_by_founder(homolog_a, homolog_b):
     """
     Given two autosome homologs, returns a list of ranges (a, b), (b, c), ...
     where the two autosomes have the same underlying sequence.
