@@ -1,6 +1,7 @@
 """# cython: profile=True"""
 import numpy as np
 from array import array
+from collections import defaultdict
 
 cimport numpy as np
 cimport cython
@@ -21,6 +22,37 @@ cpdef common_segment_ibd(genome_a, genome_b):
     ibd_segments.extend(common_homolog_segments(genome_a.father,
                                            genome_b.father))
     return ibd_segments
+
+cpdef update_segments(to_update, segments_dict):
+    for founder, segments in segments_dict.items():
+        to_update[founder].extend(segments)
+
+
+cpdef common_segment_ibd_by_founders(genome_a, genome_b):
+    """
+    Given two genomes returns a list of integers for each autosome,
+    corresponding to the length of segments that are shared between
+    the two autosomes.
+    """
+    ibd_segments = defaultdict(list)
+    d = common_homolog_segments_by_founder(genome_a.mother,
+                                           genome_b.mother)
+    update_segments(ibd_segments, d)
+    
+    d = common_homolog_segments_by_founder(genome_a.father,
+                                           genome_b.mother)
+    update_segments(ibd_segments, d)
+    
+    d = common_homolog_segments_by_founder(genome_a.mother,
+                                           genome_b.father)
+    update_segments(ibd_segments, d)
+    
+    d = common_homolog_segments_by_founder(genome_a.father,
+                                           genome_b.father)
+    update_segments(ibd_segments, d)
+    
+    return ibd_segments
+
 
 def common_segment_lengths(genome_a, genome_b):
     """
@@ -89,6 +121,64 @@ cpdef list common_homolog_segments(homolog_a, homolog_b):
     # consolidate contiguous segments eg if we have shared segments
     # (0, 5) and (5, 10), then we should merge them into (0, 10).
     return _consolidate_sequence(shared_segments)
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+cpdef list common_homolog_segments_by_founder(homolog_a, homolog_b):
+    """
+    Given two autosome homologs, returns a list of ranges (a, b), (b, c), ...
+    where the two autosomes have the same underlying sequence.
+    """
+    cdef unsigned long len_a, len_b, index_a, index_b, start, stop
+    cdef unsigned long a_start, a_stop, a_id, b_start, b_stop, b_id
+    cdef np.ndarray[np.uint32_t, ndim=1] starts_a = homolog_a.starts
+    cdef np.ndarray[np.uint32_t, ndim=1] founder_a = homolog_a.founder
+    cdef np.ndarray[np.uint32_t, ndim=1] starts_b = homolog_b.starts
+    cdef np.ndarray[np.uint32_t, ndim=1] founder_b = homolog_b.founder
+    cdef unsigned long end = homolog_a.end
+    len_a = len(starts_a)
+    len_b = len(starts_b)
+    index_a = 0
+    index_b = 0
+    shared_segments = defaultdict(list)
+    while index_a < len_a and index_b < len_b:
+        a_start = starts_a[index_a]
+        if index_a + 1 < len_a:
+            a_stop = starts_a[index_a + 1]
+        else:
+            a_stop = end
+        a_id = founder_a[index_a]
+
+        b_start = starts_b[index_b]
+        if index_b + 1 < len_b:
+            b_stop = starts_b[index_b + 1]
+        else:
+            b_stop = end
+        # assert a_start < a_stop
+        # assert b_start < b_stop
+        b_id = founder_b[index_b]
+        if a_id == b_id:
+            if a_start > b_start:
+                start = a_start
+            else:
+                start = b_start
+            if a_stop < b_stop:
+                stop = a_stop
+            else:
+                stop = b_stop
+            shared_segments[a_id].append((start, stop))
+        if a_stop == b_stop:
+            index_a += 1
+            index_b += 1
+        elif a_stop > b_stop:
+            index_b += 1
+        else:
+            index_a += 1
+    # consolidate contiguous segments eg if we have shared segments
+    # (0, 5) and (5, 10), then we should merge them into (0, 10).
+    for key, shared in shared_segments.items():
+        shared_segments[key] = _consolidate_sequence(shared)
+    return shared_segments
 
 
 
