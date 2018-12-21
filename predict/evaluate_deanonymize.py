@@ -172,9 +172,8 @@ else:
         shuffle(all_unlabeled)
     unlabeled = all_unlabeled[:args.num_node]
 
-write_log("to identify", [node._id for node in unlabeled])
-
 if not args.expansion_rounds_data:
+    write_log("to identify", [node._id for node in unlabeled])
     evaluation.run_evaluation(unlabeled)
     evaluation.print_metrics()
 else:
@@ -192,6 +191,7 @@ else:
                                   in expansion_data.remaining)
     else:
         identify_candidates = potential
+    write_log("to identify", [node._id for node in identify_candidates])
     evaluation.restrict_search(potential)
     added = evaluation.run_expansion_round(identify_candidates,
                                            args.expansion_ratio,
