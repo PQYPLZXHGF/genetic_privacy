@@ -3,6 +3,7 @@ from datetime import datetime
 from pickle import dump
 from sys import stdout
 from math import sqrt
+from random import shuffle
 
 from data_logging import write_log
 from bayes_deanonymize import BayesDeanonymize
@@ -118,6 +119,7 @@ class Evaluation:
                             expansion_data = None, expansion_filename = None):
         print("Running expansion round.")
         to_evaluate = list(identify_candidates)
+        shuffle(to_evaluate)
         added = []
         correct_add_count = 0
         write_log("expansion_confidence_ratio", confidence_ratio)
